@@ -1,7 +1,6 @@
 """Data models for Emoji Zork game."""
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
 
 
 @dataclass
@@ -40,17 +39,17 @@ class Room:
 
     id: str
     emoji: str
-    items: List[str] = field(default_factory=list)
-    enemies: List[Enemy] = field(default_factory=list)
-    exits: Dict[str, str] = field(default_factory=dict)
+    items: list[str] = field(default_factory=list)
+    enemies: list[Enemy] = field(default_factory=list)
+    exits: dict[str, str] = field(default_factory=dict)
     is_dark: bool = False
-    locked_exits: Dict[str, str] = field(default_factory=dict)
+    locked_exits: dict[str, str] = field(default_factory=dict)
 
     def has_exit(self, direction: str) -> bool:
         """Check if room has an exit in the given direction."""
         return direction in self.exits or direction in self.locked_exits
 
-    def get_available_exits(self, unlocked: set) -> Dict[str, str]:
+    def get_available_exits(self, unlocked: set) -> dict[str, str]:
         """Get all currently available exits."""
         exits = dict(self.exits)
         for direction, room_id in self.locked_exits.items():
@@ -66,10 +65,10 @@ class GameState:
     current_room: str = "house"
     health: int = 3
     max_health: int = 5
-    inventory: List[str] = field(default_factory=list)
+    inventory: list[str] = field(default_factory=list)
     score: int = 0
-    room_items: Dict[str, List[str]] = field(default_factory=dict)
-    room_enemies: Dict[str, List[Enemy]] = field(default_factory=dict)
+    room_items: dict[str, list[str]] = field(default_factory=dict)
+    room_enemies: dict[str, list[Enemy]] = field(default_factory=dict)
     unlocked_doors: set = field(default_factory=set)
     game_over: bool = False
     victory: bool = False
@@ -111,6 +110,6 @@ class ActionResult:
 
     success: bool
     state: GameState
-    event_type: Optional[str] = None
-    event_data: Optional[Dict] = None
-    error_emoji: Optional[str] = None
+    event_type: str | None = None
+    event_data: dict | None = None
+    error_emoji: str | None = None

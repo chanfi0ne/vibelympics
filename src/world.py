@@ -1,11 +1,9 @@
 """Game world definitions for Emoji Zork."""
 
-from typing import Dict, List
 from models import Enemy, Room
 
-
 # Enemy templates (will be cloned for each game)
-ENEMY_TEMPLATES: Dict[str, Enemy] = {
+ENEMY_TEMPLATES: dict[str, Enemy] = {
     "bat": Enemy(emoji="🦇", health=1, max_health=1, damage=1),
     "troll": Enemy(emoji="👹", health=3, max_health=3, damage=1),
     "dragon": Enemy(emoji="🐉", health=5, max_health=5, damage=2),
@@ -32,7 +30,7 @@ ENEMY_SCORES = {
 }
 
 
-def create_world() -> Dict[str, Room]:
+def create_world() -> dict[str, Room]:
     """Create the game world with all rooms."""
     return {
         "house": Room(
@@ -103,14 +101,13 @@ def create_world() -> Dict[str, Room]:
     }
 
 
-def get_initial_room_items(world: Dict[str, Room]) -> Dict[str, List[str]]:
+def get_initial_room_items(world: dict[str, Room]) -> dict[str, list[str]]:
     """Extract initial item placement from world."""
     return {room_id: list(room.items) for room_id, room in world.items()}
 
 
-def get_initial_room_enemies(world: Dict[str, Room]) -> Dict[str, List[Enemy]]:
+def get_initial_room_enemies(world: dict[str, Room]) -> dict[str, list[Enemy]]:
     """Extract initial enemy placement from world, cloning enemies."""
     return {
-        room_id: [e.clone() for e in room.enemies]
-        for room_id, room in world.items()
+        room_id: [e.clone() for e in room.enemies] for room_id, room in world.items()
     }

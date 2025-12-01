@@ -1,0 +1,58 @@
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # ==========================================================================
+  # PR Validation
+  # ==========================================================================
+  pr-check:
+    name: ✅ PR Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for secrets in diff
+        run: |
+          # Simple check for common secret patterns
+          if git diff origin/main...HEAD | grep -iE "(api_key|secret|password|token|credential)" | grep -v "secrets\." | grep -v "#"; then
+            echo "⚠️ Potential secrets detected in diff!"
+            echo "Please review the changes for sensitive data."
+            exit 1
+          fi
+          echo "✅ No obvious secrets detected"
+
+      - name: Check commit messages
+        run: |
+          # Ensure commits follow conventional format
+          COMMITS=$(git log origin/main..HEAD --pretty=format:"%s")
+          echo "Checking commits:"
+          echo "$COMMITS"
+          # Just informational for now
+          echo "✅ Commit check complete"
+
+  # ==========================================================================
+  # Size Check
+  # ==========================================================================
+  size-check:
+    name: 📏 Size Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for large files
+        run: |
+          # Find files larger than 1MB
+          LARGE_FILES=$(find . -type f -size +1M -not -path "./.git/*" 2>/dev/null || true)
+          if [ -n "$LARGE_FILES" ]; then
+            echo "⚠️ Large files detected:"
+            echo "$LARGE_FILES"
+          else
+            echo "✅ No large files detected"
+          fi

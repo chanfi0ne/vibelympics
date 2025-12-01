@@ -1,0 +1,10 @@
+# Code owners for Emoji Zork
+# These users will be requested for review on PRs
+
+# Default owners for everything
+* @jonc
+
+# Security-sensitive files require security review
+/src/app.py @jonc
+/Dockerfile @jonc
+/.github/workflows/ @jonc

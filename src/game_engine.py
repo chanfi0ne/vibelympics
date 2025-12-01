@@ -1,7 +1,6 @@
 """Core game engine for Emoji Zork."""
 
-from typing import Dict, Optional, Tuple
-from models import ActionResult, Enemy, GameState, Room
+from models import ActionResult, GameState, Room
 from world import (
     ENEMY_SCORES,
     ITEMS,
@@ -9,7 +8,6 @@ from world import (
     get_initial_room_enemies,
     get_initial_room_items,
 )
-
 
 # Valid inputs
 VALID_ACTIONS = frozenset({"move", "look", "take", "attack", "use"})
@@ -42,7 +40,7 @@ class GameEngine:
         """Get the current room object."""
         return self.world[state.current_room]
 
-    def get_room_display(self, state: GameState) -> Dict:
+    def get_room_display(self, state: GameState) -> dict:
         """Get display data for current room."""
         room = self.get_current_room(state)
         items = state.room_items.get(state.current_room, [])
@@ -65,18 +63,14 @@ class GameEngine:
         }
 
     def perform_action(
-        self, state: GameState, action: str, params: Dict
+        self, state: GameState, action: str, params: dict
     ) -> ActionResult:
         """Perform a game action and return the result."""
         if state.game_over:
-            return ActionResult(
-                success=False, state=state, error_emoji="💀"
-            )
+            return ActionResult(success=False, state=state, error_emoji="💀")
 
         if action not in VALID_ACTIONS:
-            return ActionResult(
-                success=False, state=state, error_emoji="❓"
-            )
+            return ActionResult(success=False, state=state, error_emoji="❓")
 
         # Dispatch to action handlers
         handlers = {
@@ -89,7 +83,7 @@ class GameEngine:
 
         return handlers[action](state, params)
 
-    def _handle_move(self, state: GameState, params: Dict) -> ActionResult:
+    def _handle_move(self, state: GameState, params: dict) -> ActionResult:
         """Handle move action."""
         direction = params.get("direction")
         if direction not in VALID_DIRECTIONS:
@@ -130,7 +124,7 @@ class GameEngine:
             event_data={"room": new_room_id},
         )
 
-    def _handle_look(self, state: GameState, params: Dict) -> ActionResult:
+    def _handle_look(self, state: GameState, params: dict) -> ActionResult:
         """Handle look action - refresh room view."""
         return ActionResult(
             success=True,
@@ -138,7 +132,7 @@ class GameEngine:
             event_type="looked",
         )
 
-    def _handle_take(self, state: GameState, params: Dict) -> ActionResult:
+    def _handle_take(self, state: GameState, params: dict) -> ActionResult:
         """Handle take action - pick up an item."""
         item = params.get("item")
         if not item or item not in VALID_ITEMS:
@@ -169,7 +163,7 @@ class GameEngine:
             event_data={"item": item},
         )
 
-    def _handle_attack(self, state: GameState, params: Dict) -> ActionResult:
+    def _handle_attack(self, state: GameState, params: dict) -> ActionResult:
         """Handle attack action - fight an enemy."""
         if not state.has_weapon:
             return ActionResult(success=False, state=state, error_emoji="🚫")
@@ -225,7 +219,7 @@ class GameEngine:
             event_data=event_data,
         )
 
-    def _handle_use(self, state: GameState, params: Dict) -> ActionResult:
+    def _handle_use(self, state: GameState, params: dict) -> ActionResult:
         """Handle use action - use an item from inventory."""
         item = params.get("item")
         if not item or item not in state.inventory:
@@ -263,7 +257,7 @@ class GameEngine:
         # Other items don't have use actions
         return ActionResult(success=False, state=state, error_emoji="🚫")
 
-    def get_state_for_client(self, state: GameState) -> Dict:
+    def get_state_for_client(self, state: GameState) -> dict:
         """Convert game state to client-friendly format."""
         room_display = self.get_room_display(state)
         return {

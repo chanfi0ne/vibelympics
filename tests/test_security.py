@@ -5,8 +5,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from app import app, game_sessions, MAX_SESSIONS, cleanup_expired_sessions
 import time
+
+from app import MAX_SESSIONS, app, cleanup_expired_sessions, game_sessions
 
 
 class TestSecurityHeaders:
@@ -52,10 +53,13 @@ class TestInputValidation:
         resp = self.client.post("/api/new-game")
         session_id = resp.get_json()["session_id"]
 
-        resp = self.client.post("/api/action", json={
-            "session_id": session_id,
-            "action": "hack",
-        })
+        resp = self.client.post(
+            "/api/action",
+            json={
+                "session_id": session_id,
+                "action": "hack",
+            },
+        )
         data = resp.get_json()
         assert data.get("error") == "❓"
 
@@ -64,11 +68,14 @@ class TestInputValidation:
         resp = self.client.post("/api/new-game")
         session_id = resp.get_json()["session_id"]
 
-        resp = self.client.post("/api/action", json={
-            "session_id": session_id,
-            "action": "move",
-            "direction": "<script>alert(1)</script>",
-        })
+        resp = self.client.post(
+            "/api/action",
+            json={
+                "session_id": session_id,
+                "action": "move",
+                "direction": "<script>alert(1)</script>",
+            },
+        )
         data = resp.get_json()
         assert data.get("error") == "❓"
 
@@ -77,11 +84,14 @@ class TestInputValidation:
         resp = self.client.post("/api/new-game")
         session_id = resp.get_json()["session_id"]
 
-        resp = self.client.post("/api/action", json={
-            "session_id": session_id,
-            "action": "take",
-            "item": "<script>alert(1)</script>",
-        })
+        resp = self.client.post(
+            "/api/action",
+            json={
+                "session_id": session_id,
+                "action": "take",
+                "item": "<script>alert(1)</script>",
+            },
+        )
         data = resp.get_json()
         assert data.get("error") == "❓"
 
@@ -100,10 +110,13 @@ class TestSessionSecurity:
 
     def test_invalid_session_rejected(self):
         """Invalid session IDs should be rejected."""
-        resp = self.client.post("/api/action", json={
-            "session_id": "fake-session-id",
-            "action": "look",
-        })
+        resp = self.client.post(
+            "/api/action",
+            json={
+                "session_id": "fake-session-id",
+                "action": "look",
+            },
+        )
         assert resp.status_code == 400
         assert resp.get_json().get("error") == "❓"
 
@@ -147,15 +160,16 @@ class TestRateLimiting:
 
     def test_rate_limit_returns_429(self):
         """Should return 429 when rate limit exceeded."""
-        from app import rate_limit_store, RATE_LIMIT
-        
+        from app import RATE_LIMIT, rate_limit_store
+
         # Simulate hitting rate limit
         test_ip = "test-ip"
         rate_limit_store[test_ip] = [time.time()] * (RATE_LIMIT + 1)
-        
+
         # This would normally check the IP, but in test mode
         # we can verify the logic works
         from app import check_rate_limit
+
         assert check_rate_limit(test_ip) is False
 
 
@@ -172,11 +186,14 @@ class TestGameStateIntegrity:
         session_id = resp.get_json()["session_id"]
 
         # Try to send manipulated health (should be ignored)
-        resp = self.client.post("/api/action", json={
-            "session_id": session_id,
-            "action": "look",
-            "health": 999,  # This should be ignored
-        })
+        resp = self.client.post(
+            "/api/action",
+            json={
+                "session_id": session_id,
+                "action": "look",
+                "health": 999,  # This should be ignored
+            },
+        )
         data = resp.get_json()
         assert data["state"]["health"] == 3  # Still original
 
@@ -185,15 +202,19 @@ class TestGameStateIntegrity:
         resp = self.client.post("/api/new-game")
         session_id = resp.get_json()["session_id"]
 
-        resp = self.client.post("/api/action", json={
-            "session_id": session_id,
-            "action": "look",
-            "inventory": ["👑"],  # This should be ignored
-        })
+        resp = self.client.post(
+            "/api/action",
+            json={
+                "session_id": session_id,
+                "action": "look",
+                "inventory": ["👑"],  # This should be ignored
+            },
+        )
         data = resp.get_json()
         assert "👑" not in data["state"]["inventory"]
 
 
 if __name__ == "__main__":
     import pytest
+
     pytest.main([__file__, "-v"])
