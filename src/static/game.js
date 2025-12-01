@@ -266,49 +266,71 @@ class EmojiZorkGame {
         this.render();
     }
 
+    /**
+     * Sanitize emoji - only allow valid emoji characters.
+     * Prevents XSS by rejecting non-emoji content.
+     */
+    sanitizeEmoji(str) {
+        if (!str || typeof str !== "string") return "";
+        // Only allow emoji characters (no HTML/JS)
+        const emojiRegex = /^[\p{Emoji}\p{Emoji_Modifier}\p{Emoji_Component}\p{Emoji_Modifier_Base}\p{Emoji_Presentation}]+$/u;
+        return emojiRegex.test(str) ? str : "❓";
+    }
+
+    /**
+     * Create an item span element safely (no innerHTML).
+     */
+    createItemElement(item, className, isSelected) {
+        const span = document.createElement("span");
+        span.className = className + (isSelected ? " selected" : "");
+        span.dataset.item = item;
+        span.textContent = this.sanitizeEmoji(item);
+        return span;
+    }
+
     render() {
         if (!this.state) return;
 
-        // Status bar
-        this.elements.location.textContent = "📍" + this.state.location;
+        // Status bar (textContent is XSS-safe)
+        this.elements.location.textContent = "📍" + this.sanitizeEmoji(this.state.location);
         this.elements.health.textContent = "❤️".repeat(this.state.health) + 
             "🖤".repeat(this.state.max_health - this.state.health);
         this.elements.score.textContent = "💰" + this.state.score;
 
         // Room view
-        this.elements.roomEmoji.textContent = this.state.location;
+        this.elements.roomEmoji.textContent = this.sanitizeEmoji(this.state.location);
         this.elements.roomView.classList.toggle("dark", this.state.is_dark);
 
-        // Visible items
-        this.elements.visibleItems.innerHTML = this.state.room_items
-            .map(
-                (item) =>
-                    `<span class="item ${
-                        this.selectedItem === item ? "selected" : ""
-                    }" data-item="${item}">${item}</span>`
-            )
-            .join("");
+        // Visible items (using DOM methods instead of innerHTML)
+        this.elements.visibleItems.replaceChildren();
+        this.state.room_items.forEach((item) => {
+            const el = this.createItemElement(item, "item", this.selectedItem === item);
+            this.elements.visibleItems.appendChild(el);
+        });
 
-        // Enemies
+        // Enemies (using DOM methods instead of innerHTML)
+        this.elements.enemyDisplay.replaceChildren();
         if (this.state.room_enemies.length > 0) {
             const enemy = this.state.room_enemies[0];
-            this.elements.enemyDisplay.innerHTML = `
-                <span class="enemy-emoji">${enemy.emoji}</span>
-                <span class="enemy-health">${"❤️".repeat(enemy.health)}</span>
-            `;
-        } else {
-            this.elements.enemyDisplay.innerHTML = "";
+            
+            const emojiSpan = document.createElement("span");
+            emojiSpan.className = "enemy-emoji";
+            emojiSpan.textContent = this.sanitizeEmoji(enemy.emoji);
+            
+            const healthSpan = document.createElement("span");
+            healthSpan.className = "enemy-health";
+            healthSpan.textContent = "❤️".repeat(Math.min(enemy.health, 10));
+            
+            this.elements.enemyDisplay.appendChild(emojiSpan);
+            this.elements.enemyDisplay.appendChild(healthSpan);
         }
 
-        // Inventory
-        this.elements.inventorySlots.innerHTML = this.state.inventory
-            .map(
-                (item) =>
-                    `<span class="inv-item ${
-                        this.selectedItem === item ? "selected" : ""
-                    }" data-item="${item}">${item}</span>`
-            )
-            .join("");
+        // Inventory (using DOM methods instead of innerHTML)
+        this.elements.inventorySlots.replaceChildren();
+        this.state.inventory.forEach((item) => {
+            const el = this.createItemElement(item, "inv-item", this.selectedItem === item);
+            this.elements.inventorySlots.appendChild(el);
+        });
 
         // Navigation buttons
         document.querySelectorAll(".nav-btn").forEach((btn) => {

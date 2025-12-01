@@ -1,7 +1,9 @@
 """Flask application for Emoji Zork."""
 
 import secrets
+import time
 import uuid
+from functools import wraps
 from typing import Dict
 
 from flask import Flask, jsonify, request, send_from_directory
@@ -16,9 +18,59 @@ app.config.update(
     MAX_CONTENT_LENGTH=1024,  # 1KB max request
 )
 
-# In-memory game sessions
+# Session configuration
+SESSION_TTL = 3600  # 1 hour
+MAX_SESSIONS = 1000
+
+# Rate limiting configuration
+RATE_LIMIT = 60  # requests per minute
+rate_limit_store: Dict[str, list] = {}
+
+# In-memory game sessions with timestamps
 game_sessions: Dict[str, Dict] = {}
 game_engine = GameEngine()
+
+
+def cleanup_expired_sessions():
+    """Remove expired sessions."""
+    current_time = time.time()
+    expired = [
+        sid for sid, data in game_sessions.items()
+        if current_time - data.get("created_at", 0) > SESSION_TTL
+    ]
+    for sid in expired:
+        del game_sessions[sid]
+
+
+def check_rate_limit(ip: str) -> bool:
+    """Check if IP has exceeded rate limit. Returns True if allowed."""
+    current_time = time.time()
+    
+    # Clean old entries
+    if ip in rate_limit_store:
+        rate_limit_store[ip] = [
+            t for t in rate_limit_store[ip]
+            if current_time - t < 60
+        ]
+    
+    # Check limit
+    if len(rate_limit_store.get(ip, [])) >= RATE_LIMIT:
+        return False
+    
+    # Record request
+    rate_limit_store.setdefault(ip, []).append(current_time)
+    return True
+
+
+def rate_limited(f):
+    """Rate limiting decorator."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        client_ip = request.remote_addr or "unknown"
+        if not check_rate_limit(client_ip):
+            return jsonify({"error": "🚫"}), 429
+        return f(*args, **kwargs)
+    return decorated
 
 
 @app.after_request
@@ -47,11 +99,22 @@ def index():
 
 
 @app.route("/api/new-game", methods=["POST"])
+@rate_limited
 def new_game():
     """Start a new game session."""
+    # Cleanup expired sessions periodically
+    cleanup_expired_sessions()
+    
+    # Limit total sessions to prevent memory exhaustion
+    if len(game_sessions) >= MAX_SESSIONS:
+        return jsonify({"error": "🚫"}), 503
+    
     session_id = str(uuid.uuid4())
     state = game_engine.new_game()
-    game_sessions[session_id] = {"state": state}
+    game_sessions[session_id] = {
+        "state": state,
+        "created_at": time.time(),
+    }
 
     return jsonify({
         "session_id": session_id,
@@ -60,6 +123,7 @@ def new_game():
 
 
 @app.route("/api/action", methods=["POST"])
+@rate_limited
 def action():
     """Perform a game action."""
     if not request.is_json:
@@ -104,6 +168,7 @@ def action():
 
 
 @app.route("/api/state", methods=["GET"])
+@rate_limited
 def get_state():
     """Get current game state."""
     session_id = request.args.get("session_id")
