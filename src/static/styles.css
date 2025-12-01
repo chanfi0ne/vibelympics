@@ -1,0 +1,419 @@
+/* ==========================================================================
+   CSS Variables
+   ========================================================================== */
+:root {
+    --color-bg: #1a1a2e;
+    --color-panel: #16213e;
+    --color-accent: #e94560;
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+    --color-text: #ffffff;
+    --color-dim: #64748b;
+
+    --emoji-size-sm: 1.5rem;
+    --emoji-size-md: 2rem;
+    --emoji-size-lg: 4rem;
+    --emoji-size-xl: 6rem;
+
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 2rem;
+
+    --animation-fast: 150ms;
+    --animation-normal: 300ms;
+    --animation-slow: 500ms;
+
+    --border-radius: 12px;
+}
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-md);
+}
+
+/* ==========================================================================
+   Game Container
+   ========================================================================== */
+#game-container {
+    display: grid;
+    grid-template-rows: auto 1fr auto auto auto;
+    gap: var(--spacing-md);
+    width: 100%;
+    max-width: 400px;
+    min-height: 600px;
+    background: var(--color-panel);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================================
+   Status Bar
+   ========================================================================== */
+#status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm);
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: var(--border-radius);
+    font-size: var(--emoji-size-md);
+}
+
+#location {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+#health {
+    letter-spacing: -0.2em;
+}
+
+#score {
+    font-size: var(--emoji-size-sm);
+}
+
+/* ==========================================================================
+   Room View
+   ========================================================================== */
+#room-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius);
+    min-height: 200px;
+}
+
+#room-emoji {
+    font-size: var(--emoji-size-xl);
+    margin-bottom: var(--spacing-md);
+    transition: transform var(--animation-normal);
+}
+
+#room-emoji.pulse {
+    animation: pulse var(--animation-slow) ease-in-out;
+}
+
+#room-contents {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+#visible-items {
+    font-size: var(--emoji-size-md);
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#visible-items .item {
+    cursor: pointer;
+    transition: transform var(--animation-fast);
+    padding: var(--spacing-xs);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#visible-items .item:hover {
+    transform: scale(1.2);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#visible-items .item.selected {
+    background: var(--color-accent);
+    box-shadow: 0 0 20px var(--color-accent);
+}
+
+#enemy-display {
+    font-size: var(--emoji-size-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+#enemy-display .enemy-health {
+    font-size: var(--emoji-size-sm);
+    letter-spacing: -0.2em;
+}
+
+/* ==========================================================================
+   Inventory
+   ========================================================================== */
+#inventory {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: var(--border-radius);
+}
+
+#inventory-label {
+    font-size: var(--emoji-size-md);
+}
+
+#inventory-slots {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+    font-size: var(--emoji-size-md);
+}
+
+#inventory-slots .inv-item {
+    padding: var(--spacing-xs);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: all var(--animation-fast);
+}
+
+#inventory-slots .inv-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+#inventory-slots .inv-item.selected {
+    background: var(--color-accent);
+    box-shadow: 0 0 10px var(--color-accent);
+}
+
+/* ==========================================================================
+   Navigation
+   ========================================================================== */
+#navigation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.nav-row {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.nav-btn,
+.action-btn {
+    font-size: var(--emoji-size-md);
+    width: 3.5rem;
+    height: 3.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: all var(--animation-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-btn:hover:not(:disabled),
+.action-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.nav-btn:active:not(:disabled),
+.action-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.nav-btn:disabled,
+.action-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Action Buttons
+   ========================================================================== */
+#actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-sm);
+}
+
+/* ==========================================================================
+   Overlays
+   ========================================================================== */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    transition: opacity var(--animation-normal);
+}
+
+.overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.overlay-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.overlay-emoji {
+    font-size: 5rem;
+    animation: bounce 1s ease-in-out infinite;
+}
+
+.retry-btn {
+    font-size: 3rem;
+    width: 5rem;
+    height: 5rem;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-accent);
+    cursor: pointer;
+    transition: all var(--animation-fast);
+}
+
+.retry-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px var(--color-accent);
+}
+
+/* Grue sequence */
+.grue-sequence .grue-stage {
+    font-size: 6rem;
+    position: absolute;
+}
+
+.grue-sequence .grue-stage.hidden {
+    display: none;
+}
+
+/* ==========================================================================
+   Error Flash
+   ========================================================================== */
+#error-flash {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 4rem;
+    z-index: 200;
+    animation: flash var(--animation-normal) ease-out;
+}
+
+#error-flash.hidden {
+    display: none;
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes flash {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+@keyframes flyToInventory {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.5) translateY(-50px); opacity: 0.8; }
+    100% { transform: scale(0) translateY(-100px); opacity: 0; }
+}
+
+@keyframes damageFlash {
+    0%, 100% { filter: none; }
+    50% { filter: brightness(2) saturate(0) sepia(1) hue-rotate(-50deg); }
+}
+
+@keyframes explode {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+    100% { transform: scale(0); opacity: 0; }
+}
+
+.shake {
+    animation: shake var(--animation-fast) ease-in-out;
+}
+
+.damage-flash {
+    animation: damageFlash var(--animation-normal) ease-in-out;
+}
+
+.item-pickup {
+    animation: flyToInventory var(--animation-slow) ease-out forwards;
+}
+
+.explode {
+    animation: explode var(--animation-slow) ease-out forwards;
+}
+
+/* ==========================================================================
+   Dark Room
+   ========================================================================== */
+#room-view.dark {
+    background: #000;
+}
+
+#room-view.dark #room-emoji {
+    text-shadow: 0 0 50px rgba(255, 255, 255, 0.3);
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+@media (max-width: 450px) {
+    :root {
+        --emoji-size-sm: 1.2rem;
+        --emoji-size-md: 1.5rem;
+        --emoji-size-lg: 3rem;
+        --emoji-size-xl: 4rem;
+    }
+
+    .nav-btn,
+    .action-btn {
+        width: 3rem;
+        height: 3rem;
+    }
+}

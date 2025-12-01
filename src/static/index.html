@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🕳️👑</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕳️</text></svg>">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Status Bar -->
+        <header id="status-bar">
+            <span id="location">📍🏠</span>
+            <span id="health">❤️❤️❤️</span>
+            <span id="score">💰0</span>
+        </header>
+
+        <!-- Room View -->
+        <section id="room-view">
+            <div id="room-emoji">🏠</div>
+            <div id="room-contents">
+                <div id="visible-items"></div>
+                <div id="enemy-display"></div>
+            </div>
+        </section>
+
+        <!-- Inventory -->
+        <aside id="inventory">
+            <span id="inventory-label">🎒</span>
+            <div id="inventory-slots"></div>
+        </aside>
+
+        <!-- Navigation Controls -->
+        <nav id="navigation">
+            <div class="nav-row">
+                <button class="nav-btn" data-dir="⬆️" disabled>⬆️</button>
+            </div>
+            <div class="nav-row">
+                <button class="nav-btn" data-dir="⬅️" disabled>⬅️</button>
+                <button class="action-btn" data-action="look">👁️</button>
+                <button class="nav-btn" data-dir="➡️" disabled>➡️</button>
+            </div>
+            <div class="nav-row">
+                <button class="nav-btn" data-dir="⬇️" disabled>⬇️</button>
+            </div>
+        </nav>
+
+        <!-- Action Buttons -->
+        <div id="actions">
+            <button class="action-btn" data-action="take" disabled>🖐️</button>
+            <button class="action-btn" data-action="attack" disabled>⚔️</button>
+            <button class="action-btn" data-action="use-potion" disabled>🧪</button>
+            <button class="action-btn" data-action="use-key" disabled>🔑</button>
+        </div>
+    </div>
+
+    <!-- Death Overlay -->
+    <div id="death-overlay" class="overlay hidden">
+        <div class="overlay-content">
+            <span class="overlay-emoji">💀</span>
+            <button id="retry-btn" class="retry-btn">🔄</button>
+        </div>
+    </div>
+
+    <!-- Grue Overlay -->
+    <div id="grue-overlay" class="overlay hidden">
+        <div class="overlay-content grue-sequence">
+            <span class="grue-stage" id="grue-dark">🌑</span>
+            <span class="grue-stage hidden" id="grue-eyes">👀</span>
+            <span class="grue-stage hidden" id="grue-fear">😱</span>
+            <span class="grue-stage hidden" id="grue-death">💀</span>
+        </div>
+    </div>
+
+    <!-- Victory Overlay -->
+    <div id="victory-overlay" class="overlay hidden">
+        <div class="overlay-content">
+            <span class="overlay-emoji">🏆</span>
+            <span class="overlay-emoji">👑</span>
+            <span class="overlay-emoji">🎉</span>
+            <button id="play-again-btn" class="retry-btn">🔄</button>
+        </div>
+    </div>
+
+    <!-- Error Flash -->
+    <div id="error-flash" class="hidden">❌</div>
+
+    <script src="game.js"></script>
+</body>
+</html>
