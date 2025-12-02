@@ -142,6 +142,25 @@ class GameEngine:
         if item not in room_items:
             return ActionResult(success=False, state=state, error_emoji="🚫")
 
+        # Check for enemies in the room - taking items is risky!
+        enemies = state.room_enemies.get(state.current_room, [])
+        alive_enemies = [e for e in enemies if e.is_alive]
+        took_damage = False
+
+        if alive_enemies:
+            # Enemy attacks while player is distracted
+            enemy = alive_enemies[0]
+            state.take_damage(enemy.damage)
+            took_damage = True
+
+            if state.game_over:
+                return ActionResult(
+                    success=False,
+                    state=state,
+                    event_type="player_died",
+                    event_data={"enemy": enemy.emoji},
+                )
+
         # Pick up item
         room_items.remove(item)
         state.inventory.append(item)
@@ -156,11 +175,16 @@ class GameEngine:
             state.victory = True
             state.game_over = True
 
+        event_type = "item_taken_combat" if took_damage else "item_taken"
+        event_data = {"item": item}
+        if took_damage:
+            event_data["damage_taken"] = alive_enemies[0].damage
+
         return ActionResult(
             success=True,
             state=state,
-            event_type="item_taken",
-            event_data={"item": item},
+            event_type=event_type,
+            event_data=event_data,
         )
 
     def _handle_attack(self, state: GameState, params: dict) -> ActionResult:

@@ -5,7 +5,8 @@ from models import Enemy, Room
 # Enemy templates (will be cloned for each game)
 ENEMY_TEMPLATES: dict[str, Enemy] = {
     "bat": Enemy(emoji="🦇", health=1, max_health=1, damage=1),
-    "troll": Enemy(emoji="👹", health=3, max_health=3, damage=1),
+    "temple_troll": Enemy(emoji="👹", health=3, max_health=3, damage=1),
+    "dungeon_troll": Enemy(emoji="👺", health=3, max_health=3, damage=1),
     "dragon": Enemy(emoji="🐉", health=5, max_health=5, damage=2),
     "grue": Enemy(emoji="🐺", health=999, max_health=999, damage=999, is_grue=True),
 }
@@ -25,7 +26,8 @@ ITEMS = {
 # Score values for defeating enemies
 ENEMY_SCORES = {
     "🦇": 10,
-    "👹": 25,
+    "👹": 25,  # Temple troll
+    "👺": 25,  # Dungeon troll
     "🐉": 50,
 }
 
@@ -66,7 +68,7 @@ def create_world() -> dict[str, Room]:
             id="temple",
             emoji="⛪",
             items=["🧪"],
-            enemies=[ENEMY_TEMPLATES["troll"].clone()],
+            enemies=[ENEMY_TEMPLATES["temple_troll"].clone()],
             exits={"⬇️": "forest"},
             is_dark=False,
         ),
@@ -85,7 +87,7 @@ def create_world() -> dict[str, Room]:
             id="dungeon",
             emoji="🏰",
             items=["🗺️"],
-            enemies=[ENEMY_TEMPLATES["troll"].clone()],
+            enemies=[ENEMY_TEMPLATES["dungeon_troll"].clone()],
             exits={"⬆️": "cave"},
             locked_exits={"⬇️": "throne"},
             is_dark=False,

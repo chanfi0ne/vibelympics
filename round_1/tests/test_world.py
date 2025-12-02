@@ -90,6 +90,19 @@ class TestEnemyTemplates:
         """Bat should have 1 HP."""
         assert ENEMY_TEMPLATES["bat"].health == 1
 
+    def test_temple_troll_has_standard_hp(self):
+        """Temple troll should have 3 HP."""
+        assert ENEMY_TEMPLATES["temple_troll"].health == 3
+        assert ENEMY_TEMPLATES["temple_troll"].emoji == "👹"
+
+    def test_dungeon_troll_has_different_emoji(self):
+        """Dungeon troll should have different emoji than temple troll."""
+        assert ENEMY_TEMPLATES["dungeon_troll"].health == 3
+        assert ENEMY_TEMPLATES["dungeon_troll"].emoji == "👺"
+        temple_emoji = ENEMY_TEMPLATES["temple_troll"].emoji
+        dungeon_emoji = ENEMY_TEMPLATES["dungeon_troll"].emoji
+        assert dungeon_emoji != temple_emoji
+
     def test_dragon_is_strong(self):
         """Dragon should have 5 HP."""
         assert ENEMY_TEMPLATES["dragon"].health == 5
