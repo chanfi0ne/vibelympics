@@ -15,6 +15,7 @@ Welcome to Chainguard's Vibelympics, our first ever vibe coding tournament, wher
 A text-adventure game inspired by the classic Zork, reimagined with an all-emoji interface. Navigate through dungeons, battle enemies, and claim the crown!
 
 **Features:**
+- 🔒 **0 CVEs** - Built on Chainguard Containers
 - 100% emoji-based UI (no text!)
 - 7 rooms to explore
 - Combat system with 4 enemy types
