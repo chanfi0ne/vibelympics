@@ -1,6 +1,31 @@
 # Vibelympics 🏅✨
 
-Welcome to Chainguard's Vibelympics, our first ever vibe coding tournament, where the only rule is writing code without looking at the code! 
+Welcome to Chainguard's Vibelympics, our first ever vibe coding tournament, where the only rule is writing code without looking at the code!
+
+## Our Submissions
+
+| Round | Project | Description | Tech Stack | Link |
+|-------|---------|-------------|------------|------|
+| 1 | 🕳️ Emoji Zork | Dungeon crawler with 100% emoji UI | Python, Flask, Chainguard Containers | [round_1/](./round_1/) |
+| 2 | TBD | - | - | - |
+| 3 | TBD | - | - | - |
+
+### Round 1: Emoji Zork
+
+A text-adventure game inspired by the classic Zork, reimagined with an all-emoji interface. Navigate through dungeons, battle enemies, and claim the crown!
+
+**Features:**
+- 100% emoji-based UI (no text!)
+- 7 rooms to explore
+- Combat system with 4 enemy types
+- Inventory management
+- Keyboard controls + help overlay
+- Victory confetti animation
+- Ambient room particles
+
+**Container:** `ghcr.io/chanfi0ne/vibelympics/emoji-zork:latest`
+
+---
 
 ## Entering the Competition
 
