@@ -469,6 +469,64 @@ body {
 }
 
 /* ==========================================================================
+   Help Overlay
+   ========================================================================== */
+.help-btn {
+    background: var(--color-warning) !important;
+}
+
+.help-btn:hover:not(:disabled) {
+    box-shadow: 0 0 15px var(--color-warning);
+}
+
+.help-content {
+    background: var(--color-panel);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    max-width: 320px;
+}
+
+.help-title {
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.help-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.help-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+.help-icon {
+    font-size: 1.8rem;
+}
+
+.help-keys {
+    font-size: 1rem;
+    opacity: 0.8;
+}
+
+.help-goal {
+    font-size: 1.5rem;
+    text-align: center;
+    padding: var(--spacing-sm);
+    background: rgba(255, 215, 0, 0.2);
+    border-radius: 8px;
+    margin-bottom: var(--spacing-md);
+}
+
+/* ==========================================================================
    Ambient Particles
    ========================================================================== */
 .ambient-container {

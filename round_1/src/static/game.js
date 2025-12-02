@@ -26,6 +26,9 @@ class EmojiZorkGame {
             errorFlash: document.getElementById("error-flash"),
             retryBtn: document.getElementById("retry-btn"),
             playAgainBtn: document.getElementById("play-again-btn"),
+            helpBtn: document.getElementById("help-btn"),
+            helpOverlay: document.getElementById("help-overlay"),
+            helpCloseBtn: document.getElementById("help-close-btn"),
         };
 
         // Confetti emoji options
@@ -92,6 +95,13 @@ class EmojiZorkGame {
         // Keyboard controls
         document.addEventListener("keydown", (e) => this.handleKeyboard(e));
 
+        // Help overlay
+        this.elements.helpBtn.addEventListener("click", () => this.toggleHelp());
+        this.elements.helpCloseBtn.addEventListener("click", () => this.hideHelp());
+        this.elements.helpOverlay.addEventListener("click", (e) => {
+            if (e.target === this.elements.helpOverlay) this.hideHelp();
+        });
+
         // Item selection in room
         this.elements.visibleItems.addEventListener("click", (e) => {
             if (e.target.classList.contains("item")) {
@@ -121,6 +131,25 @@ class EmojiZorkGame {
      * Handle keyboard input for game controls.
      */
     handleKeyboard(e) {
+        // Escape closes help
+        if (e.key === "Escape") {
+            e.preventDefault();
+            this.hideHelp();
+            return;
+        }
+
+        // ? or / toggles help
+        if (e.key === "?" || (e.key === "/" && !e.shiftKey)) {
+            e.preventDefault();
+            this.toggleHelp();
+            return;
+        }
+
+        // Don't process game keys if help is open
+        if (!this.elements.helpOverlay.classList.contains("hidden")) {
+            return;
+        }
+
         // Ignore if animating or game over (unless restart key)
         if (this.isAnimating) return;
 
@@ -371,8 +400,17 @@ class EmojiZorkGame {
         this.elements.deathOverlay.classList.add("hidden");
         this.elements.grueOverlay.classList.add("hidden");
         this.elements.victoryOverlay.classList.add("hidden");
+        this.elements.helpOverlay.classList.add("hidden");
         this.clearConfetti();
         this.currentRoomId = null; // Reset to trigger particle refresh
+    }
+
+    toggleHelp() {
+        this.elements.helpOverlay.classList.toggle("hidden");
+    }
+
+    hideHelp() {
+        this.elements.helpOverlay.classList.add("hidden");
     }
 
     async restart() {
