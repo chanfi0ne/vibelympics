@@ -89,6 +89,9 @@ class EmojiZorkGame {
         this.elements.retryBtn.addEventListener("click", () => this.restart());
         this.elements.playAgainBtn.addEventListener("click", () => this.restart());
 
+        // Keyboard controls
+        document.addEventListener("keydown", (e) => this.handleKeyboard(e));
+
         // Item selection in room
         this.elements.visibleItems.addEventListener("click", (e) => {
             if (e.target.classList.contains("item")) {
@@ -112,6 +115,97 @@ class EmojiZorkGame {
             this.selectedItem = item;
         }
         this.render();
+    }
+
+    /**
+     * Handle keyboard input for game controls.
+     */
+    handleKeyboard(e) {
+        // Ignore if animating or game over (unless restart key)
+        if (this.isAnimating) return;
+
+        // Handle overlays - R to restart
+        if (this.state?.game_over || this.state?.victory) {
+            if (e.key.toLowerCase() === "r") {
+                e.preventDefault();
+                this.restart();
+            }
+            return;
+        }
+
+        // Arrow keys for movement
+        const moveKeys = {
+            ArrowUp: "⬆️",
+            ArrowDown: "⬇️",
+            ArrowLeft: "⬅️",
+            ArrowRight: "➡️",
+            w: "⬆️",
+            s: "⬇️",
+            a: "⬅️",
+            d: "➡️",
+        };
+
+        if (moveKeys[e.key]) {
+            e.preventDefault();
+            this.handleMove(moveKeys[e.key]);
+            return;
+        }
+
+        // Action keys
+        switch (e.key.toLowerCase()) {
+            case " ": // Space for look
+            case "l":
+                e.preventDefault();
+                this.handleAction("look");
+                break;
+            case "e": // E for take (like "equip" or "examine")
+            case "t":
+                e.preventDefault();
+                this.handleAction("take");
+                break;
+            case "f": // F for fight/attack
+            case "x":
+                e.preventDefault();
+                this.handleAction("attack");
+                break;
+            case "p": // P for potion
+            case "h": // H for heal
+                e.preventDefault();
+                this.handleAction("use-potion");
+                break;
+            case "k": // K for key
+            case "u": // U for unlock
+                e.preventDefault();
+                this.handleAction("use-key");
+                break;
+            case "1":
+            case "2":
+            case "3":
+            case "4":
+            case "5":
+            case "6":
+            case "7":
+            case "8":
+            case "9":
+                // Number keys select items (1-9)
+                e.preventDefault();
+                this.selectItemByIndex(parseInt(e.key) - 1);
+                break;
+        }
+    }
+
+    /**
+     * Select an item by index (for keyboard shortcuts).
+     */
+    selectItemByIndex(index) {
+        // Try room items first, then inventory
+        const roomItems = this.state?.room_items || [];
+        const inventory = this.state?.inventory || [];
+        const allItems = [...roomItems, ...inventory];
+
+        if (index >= 0 && index < allItems.length) {
+            this.selectItem(allItems[index], index < roomItems.length ? "room" : "inventory");
+        }
     }
 
     async handleMove(direction) {
