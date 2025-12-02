@@ -21,7 +21,15 @@ class TestWorldCreation:
     def test_world_has_all_rooms(self):
         """World should contain all expected rooms."""
         world = create_world()
-        expected_rooms = ["house", "forest", "river", "temple", "cave", "dungeon", "throne"]
+        expected_rooms = [
+            "house",
+            "forest",
+            "river",
+            "temple",
+            "cave",
+            "dungeon",
+            "throne",
+        ]
         for room_id in expected_rooms:
             assert room_id in world
 
