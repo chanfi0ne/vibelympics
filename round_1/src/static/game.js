@@ -22,6 +22,7 @@ class EmojiZorkGame {
             grueOverlay: document.getElementById("grue-overlay"),
             victoryOverlay: document.getElementById("victory-overlay"),
             confettiContainer: document.getElementById("confetti-container"),
+            ambientContainer: document.getElementById("ambient-container"),
             errorFlash: document.getElementById("error-flash"),
             retryBtn: document.getElementById("retry-btn"),
             playAgainBtn: document.getElementById("play-again-btn"),
@@ -29,6 +30,19 @@ class EmojiZorkGame {
 
         // Confetti emoji options
         this.confettiEmojis = ["🎉", "🎊", "✨", "⭐", "💫", "🌟", "🏆", "👑", "💎", "🥳"];
+
+        // Ambient particle configurations per room
+        this.ambientConfig = {
+            forest: { emoji: "🍃", count: 6, class: "particle-leaf", duration: [4, 7] },
+            river: { emoji: "✨", count: 8, class: "particle-sparkle", duration: [2, 4] },
+            cave: { emoji: "💧", count: 5, class: "particle-drop", duration: [2, 4] },
+            temple: { emoji: "✨", count: 4, class: "particle-glow", duration: [3, 5] },
+            throne: { emoji: "🔥", count: 6, class: "particle-fire", duration: [1, 2] },
+            dungeon: { emoji: "💀", count: 3, class: "particle-glow", duration: [4, 6] },
+        };
+
+        this.ambientInterval = null;
+        this.currentRoomId = null;
 
         this.init();
     }
@@ -264,6 +278,7 @@ class EmojiZorkGame {
         this.elements.grueOverlay.classList.add("hidden");
         this.elements.victoryOverlay.classList.add("hidden");
         this.clearConfetti();
+        this.currentRoomId = null; // Reset to trigger particle refresh
     }
 
     async restart() {
@@ -305,6 +320,12 @@ class EmojiZorkGame {
         // Room view
         this.elements.roomEmoji.textContent = this.sanitizeEmoji(this.state.location);
         this.elements.roomView.classList.toggle("dark", this.state.is_dark);
+
+        // Update ambient particles if room changed
+        if (this.state.location_id !== this.currentRoomId) {
+            this.currentRoomId = this.state.location_id;
+            this.updateAmbientParticles(this.currentRoomId);
+        }
 
         // Visible items (using DOM methods instead of innerHTML)
         this.elements.visibleItems.replaceChildren();
@@ -414,6 +435,77 @@ class EmojiZorkGame {
     clearConfetti() {
         if (this.elements.confettiContainer) {
             this.elements.confettiContainer.innerHTML = "";
+        }
+    }
+
+    /**
+     * Update ambient particles based on current room.
+     */
+    updateAmbientParticles(roomId) {
+        // Clear existing particles
+        this.clearAmbientParticles();
+
+        const config = this.ambientConfig[roomId];
+        if (!config) return;
+
+        // Create particles
+        this.createAmbientParticles(config);
+
+        // Set up continuous particle generation
+        this.ambientInterval = setInterval(() => {
+            this.createAmbientParticles(config);
+        }, 2000);
+    }
+
+    /**
+     * Create ambient particles for a room.
+     */
+    createAmbientParticles(config) {
+        const container = this.elements.ambientContainer;
+        if (!container) return;
+
+        // Limit total particles
+        const existing = container.children.length;
+        const toCreate = Math.min(config.count, 20 - existing);
+
+        for (let i = 0; i < toCreate; i++) {
+            const particle = document.createElement("span");
+            particle.className = `ambient-particle ${config.class}`;
+            particle.textContent = config.emoji;
+
+            // Random position
+            particle.style.left = Math.random() * 100 + "%";
+            particle.style.top = Math.random() * 100 + "%";
+
+            // Random duration within range
+            const [minDur, maxDur] = config.duration;
+            const duration = minDur + Math.random() * (maxDur - minDur);
+            particle.style.animationDuration = duration + "s";
+
+            // Random delay
+            particle.style.animationDelay = Math.random() * 2 + "s";
+
+            container.appendChild(particle);
+
+            // Remove particle after animation
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.remove();
+                }
+            }, (duration + 2) * 1000);
+        }
+    }
+
+    /**
+     * Clear ambient particles.
+     */
+    clearAmbientParticles() {
+        if (this.ambientInterval) {
+            clearInterval(this.ambientInterval);
+            this.ambientInterval = null;
+        }
+        if (this.elements.ambientContainer) {
+            this.elements.ambientContainer.innerHTML = "";
         }
     }
 
