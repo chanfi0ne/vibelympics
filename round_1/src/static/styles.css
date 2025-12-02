@@ -401,6 +401,74 @@ body {
 }
 
 /* ==========================================================================
+   Victory Confetti
+   ========================================================================== */
+.confetti-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 150;
+}
+
+.confetti {
+    position: absolute;
+    font-size: 2rem;
+    animation: confetti-fall linear forwards;
+    opacity: 1;
+}
+
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(-100%) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+/* Victory overlay enhancements */
+#victory-overlay .overlay-content {
+    z-index: 160;
+}
+
+#victory-overlay .victory-emojis {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#victory-overlay .victory-emojis .overlay-emoji {
+    animation: victory-pop 0.5s ease-out forwards;
+    opacity: 0;
+    transform: scale(0);
+}
+
+#victory-overlay .victory-emojis .overlay-emoji:nth-child(1) { animation-delay: 0.2s; }
+#victory-overlay .victory-emojis .overlay-emoji:nth-child(2) { animation-delay: 0.4s; }
+#victory-overlay .victory-emojis .overlay-emoji:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes victory-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0) rotate(-180deg);
+    }
+    50% {
+        transform: scale(1.3) rotate(10deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+/* ==========================================================================
    Responsive
    ========================================================================== */
 @media (max-width: 450px) {

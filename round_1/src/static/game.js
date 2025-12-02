@@ -21,10 +21,14 @@ class EmojiZorkGame {
             deathOverlay: document.getElementById("death-overlay"),
             grueOverlay: document.getElementById("grue-overlay"),
             victoryOverlay: document.getElementById("victory-overlay"),
+            confettiContainer: document.getElementById("confetti-container"),
             errorFlash: document.getElementById("error-flash"),
             retryBtn: document.getElementById("retry-btn"),
             playAgainBtn: document.getElementById("play-again-btn"),
         };
+
+        // Confetti emoji options
+        this.confettiEmojis = ["🎉", "🎊", "✨", "⭐", "💫", "🌟", "🏆", "👑", "💎", "🥳"];
 
         this.init();
     }
@@ -259,6 +263,7 @@ class EmojiZorkGame {
         this.elements.deathOverlay.classList.add("hidden");
         this.elements.grueOverlay.classList.add("hidden");
         this.elements.victoryOverlay.classList.add("hidden");
+        this.clearConfetti();
     }
 
     async restart() {
@@ -354,7 +359,61 @@ class EmojiZorkGame {
 
         // Victory check
         if (this.state.victory) {
-            this.elements.victoryOverlay.classList.remove("hidden");
+            this.showVictory();
+        }
+    }
+
+    /**
+     * Show victory screen with confetti animation.
+     */
+    showVictory() {
+        this.elements.victoryOverlay.classList.remove("hidden");
+        this.createConfetti();
+    }
+
+    /**
+     * Create falling confetti emojis.
+     */
+    createConfetti() {
+        const container = this.elements.confettiContainer;
+        container.innerHTML = "";
+
+        // Create 50 confetti pieces
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement("span");
+            confetti.className = "confetti";
+            confetti.textContent = this.confettiEmojis[
+                Math.floor(Math.random() * this.confettiEmojis.length)
+            ];
+
+            // Random horizontal position
+            confetti.style.left = Math.random() * 100 + "%";
+
+            // Random animation duration (2-4 seconds)
+            const duration = 2 + Math.random() * 2;
+            confetti.style.animationDuration = duration + "s";
+
+            // Random delay for staggered effect
+            confetti.style.animationDelay = Math.random() * 2 + "s";
+
+            // Random size variation
+            confetti.style.fontSize = (1.5 + Math.random() * 1.5) + "rem";
+
+            container.appendChild(confetti);
+        }
+
+        // Clean up confetti after animation
+        setTimeout(() => {
+            container.innerHTML = "";
+        }, 6000);
+    }
+
+    /**
+     * Clear confetti container.
+     */
+    clearConfetti() {
+        if (this.elements.confettiContainer) {
+            this.elements.confettiContainer.innerHTML = "";
         }
     }
 
