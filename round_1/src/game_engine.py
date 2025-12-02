@@ -147,7 +147,20 @@ class GameEngine:
         alive_enemies = [e for e in enemies if e.is_alive]
 
         if alive_enemies:
-            # Cannot take items while enemies are present
+            # Enemy attacks while player is distracted trying to grab item
+            enemy = alive_enemies[0]
+            state.take_damage(enemy.damage)
+
+            if state.game_over:
+                return ActionResult(
+                    success=False,
+                    state=state,
+                    event_type="player_died",
+                    event_data={"enemy": enemy.emoji},
+                    error_emoji="⚔️",
+                )
+
+            # Item pickup blocked - must defeat enemy first
             return ActionResult(success=False, state=state, error_emoji="⚔️")
 
         # Pick up item

@@ -11,18 +11,33 @@ from game_engine import GameEngine
 class TestCombatItemInteraction:
     """Tests for item pickup while enemies are present."""
 
-    def test_cannot_take_item_with_enemy_present(self):
-        """Taking an item while an enemy is alive should be blocked."""
+    def test_cannot_take_item_with_enemy_present_and_takes_damage(self):
+        """Taking an item while enemy alive should be blocked AND deal damage."""
         engine = GameEngine()
         state = engine.new_game()
         # Move to forest (has bat)
         engine.perform_action(state, "move", {"direction": "➡️"})
-        # Try to take flashlight while bat is alive - should fail
+        initial_health = state.health
+        # Try to take flashlight while bat is alive - should fail and take damage
         result = engine.perform_action(state, "take", {"item": "🔦"})
         assert not result.success
         assert result.error_emoji == "⚔️"  # Combat required
         assert "🔦" not in state.inventory  # Item not taken
         assert "🔦" in state.room_items["forest"]  # Item still in room
+        assert state.health < initial_health  # Took damage from enemy
+
+    def test_taking_item_with_enemy_can_kill_player(self):
+        """Trying to take item at low health can result in death."""
+        engine = GameEngine()
+        state = engine.new_game()
+        # Move to forest (has bat)
+        engine.perform_action(state, "move", {"direction": "➡️"})
+        state.health = 1  # Low health
+        # Try to take flashlight - bat attacks and kills player
+        result = engine.perform_action(state, "take", {"item": "🔦"})
+        assert not result.success
+        assert result.state.game_over
+        assert result.event_type == "player_died"
 
     def test_taking_item_without_enemy_is_safe(self):
         """Taking an item with no enemies should work normally."""
