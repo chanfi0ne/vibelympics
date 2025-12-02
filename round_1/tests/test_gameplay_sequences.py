@@ -11,21 +11,21 @@ from game_engine import GameEngine
 class TestCombatItemInteraction:
     """Tests for item pickup while enemies are present."""
 
-    def test_taking_item_with_enemy_present_causes_damage(self):
-        """Taking an item while an enemy is alive should cause damage."""
+    def test_cannot_take_item_with_enemy_present(self):
+        """Taking an item while an enemy is alive should be blocked."""
         engine = GameEngine()
         state = engine.new_game()
         # Move to forest (has bat)
         engine.perform_action(state, "move", {"direction": "➡️"})
-        initial_health = state.health
-        # Try to take flashlight while bat is alive
+        # Try to take flashlight while bat is alive - should fail
         result = engine.perform_action(state, "take", {"item": "🔦"})
-        assert result.success
-        assert result.state.health < initial_health
-        assert result.event_type == "item_taken_combat"
+        assert not result.success
+        assert result.error_emoji == "⚔️"  # Combat required
+        assert "🔦" not in state.inventory  # Item not taken
+        assert "🔦" in state.room_items["forest"]  # Item still in room
 
     def test_taking_item_without_enemy_is_safe(self):
-        """Taking an item with no enemies should not cause damage."""
+        """Taking an item with no enemies should work normally."""
         engine = GameEngine()
         state = engine.new_game()
         initial_health = state.health
@@ -34,8 +34,8 @@ class TestCombatItemInteraction:
         assert result.success
         assert result.state.health == initial_health
 
-    def test_taking_item_after_killing_enemy_is_safe(self):
-        """Taking item after defeating enemy should not cause damage."""
+    def test_taking_item_after_killing_enemy_works(self):
+        """Taking item after defeating enemy should work."""
         engine = GameEngine()
         state = engine.new_game()
         engine.perform_action(state, "take", {"item": "🗡️"})
@@ -43,10 +43,11 @@ class TestCombatItemInteraction:
         # Kill the bat
         engine.perform_action(state, "attack", {})
         initial_health = state.health
-        # Now take flashlight safely
+        # Now take flashlight - should work
         result = engine.perform_action(state, "take", {"item": "🔦"})
         assert result.success
         assert result.state.health == initial_health
+        assert "🔦" in state.inventory
 
 
 class TestTrollVariants:

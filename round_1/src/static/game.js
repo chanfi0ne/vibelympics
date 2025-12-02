@@ -302,10 +302,6 @@ class EmojiZorkGame {
             case "item_taken":
                 await this.animateItemPickup(event.data.item);
                 break;
-            case "item_taken_combat":
-                // Player took damage while grabbing item
-                await this.animateCombatItemPickup(event.data.item);
-                break;
             case "enemy_defeated":
                 await this.animateEnemyDefeat();
                 break;
@@ -337,25 +333,6 @@ class EmojiZorkGame {
             itemEl.classList.add("item-pickup");
             await this.delay(400);
         }
-    }
-
-    async animateCombatItemPickup(item) {
-        // Show damage first (enemy attacks while player is distracted)
-        this.elements.roomEmoji.classList.add("shake");
-        this.elements.health.classList.add("damage-flash");
-        await this.delay(200);
-
-        // Then show item pickup
-        const itemEl = this.elements.visibleItems.querySelector(
-            `[data-item="${item}"]`
-        );
-        if (itemEl) {
-            itemEl.classList.add("item-pickup");
-        }
-        await this.delay(300);
-
-        this.elements.roomEmoji.classList.remove("shake");
-        this.elements.health.classList.remove("damage-flash");
     }
 
     async animateEnemyDefeat() {
