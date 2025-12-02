@@ -469,6 +469,116 @@ body {
 }
 
 /* ==========================================================================
+   Ambient Particles
+   ========================================================================== */
+.ambient-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+}
+
+.ambient-particle {
+    position: absolute;
+    opacity: 0.7;
+    font-size: 1rem;
+}
+
+/* Forest leaves - gentle floating */
+.particle-leaf {
+    animation: leaf-fall linear infinite;
+}
+
+@keyframes leaf-fall {
+    0% {
+        transform: translateY(-20px) rotate(0deg) translateX(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.7;
+    }
+    90% {
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(200px) rotate(360deg) translateX(20px);
+        opacity: 0;
+    }
+}
+
+/* Cave water drops */
+.particle-drop {
+    animation: water-drop linear infinite;
+}
+
+@keyframes water-drop {
+    0% {
+        transform: translateY(-10px) scale(0.5);
+        opacity: 0;
+    }
+    20% {
+        opacity: 0.8;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        transform: translateY(180px) scale(0.3);
+        opacity: 0;
+    }
+}
+
+/* Dragon fire sparks */
+.particle-fire {
+    animation: fire-spark ease-out infinite;
+}
+
+@keyframes fire-spark {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 0.9;
+    }
+    100% {
+        transform: translateY(-60px) scale(0);
+        opacity: 0;
+    }
+}
+
+/* River sparkles */
+.particle-sparkle {
+    animation: sparkle ease-in-out infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.2);
+    }
+}
+
+/* Temple glow */
+.particle-glow {
+    animation: temple-glow ease-in-out infinite;
+}
+
+@keyframes temple-glow {
+    0%, 100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(1.1);
+    }
+}
+
+/* ==========================================================================
    Responsive
    ========================================================================== */
 @media (max-width: 450px) {
