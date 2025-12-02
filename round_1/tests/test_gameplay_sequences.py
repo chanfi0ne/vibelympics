@@ -234,6 +234,72 @@ class TestCompletePlaythrough:
         assert state.health == initial_health  # No damage from fleeing
 
 
+class TestGrueFlee:
+    """Tests for grue fleeing from flashlight."""
+
+    def test_grue_flees_when_entering_cave_with_flashlight(self):
+        """Grue should flee when player enters cave with flashlight."""
+        engine = GameEngine()
+        state = engine.new_game()
+        # Get sword, kill bat, get flashlight
+        engine.perform_action(state, "take", {"item": "🗡️"})
+        engine.perform_action(state, "move", {"direction": "➡️"})  # forest
+        engine.perform_action(state, "attack", {})  # kill bat
+        engine.perform_action(state, "take", {"item": "🔦"})
+        # Enter cave with flashlight
+        result = engine.perform_action(state, "move", {"direction": "⬇️"})
+        assert result.success
+        assert result.event_type == "grue_fled"
+        assert not result.state.game_over
+        # Grue should be gone
+        cave_enemies = [e for e in state.room_enemies.get("cave", []) if e.is_alive]
+        assert len(cave_enemies) == 0
+
+    def test_can_take_shield_after_grue_flees(self):
+        """Should be able to take shield after grue flees."""
+        engine = GameEngine()
+        state = engine.new_game()
+        # Get sword, kill bat, get flashlight
+        engine.perform_action(state, "take", {"item": "🗡️"})
+        engine.perform_action(state, "move", {"direction": "➡️"})  # forest
+        engine.perform_action(state, "attack", {})  # kill bat
+        engine.perform_action(state, "take", {"item": "🔦"})
+        # Enter cave
+        engine.perform_action(state, "move", {"direction": "⬇️"})
+        # Take shield - should work now
+        result = engine.perform_action(state, "take", {"item": "🛡️"})
+        assert result.success
+        assert "🛡️" in state.inventory
+
+    def test_grue_attacks_without_flashlight(self):
+        """Grue should attack if entering cave without flashlight."""
+        engine = GameEngine()
+        state = engine.new_game()
+        engine.perform_action(state, "move", {"direction": "➡️"})  # forest
+        result = engine.perform_action(state, "move", {"direction": "⬇️"})  # cave
+        assert result.event_type == "grue_attack"
+        assert result.state.game_over
+
+    def test_grue_stays_fled_on_revisit(self):
+        """Grue should stay gone if player leaves and returns to cave."""
+        engine = GameEngine()
+        state = engine.new_game()
+        # Get flashlight and enter cave
+        engine.perform_action(state, "take", {"item": "🗡️"})
+        engine.perform_action(state, "move", {"direction": "➡️"})
+        engine.perform_action(state, "attack", {})
+        engine.perform_action(state, "take", {"item": "🔦"})
+        engine.perform_action(state, "move", {"direction": "⬇️"})  # grue flees
+        # Leave cave
+        engine.perform_action(state, "move", {"direction": "⬆️"})  # back to forest
+        # Re-enter cave
+        result = engine.perform_action(state, "move", {"direction": "⬇️"})
+        assert result.success
+        assert result.event_type == "room_entered"  # Normal entry, grue already gone
+        cave_enemies = [e for e in state.room_enemies.get("cave", []) if e.is_alive]
+        assert len(cave_enemies) == 0
+
+
 class TestEdgeCases:
     """Tests for edge cases and error handling."""
 

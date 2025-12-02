@@ -311,6 +311,9 @@ class EmojiZorkGame {
             case "player_died":
                 await this.animateDeath();
                 break;
+            case "grue_fled":
+                await this.animateGrueFlee();
+                break;
             case "grue_attack":
                 await this.animateGrueAttack();
                 break;
@@ -375,6 +378,24 @@ class EmojiZorkGame {
         await this.delay(500);
         overlay.classList.add("hidden");
         this.elements.deathOverlay.classList.remove("hidden");
+    }
+
+    async animateGrueFlee() {
+        // Show flashlight beam effect
+        this.elements.roomEmoji.textContent = "🔦";
+        await this.delay(300);
+
+        // Show grue fleeing sequence in enemy display
+        const fleeSequence = ["🐺", "🐺💨", "💨", ""];
+        for (const frame of fleeSequence) {
+            this.elements.enemyDisplay.textContent = frame;
+            await this.delay(400);
+        }
+
+        // Flash the room to show it's now safe
+        this.elements.roomView.style.background = "rgba(255, 255, 200, 0.3)";
+        await this.delay(300);
+        this.elements.roomView.style.background = "";
     }
 
     async animateDoorUnlock() {

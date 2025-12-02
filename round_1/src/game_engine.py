@@ -107,15 +107,30 @@ class GameEngine:
         new_room_id = exits[direction]
         state.current_room = new_room_id
 
-        # Check for grue attack in dark rooms
+        # Check for grue in dark rooms
         new_room = self.world[new_room_id]
-        if new_room.is_dark and not state.has_light:
-            state.game_over = True
-            return ActionResult(
-                success=True,
-                state=state,
-                event_type="grue_attack",
-            )
+        if new_room.is_dark:
+            if not state.has_light:
+                # No light = grue attacks
+                state.game_over = True
+                return ActionResult(
+                    success=True,
+                    state=state,
+                    event_type="grue_attack",
+                )
+
+            # Has light - check if grue is present and make it flee
+            room_enemies = state.room_enemies.get(new_room_id, [])
+            grue = next((e for e in room_enemies if e.is_grue and e.is_alive), None)
+            if grue:
+                # Grue flees from the light!
+                grue.health = 0  # Mark as defeated/fled
+                return ActionResult(
+                    success=True,
+                    state=state,
+                    event_type="grue_fled",
+                    event_data={"room": new_room_id},
+                )
 
         return ActionResult(
             success=True,
