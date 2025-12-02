@@ -128,8 +128,11 @@ class TestGrueMechanic:
         """Entering cave with flashlight should be safe."""
         engine = GameEngine()
         state = engine.new_game()
+        # Get sword and go to forest
+        engine.perform_action(state, "take", {"item": "🗡️"})
         engine.perform_action(state, "move", {"direction": "➡️"})
-        # Pick up flashlight (need to defeat bat first or just take it)
+        # Must defeat bat before taking flashlight
+        engine.perform_action(state, "attack", {})
         engine.perform_action(state, "take", {"item": "🔦"})
         result = engine.perform_action(state, "move", {"direction": "⬇️"})
         assert result.success
