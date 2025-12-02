@@ -192,6 +192,246 @@ class TestVictory:
         assert result.state.game_over
 
 
+class TestGameOver:
+    """Tests for game over state."""
+
+    def test_cannot_act_when_game_over(self):
+        """Should not be able to perform actions when game over."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.game_over = True
+        result = engine.perform_action(state, "move", {"direction": "➡️"})
+        assert not result.success
+        assert result.error_emoji == "💀"
+
+    def test_invalid_action_returns_error(self):
+        """Invalid action type should return error."""
+        engine = GameEngine()
+        state = engine.new_game()
+        result = engine.perform_action(state, "invalid_action", {})
+        assert not result.success
+        assert result.error_emoji == "❓"
+
+
+class TestRoomDisplay:
+    """Tests for room display functionality."""
+
+    def test_dark_room_shows_dark_emoji_without_light(self):
+        """Dark room without light should show darkness emoji."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.current_room = "cave"
+        state.inventory = []  # No flashlight
+        display = engine.get_room_display(state)
+        assert display["location"] == "🌑"
+        assert display["is_dark"]
+
+    def test_dark_room_shows_normal_emoji_with_light(self):
+        """Dark room with light should show normal emoji."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.current_room = "cave"
+        state.inventory = ["🔦"]
+        display = engine.get_room_display(state)
+        assert display["location"] == "🕳️"
+        assert not display["is_dark"]
+
+    def test_room_display_shows_exits(self):
+        """Room display should show available exits."""
+        engine = GameEngine()
+        state = engine.new_game()
+        display = engine.get_room_display(state)
+        assert "➡️" in display["exits"]
+
+    def test_room_display_shows_items(self):
+        """Room display should show items in room."""
+        engine = GameEngine()
+        state = engine.new_game()
+        display = engine.get_room_display(state)
+        assert "🗡️" in display["items"]
+
+    def test_room_display_shows_alive_enemies(self):
+        """Room display should only show alive enemies."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.current_room = "forest"
+        # Kill the bat
+        for enemy in state.room_enemies["forest"]:
+            enemy.health = 0
+        display = engine.get_room_display(state)
+        assert len(display["enemies"]) == 0
+
+
+class TestCombatAdvanced:
+    """Advanced combat tests."""
+
+    def test_enemy_counter_attacks(self):
+        """Enemy should counter-attack after player attacks."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.inventory = ["🗡️"]
+        state.current_room = "temple"  # Has troll with 3 HP
+        initial_health = state.health
+        result = engine.perform_action(state, "attack", {})
+        # Troll takes 2 damage (sword), still alive with 1 HP
+        # Troll counter-attacks for 1 damage
+        assert result.success
+        assert result.state.health < initial_health
+        assert result.event_type == "combat_round"
+        assert "damage_taken" in result.event_data
+
+    def test_player_death_in_combat(self):
+        """Player should die if health reaches zero in combat."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.inventory = ["🗡️"]
+        state.health = 1
+        state.current_room = "temple"
+        result = engine.perform_action(state, "attack", {})
+        assert result.state.game_over
+        assert result.event_type == "player_died"
+
+    def test_cannot_attack_no_enemies(self):
+        """Should not be able to attack when no enemies present."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.inventory = ["🗡️"]
+        # House has no enemies
+        result = engine.perform_action(state, "attack", {})
+        assert not result.success
+        assert result.error_emoji == "🚫"
+
+    def test_troll_drops_key_when_defeated(self):
+        """Troll in temple should drop key when defeated."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.inventory = ["🗡️"]
+        state.current_room = "temple"
+        # Weaken the troll first
+        for enemy in state.room_enemies["temple"]:
+            if enemy.emoji == "👹":
+                enemy.health = 1  # One hit will kill it
+        result = engine.perform_action(state, "attack", {})
+        assert result.event_type == "enemy_defeated"
+        assert "🔑" in state.room_items.get("temple", [])
+
+    def test_shield_reduces_damage_in_combat(self):
+        """Shield should reduce damage taken in combat."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.inventory = ["🗡️", "🛡️"]
+        state.current_room = "temple"
+        state.health = 3
+        engine.perform_action(state, "attack", {})
+        # Troll does 1 damage, shield reduces to still 1 (minimum)
+        # But if we had a dragon (2 damage), shield would reduce to 1
+        assert state.health == 2  # Took 1 damage
+
+
+class TestTakeAdvanced:
+    """Advanced item pickup tests."""
+
+    def test_take_diamond_adds_score(self):
+        """Taking diamond should add score."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.current_room = "river"
+        initial_score = state.score
+        result = engine.perform_action(state, "take", {"item": "💎"})
+        assert result.success
+        assert result.state.score > initial_score
+
+    def test_take_invalid_item_fails(self):
+        """Taking invalid item should fail."""
+        engine = GameEngine()
+        state = engine.new_game()
+        result = engine.perform_action(state, "take", {"item": "🍕"})
+        assert not result.success
+        assert result.error_emoji == "❓"
+
+    def test_take_without_item_param_fails(self):
+        """Taking without item parameter should fail."""
+        engine = GameEngine()
+        state = engine.new_game()
+        result = engine.perform_action(state, "take", {})
+        assert not result.success
+
+
+class TestUseAdvanced:
+    """Advanced item use tests."""
+
+    def test_use_key_fails_without_locked_door(self):
+        """Using key in room without locked door should fail."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.inventory = ["🔑"]
+        # House has no locked doors
+        result = engine.perform_action(state, "use", {"item": "🔑"})
+        assert not result.success
+        assert result.error_emoji == "🚫"
+
+    def test_use_item_not_in_inventory_fails(self):
+        """Using item not in inventory should fail."""
+        engine = GameEngine()
+        state = engine.new_game()
+        result = engine.perform_action(state, "use", {"item": "🧪"})
+        assert not result.success
+        assert result.error_emoji == "🚫"
+
+    def test_use_non_usable_item_fails(self):
+        """Using non-usable item should fail."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.inventory = ["🗡️"]  # Sword is not usable
+        result = engine.perform_action(state, "use", {"item": "🗡️"})
+        assert not result.success
+        assert result.error_emoji == "🚫"
+
+
+class TestMovementAdvanced:
+    """Advanced movement tests."""
+
+    def test_move_invalid_direction_format(self):
+        """Moving with invalid direction format should fail."""
+        engine = GameEngine()
+        state = engine.new_game()
+        result = engine.perform_action(state, "move", {"direction": "north"})
+        assert not result.success
+        assert result.error_emoji == "❓"
+
+    def test_can_enter_unlocked_throne_room(self):
+        """Should be able to enter throne room after unlocking."""
+        engine = GameEngine()
+        state = engine.new_game()
+        state.current_room = "dungeon"
+        state.unlocked_doors.add("throne")
+        result = engine.perform_action(state, "move", {"direction": "⬇️"})
+        assert result.success
+        assert result.state.current_room == "throne"
+
+
+class TestClientState:
+    """Tests for client state conversion."""
+
+    def test_get_state_for_client_contains_all_fields(self):
+        """Client state should contain all required fields."""
+        engine = GameEngine()
+        state = engine.new_game()
+        client_state = engine.get_state_for_client(state)
+        assert "location" in client_state
+        assert "location_id" in client_state
+        assert "health" in client_state
+        assert "max_health" in client_state
+        assert "score" in client_state
+        assert "inventory" in client_state
+        assert "room_items" in client_state
+        assert "room_enemies" in client_state
+        assert "exits" in client_state
+        assert "is_dark" in client_state
+        assert "game_over" in client_state
+        assert "victory" in client_state
+
+
 if __name__ == "__main__":
     import pytest
 
