@@ -174,17 +174,17 @@ export default function RiskScore({ score, severity }) {
         </div>
       </motion.div>
 
-      {/* Score interpretation */}
+      {/* Score interpretation - based on actual risk level from backend */}
       <motion.div
         className="text-center text-text-secondary text-sm max-w-md"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.4 }}
       >
-        {score >= 76 && 'Severe supply chain threats detected. Exercise extreme caution.'}
-        {score >= 51 && score < 76 && 'Significant security concerns identified. Review carefully.'}
-        {score >= 26 && score < 51 && 'Moderate risk factors present. Additional verification recommended.'}
-        {score < 26 && 'Low risk profile with minor concerns. Generally safe to use.'}
+        {severity?.toLowerCase() === 'critical' && 'Severe supply chain threats detected. Exercise extreme caution.'}
+        {severity?.toLowerCase() === 'high' && 'Significant security concerns identified. Review carefully before use.'}
+        {severity?.toLowerCase() === 'medium' && 'Moderate risk factors present. Additional verification recommended.'}
+        {severity?.toLowerCase() === 'low' && 'Low risk profile with minor concerns. Generally safe to use.'}
       </motion.div>
 
       {/* Progress bar */}
