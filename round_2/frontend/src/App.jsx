@@ -305,6 +305,7 @@ export default function App() {
                 <RiskScore
                   score={result.risk_score}
                   severity={result.risk_level}
+                  factors={result.factors || []}
                 />
 
                 {/* Two Column Layout */}

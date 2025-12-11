@@ -55,11 +55,18 @@ function getSeverityConfig(severity) {
   return SEVERITY_CONFIG[key] || SEVERITY_CONFIG.LOW;
 }
 
-export default function RiskScore({ score, severity }) {
+export default function RiskScore({ score, severity, factors = [] }) {
   const [displayScore, setDisplayScore] = useState(0);
   const config = getSeverityConfig(severity);
   const circumference = 2 * Math.PI * 120;
   const strokeDashoffset = circumference - (score / 100) * circumference;
+
+  // Count findings by severity
+  const severityCounts = factors.reduce((acc, f) => {
+    const sev = f.severity?.toLowerCase() || 'info';
+    acc[sev] = (acc[sev] || 0) + 1;
+    return acc;
+  }, {});
 
   useEffect(() => {
     let start = 0;
@@ -218,6 +225,61 @@ export default function RiskScore({ score, severity }) {
           </>
         )}
       </motion.div>
+
+      {/* Threat Summary - show what's driving the score */}
+      {factors.length > 0 && (
+        <motion.div
+          className="w-full max-w-lg"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.6 }}
+        >
+          <div className="text-xs text-text-dim uppercase tracking-wider mb-2 text-center">
+            Threat Summary
+          </div>
+          <div className="flex justify-center gap-3 flex-wrap mb-3">
+            {severityCounts.critical > 0 && (
+              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-severity-critical/20 border border-severity-critical/50">
+                <span className="text-severity-critical font-bold">{severityCounts.critical}</span>
+                <span className="text-severity-critical text-xs">Critical</span>
+              </div>
+            )}
+            {severityCounts.high > 0 && (
+              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-severity-high/20 border border-severity-high/50">
+                <span className="text-severity-high font-bold">{severityCounts.high}</span>
+                <span className="text-severity-high text-xs">High</span>
+              </div>
+            )}
+            {severityCounts.medium > 0 && (
+              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-severity-medium/20 border border-severity-medium/50">
+                <span className="text-severity-medium font-bold">{severityCounts.medium}</span>
+                <span className="text-severity-medium text-xs">Medium</span>
+              </div>
+            )}
+            {severityCounts.low > 0 && (
+              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-severity-low/20 border border-severity-low/50">
+                <span className="text-severity-low font-bold">{severityCounts.low}</span>
+                <span className="text-severity-low text-xs">Low</span>
+              </div>
+            )}
+          </div>
+          {/* Top issues preview */}
+          <div className="text-center text-xs text-text-dim">
+            {factors.filter(f => f.severity?.toLowerCase() === 'critical' || f.severity?.toLowerCase() === 'high')
+              .slice(0, 3)
+              .map((f, i) => (
+                <div key={i} className="truncate">
+                  • {f.name || f.description || 'Security issue detected'}
+                </div>
+              ))}
+            {factors.length > 3 && (
+              <div className="text-accent-primary mt-1">
+                +{factors.length - 3} more findings below
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
 
       {/* Progress bar */}
       <div className="w-full max-w-md">
