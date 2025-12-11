@@ -24,12 +24,9 @@ COPY --chown=nonroot:nonroot . .
 ENV PATH="/home/nonroot/.local/bin:$PATH"
 ENV PYTHONPATH="/home/nonroot/.local/lib/python3.12/site-packages"
 
-# Expose port
+# Expose port (Railway sets PORT env var)
 EXPOSE 8000
 
-# Expose port
-ENV PORT=8000
-
-# Run uvicorn server - exec form (Chainguard has no shell)
-ENTRYPOINT ["python", "-m", "uvicorn"]
-CMD ["main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run via Python script that reads PORT env var
+ENTRYPOINT []
+CMD ["/usr/bin/python", "run.py"]
