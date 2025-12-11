@@ -2,6 +2,10 @@
 # Build stage - use dev variant that includes npm
 FROM cgr.dev/chainguard/node:latest-dev AS builder
 
+# Build arg for API URL (empty = use nginx proxy, set for Railway)
+ARG VITE_API_URL=""
+ENV VITE_API_URL=$VITE_API_URL
+
 WORKDIR /app
 
 # Copy package files
@@ -13,7 +17,7 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build application
+# Build application (VITE_API_URL is baked in here)
 RUN npm run build
 
 # Production stage - minimal Chainguard nginx image
