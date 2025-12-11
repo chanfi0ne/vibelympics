@@ -215,6 +215,8 @@ async def audit_package(request: AuditRequest):
         time_data = npm_data.get("time", {})
         created = time_data.get("created")
         modified = time_data.get("modified")
+        # Get version-specific publish date
+        version_published = time_data.get(target_version) or modified
 
         maintainers_list = latest_version_data.get("maintainers") or npm_data.get("maintainers") or []
         maintainer_names = [m.get("name", "unknown") for m in maintainers_list if isinstance(m, dict)]
@@ -236,7 +238,7 @@ async def audit_package(request: AuditRequest):
             license=latest_version_data.get("license") or npm_data.get("license"),
             repository=repo_url,
             created=created,
-            modified=modified,
+            modified=version_published,  # Use version-specific publish date
             maintainers=maintainer_names,
             downloads_weekly=weekly_downloads,
             versions_count=len(versions)

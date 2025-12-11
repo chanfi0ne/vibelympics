@@ -306,6 +306,7 @@ export default function App() {
                   score={result.risk_score}
                   severity={result.risk_level}
                   factors={result.factors || []}
+                  versionDate={result.metadata?.modified}
                 />
 
                 {/* Two Column Layout */}

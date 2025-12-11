@@ -55,7 +55,7 @@ function getSeverityConfig(severity) {
   return SEVERITY_CONFIG[key] || SEVERITY_CONFIG.LOW;
 }
 
-export default function RiskScore({ score, severity, factors = [] }) {
+export default function RiskScore({ score, severity, factors = [], versionDate }) {
   const [displayScore, setDisplayScore] = useState(0);
   const config = getSeverityConfig(severity);
   const circumference = 2 * Math.PI * 120;
@@ -67,6 +67,26 @@ export default function RiskScore({ score, severity, factors = [] }) {
     acc[sev] = (acc[sev] || 0) + 1;
     return acc;
   }, {});
+
+  // Calculate version age
+  const getVersionAge = () => {
+    if (!versionDate) return null;
+    const published = new Date(versionDate);
+    const now = new Date();
+    const diffMs = now - published;
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const years = Math.floor(days / 365);
+    const months = Math.floor((days % 365) / 30);
+    
+    if (years > 0) {
+      return { value: years, unit: years === 1 ? 'year' : 'years', days, isOld: years >= 2 };
+    } else if (months > 0) {
+      return { value: months, unit: months === 1 ? 'month' : 'months', days, isOld: false };
+    } else {
+      return { value: days, unit: days === 1 ? 'day' : 'days', days, isOld: false };
+    }
+  };
+  const versionAge = getVersionAge();
 
   useEffect(() => {
     let start = 0;
@@ -263,6 +283,16 @@ export default function RiskScore({ score, severity, factors = [] }) {
               </div>
             )}
           </div>
+          {/* Version age */}
+          {versionAge && (
+            <div className={`text-center text-sm mb-3 ${versionAge.isOld ? 'text-severity-medium' : 'text-text-dim'}`}>
+              <span className="font-mono">
+                {versionAge.isOld ? '⚠️ ' : '📅 '}
+                This version is <span className="font-bold">{versionAge.value} {versionAge.unit}</span> old
+                {versionAge.isOld && ' — consider upgrading'}
+              </span>
+            </div>
+          )}
           {/* Top issues preview */}
           <div className="text-center text-xs text-text-dim">
             {factors.filter(f => f.severity?.toLowerCase() === 'critical' || f.severity?.toLowerCase() === 'high')
