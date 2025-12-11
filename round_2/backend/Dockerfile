@@ -27,8 +27,9 @@ ENV PYTHONPATH="/home/nonroot/.local/lib/python3.12/site-packages"
 # Expose port
 EXPOSE 8000
 
-# Default port (Railway sets PORT env var)
+# Expose port
 ENV PORT=8000
 
-# Run uvicorn server - use shell form to expand $PORT
-CMD python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+# Run uvicorn server - exec form (Chainguard has no shell)
+ENTRYPOINT ["python", "-m", "uvicorn"]
+CMD ["main:app", "--host", "0.0.0.0", "--port", "8000"]
