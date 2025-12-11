@@ -1,6 +1,6 @@
-# PURPOSE: Multi-stage Docker build for optimized production frontend deployment
-# Build stage
-FROM node:20-alpine AS builder
+# PURPOSE: Multi-stage Docker build using Chainguard base images for minimal attack surface
+# Build stage - use Node for building
+FROM cgr.dev/chainguard/node:latest-dev AS builder
 
 WORKDIR /app
 
@@ -16,24 +16,16 @@ COPY . .
 # Build application
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+# Production stage - Chainguard nginx
+FROM cgr.dev/chainguard/nginx:latest
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx configuration (Chainguard nginx uses /etc/nginx/nginx.conf)
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Fix permissions for nginx to read all files
-RUN chmod -R 755 /usr/share/nginx/html
-
-# Add healthcheck
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost/health || exit 1
-
 # Expose port
-EXPOSE 80
+EXPOSE 8080
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Chainguard nginx runs as non-root on port 8080 by default
