@@ -27,7 +27,18 @@ export function useAudit() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        // Handle error detail which may be a string or object
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        if (errorData.detail) {
+          if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else if (errorData.detail.message) {
+            errorMessage = errorData.detail.message;
+          } else {
+            errorMessage = JSON.stringify(errorData.detail);
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
