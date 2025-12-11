@@ -20,10 +20,11 @@ from services.npm_client import (
 )
 from services.github_client import (
     fetch_repository_data,
-    fetch_security_advisories,
     RateLimitError,
     RepositoryNotFoundError,
 )
+from services.osv_client import fetch_vulnerabilities
+from services.provenance_client import fetch_provenance_attestations, analyze_provenance
 from services.analyzer import (
     analyze_typosquatting,
     analyze_install_scripts,
@@ -32,6 +33,9 @@ from services.analyzer import (
     analyze_repository,
     analyze_downloads,
     analyze_vulnerabilities,
+    analyze_dependencies,
+    analyze_license,
+    analyze_provenance as analyze_provenance_factors,
 )
 from services.scoring import (
     calculate_risk_score,
@@ -116,24 +120,47 @@ async def audit_package(request: AuditRequest):
         if repo_url:
             repo_url = repo_url.replace("git+", "").replace("git://", "https://")
 
-        # Fetch GitHub data if repo exists
+        # Fetch GitHub data, vulnerabilities, and provenance in parallel
         github_data = None
         advisories = []
+        provenance_data = {}
+
+        # Always fetch vulnerabilities from OSV and provenance (don't require GitHub)
+        vuln_task = fetch_vulnerabilities(client, package_name)
+        provenance_task = fetch_provenance_attestations(client, package_name, latest_version)
 
         if repo_url and "github.com" in repo_url:
             github_results = await asyncio.gather(
                 fetch_repository_data(client, repo_url),
-                fetch_security_advisories(client, package_name),
+                vuln_task,
+                provenance_task,
                 return_exceptions=True
             )
 
-            github_data_result, advisories_result = github_results
+            github_data_result, advisories_result, provenance_result = github_results
 
             if not isinstance(github_data_result, Exception):
                 github_data = github_data_result
 
             if not isinstance(advisories_result, Exception):
                 advisories = advisories_result
+
+            if not isinstance(provenance_result, Exception) and provenance_result:
+                provenance_data = analyze_provenance(provenance_result, package_name)
+        else:
+            # No GitHub repo, but still fetch vulnerabilities and provenance
+            other_results = await asyncio.gather(
+                vuln_task,
+                provenance_task,
+                return_exceptions=True
+            )
+            advisories_result, provenance_result = other_results
+
+            if not isinstance(advisories_result, Exception):
+                advisories = advisories_result
+
+            if not isinstance(provenance_result, Exception) and provenance_result:
+                provenance_data = analyze_provenance(provenance_result, package_name)
 
         # Build metadata
         time_data = npm_data.get("time", {})
@@ -198,7 +225,17 @@ async def audit_package(request: AuditRequest):
         # Download patterns
         factors.extend(analyze_downloads(weekly_downloads, age_days))
 
-        # Known vulnerabilities
+        # Dependency analysis
+        factors.extend(analyze_dependencies(latest_version_data))
+
+        # License analysis
+        license_info = latest_version_data.get("license") or npm_data.get("license")
+        factors.extend(analyze_license(license_info))
+
+        # Sigstore provenance analysis
+        factors.extend(analyze_provenance_factors(provenance_data))
+
+        # Known vulnerabilities (from OSV.dev)
         factors.extend(analyze_vulnerabilities(advisories))
 
         # Calculate scores
