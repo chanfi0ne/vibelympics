@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SearchBar from './components/SearchBar';
+import CompareSearch from './components/CompareSearch';
+import CompareView from './components/CompareView';
 import Loading from './components/Loading';
 import RiskScore from './components/RiskScore';
 import RiskRadar from './components/RiskRadar';
@@ -12,6 +14,10 @@ import { useAudit } from './hooks/useAudit';
 export default function App() {
   const { loading, result, error, auditPackage, reset } = useAudit();
   const [showResults, setShowResults] = useState(false);
+  const [mode, setMode] = useState('audit'); // 'audit' or 'compare'
+  const [compareLoading, setCompareLoading] = useState(false);
+  const [compareResult, setCompareResult] = useState(null);
+  const [compareError, setCompareError] = useState(null);
 
   const handleSearch = async (packageName) => {
     setShowResults(false);
@@ -21,10 +27,45 @@ export default function App() {
     }
   };
 
+  const handleCompare = async (data) => {
+    setCompareLoading(true);
+    setCompareError(null);
+    setCompareResult(null);
+
+    try {
+      const response = await fetch('/api/audit/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail?.message || `HTTP error ${response.status}`);
+      }
+
+      const result = await response.json();
+      setCompareResult(result);
+    } catch (err) {
+      setCompareError(err.message || 'Failed to compare versions');
+    } finally {
+      setCompareLoading(false);
+    }
+  };
+
   const handleReset = () => {
     reset();
     setShowResults(false);
+    setCompareResult(null);
+    setCompareError(null);
   };
+
+  const switchMode = (newMode) => {
+    handleReset();
+    setMode(newMode);
+  };
+
+  const isIdle = !loading && !result && !compareLoading && !compareResult;
 
   return (
     <div className="min-h-screen bg-void relative">
@@ -51,7 +92,7 @@ export default function App() {
                 </p>
               </motion.div>
 
-              {result && (
+              {(result || compareResult) && (
                 <motion.button
                   onClick={handleReset}
                   className="btn-glow px-4 py-2 text-sm ml-4"
@@ -69,11 +110,11 @@ export default function App() {
 
         {/* Main Content Area */}
         <main className="container mx-auto px-4 py-8">
-          {/* Search Bar - Always Visible */}
-          {!loading && !result && (
-            <div className="max-w-4xl mx-auto mt-20">
+          {/* Mode Toggle & Search - Visible when idle */}
+          {isIdle && (
+            <div className="max-w-4xl mx-auto mt-12">
               <motion.div
-                className="text-center mb-12"
+                className="text-center mb-8"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
@@ -81,18 +122,64 @@ export default function App() {
                 <h2 className="text-3xl font-bold text-accent-primary mb-4">
                   NPM Supply Chain Security Auditor
                 </h2>
-                <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed">
+                <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed mb-8">
                   Analyze npm packages for supply chain security threats. Our multi-dimensional
                   risk assessment scans for authenticity, maintenance, security, and reputation indicators.
                 </p>
+
+                {/* Mode Toggle */}
+                <div className="inline-flex rounded-lg border border-accent-dim p-1 mb-8">
+                  <button
+                    onClick={() => switchMode('audit')}
+                    className={`px-6 py-2 rounded-md text-sm font-semibold transition-all ${
+                      mode === 'audit'
+                        ? 'bg-accent-primary text-void'
+                        : 'text-text-secondary hover:text-accent-primary'
+                    }`}
+                  >
+                    Audit Package
+                  </button>
+                  <button
+                    onClick={() => switchMode('compare')}
+                    className={`px-6 py-2 rounded-md text-sm font-semibold transition-all ${
+                      mode === 'compare'
+                        ? 'bg-accent-primary text-void'
+                        : 'text-text-secondary hover:text-accent-primary'
+                    }`}
+                  >
+                    Compare Versions
+                  </button>
+                </div>
               </motion.div>
-              <SearchBar onSearch={handleSearch} loading={loading} />
+
+              {/* Search Forms */}
+              <AnimatePresence mode="wait">
+                {mode === 'audit' ? (
+                  <motion.div
+                    key="audit-search"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                  >
+                    <SearchBar onSearch={handleSearch} loading={loading} />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="compare-search"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                  >
+                    <CompareSearch onCompare={handleCompare} loading={compareLoading} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
 
           {/* Loading State */}
           <AnimatePresence mode="wait">
-            {loading && (
+            {(loading || compareLoading) && (
               <motion.div
                 key="loading"
                 initial={{ opacity: 0 }}
@@ -106,7 +193,7 @@ export default function App() {
 
           {/* Error State */}
           <AnimatePresence mode="wait">
-            {error && !loading && (
+            {(error || compareError) && !loading && !compareLoading && (
               <motion.div
                 key="error"
                 className="max-w-2xl mx-auto mt-12"
@@ -119,9 +206,9 @@ export default function App() {
                     <div className="text-4xl">⚠️</div>
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-severity-critical mb-2">
-                        Audit Failed
+                        {mode === 'compare' ? 'Comparison Failed' : 'Audit Failed'}
                       </h3>
-                      <p className="text-text-secondary mb-4">{error}</p>
+                      <p className="text-text-secondary mb-4">{error || compareError}</p>
                       <button
                         onClick={handleReset}
                         className="btn-glow px-6 py-2"
@@ -135,7 +222,21 @@ export default function App() {
             )}
           </AnimatePresence>
 
-          {/* Results */}
+          {/* Compare Results */}
+          <AnimatePresence mode="wait">
+            {compareResult && (
+              <motion.div
+                key="compare-results"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <CompareView result={compareResult} onBack={handleReset} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Audit Results */}
           <AnimatePresence mode="wait">
             {result && showResults && (
               <motion.div

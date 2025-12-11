@@ -5,12 +5,15 @@ import httpx
 import asyncio
 from typing import Optional
 
-from models.request import AuditRequest
+from models.request import AuditRequest, CompareRequest
 from models.response import (
     AuditResponse,
     PackageMetadata,
     RepositoryVerification,
     HealthResponse,
+    CompareResponse,
+    VersionAnalysis,
+    VulnerabilityInfo,
 )
 from services.npm_client import (
     fetch_package_metadata,
@@ -278,4 +281,149 @@ async def audit_package(request: AuditRequest):
             repository_verification=repo_verification,
             timestamp=datetime.utcnow().isoformat() + "Z",
             audit_duration_ms=duration_ms
+        )
+
+
+@router.post("/audit/compare", response_model=CompareResponse)
+async def compare_versions(request: CompareRequest):
+    """
+    Compare security vulnerabilities between two versions of a package.
+
+    Returns:
+    - Vulnerabilities affecting each version
+    - CVEs fixed by upgrading
+    - New CVEs introduced (if any)
+    - Risk reduction score
+    - Upgrade recommendation
+    """
+    start_time = datetime.now()
+    package_name = request.package_name
+    version_old = request.version_old
+    version_new = request.version_new
+
+    async with httpx.AsyncClient() as client:
+        # Verify package exists
+        try:
+            npm_data = await fetch_package_metadata(client, package_name)
+        except PackageNotFoundError:
+            raise HTTPException(
+                status_code=404,
+                detail={"error": "package_not_found", "message": f"Package '{package_name}' not found"}
+            )
+
+        # Verify versions exist
+        versions = npm_data.get("versions", {})
+        if version_old not in versions:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": "invalid_version", "message": f"Version '{version_old}' not found"}
+            )
+        if version_new not in versions:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": "invalid_version", "message": f"Version '{version_new}' not found"}
+            )
+
+        # Fetch vulnerabilities for both versions in parallel
+        vulns_old, vulns_new = await asyncio.gather(
+            fetch_vulnerabilities(client, package_name, version=version_old),
+            fetch_vulnerabilities(client, package_name, version=version_new),
+            return_exceptions=True
+        )
+
+        # Handle errors gracefully
+        if isinstance(vulns_old, Exception):
+            vulns_old = []
+        if isinstance(vulns_new, Exception):
+            vulns_new = []
+
+        # Convert to VulnerabilityInfo objects
+        def to_vuln_info(vuln: dict) -> VulnerabilityInfo:
+            return VulnerabilityInfo(
+                id=vuln.get("id", ""),
+                cve_id=vuln.get("cve_id"),
+                severity=vuln.get("severity", "medium"),
+                summary=vuln.get("summary", ""),
+                fixed_in=vuln.get("affected", "").split("fixed: ")[-1].split(",")[0] if "fixed:" in vuln.get("affected", "") else None
+            )
+
+        vulns_old_info = [to_vuln_info(v) for v in vulns_old]
+        vulns_new_info = [to_vuln_info(v) for v in vulns_new]
+
+        # Calculate counts by severity
+        def count_by_severity(vulns: list) -> dict:
+            counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+            for v in vulns:
+                sev = v.severity.lower() if hasattr(v, 'severity') else v.get("severity", "medium").lower()
+                if sev in counts:
+                    counts[sev] += 1
+            return counts
+
+        old_counts = count_by_severity(vulns_old_info)
+        new_counts = count_by_severity(vulns_new_info)
+
+        # Build version analyses
+        old_analysis = VersionAnalysis(
+            version=version_old,
+            vulnerabilities=vulns_old_info,
+            vuln_count=len(vulns_old_info),
+            critical_count=old_counts["critical"],
+            high_count=old_counts["high"],
+            medium_count=old_counts["medium"],
+            low_count=old_counts["low"]
+        )
+
+        new_analysis = VersionAnalysis(
+            version=version_new,
+            vulnerabilities=vulns_new_info,
+            vuln_count=len(vulns_new_info),
+            critical_count=new_counts["critical"],
+            high_count=new_counts["high"],
+            medium_count=new_counts["medium"],
+            low_count=new_counts["low"]
+        )
+
+        # Find fixed and new vulnerabilities
+        old_ids = {v.id for v in vulns_old_info}
+        new_ids = {v.id for v in vulns_new_info}
+
+        fixed_ids = old_ids - new_ids
+        new_vuln_ids = new_ids - old_ids
+
+        vulns_fixed = [v for v in vulns_old_info if v.id in fixed_ids]
+        vulns_introduced = [v for v in vulns_new_info if v.id in new_vuln_ids]
+
+        # Calculate risk reduction (weighted by severity)
+        severity_weights = {"critical": 25, "high": 15, "medium": 8, "low": 3}
+        old_risk = sum(severity_weights.get(v.severity.lower(), 5) for v in vulns_old_info)
+        new_risk = sum(severity_weights.get(v.severity.lower(), 5) for v in vulns_new_info)
+        risk_reduction = old_risk - new_risk
+
+        # Generate recommendation
+        if len(vulns_fixed) > 0 and len(vulns_introduced) == 0:
+            if any(v.severity.lower() in ["critical", "high"] for v in vulns_fixed):
+                recommendation = f"STRONGLY RECOMMENDED: Upgrade fixes {len(vulns_fixed)} vulnerabilities including critical/high severity issues."
+            else:
+                recommendation = f"Recommended: Upgrade fixes {len(vulns_fixed)} vulnerabilities."
+        elif len(vulns_introduced) > 0:
+            recommendation = f"Caution: Upgrade fixes {len(vulns_fixed)} but introduces {len(vulns_introduced)} new vulnerabilities."
+        elif len(vulns_old_info) == 0 and len(vulns_new_info) == 0:
+            recommendation = "Both versions have no known vulnerabilities."
+        else:
+            recommendation = "No significant security difference between versions."
+
+        # Calculate duration
+        end_time = datetime.now()
+        duration_ms = int((end_time - start_time).total_seconds() * 1000)
+
+        return CompareResponse(
+            package_name=package_name,
+            old_version=old_analysis,
+            new_version=new_analysis,
+            vulnerabilities_fixed=vulns_fixed,
+            vulnerabilities_new=vulns_introduced,
+            risk_reduction=risk_reduction,
+            recommendation=recommendation,
+            timestamp=datetime.utcnow().isoformat() + "Z",
+            duration_ms=duration_ms
         )

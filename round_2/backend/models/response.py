@@ -83,3 +83,36 @@ class HealthResponse(BaseModel):
     status: str = Field(..., description="Service status")
     version: str = Field(..., description="API version")
     timestamp: str = Field(..., description="Current timestamp")
+
+
+class VulnerabilityInfo(BaseModel):
+    """Vulnerability information for comparison."""
+    id: str = Field(..., description="Vulnerability ID (GHSA or CVE)")
+    cve_id: Optional[str] = Field(None, description="CVE identifier if available")
+    severity: str = Field(..., description="Severity level")
+    summary: str = Field(..., description="Brief description")
+    fixed_in: Optional[str] = Field(None, description="Version where fixed")
+
+
+class VersionAnalysis(BaseModel):
+    """Analysis results for a specific version."""
+    version: str = Field(..., description="Package version")
+    vulnerabilities: List[VulnerabilityInfo] = Field(default_factory=list, description="CVEs affecting this version")
+    vuln_count: int = Field(..., description="Total vulnerability count")
+    critical_count: int = Field(0, description="Critical severity count")
+    high_count: int = Field(0, description="High severity count")
+    medium_count: int = Field(0, description="Medium severity count")
+    low_count: int = Field(0, description="Low severity count")
+
+
+class CompareResponse(BaseModel):
+    """Version comparison response."""
+    package_name: str = Field(..., description="Package name")
+    old_version: VersionAnalysis = Field(..., description="Old version analysis")
+    new_version: VersionAnalysis = Field(..., description="New version analysis")
+    vulnerabilities_fixed: List[VulnerabilityInfo] = Field(default_factory=list, description="CVEs fixed in new version")
+    vulnerabilities_new: List[VulnerabilityInfo] = Field(default_factory=list, description="New CVEs in new version")
+    risk_reduction: int = Field(..., description="Risk score reduction (positive = improvement)")
+    recommendation: str = Field(..., description="Upgrade recommendation")
+    timestamp: str = Field(..., description="Comparison timestamp")
+    duration_ms: int = Field(..., description="Comparison duration in milliseconds")
