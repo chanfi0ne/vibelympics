@@ -5,11 +5,15 @@ import SearchBar from './components/SearchBar';
 import CompareSearch from './components/CompareSearch';
 import CompareView from './components/CompareView';
 import Loading from './components/Loading';
+
 import RiskScore from './components/RiskScore';
 import RiskRadar from './components/RiskRadar';
 import MetadataCard from './components/MetadataCard';
 import FindingsList from './components/FindingsList';
 import { useAudit } from './hooks/useAudit';
+
+// API base URL - empty for nginx proxy (local), or full URL for Railway
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export default function App() {
   const { loading, result, error, auditPackage, reset } = useAudit();
@@ -38,7 +42,7 @@ export default function App() {
     setCompareResult(null);
 
     try {
-      const response = await fetch('/api/audit/compare', {
+      const response = await fetch(`${API_BASE}/api/audit/compare`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

@@ -1,6 +1,9 @@
 // PURPOSE: Custom React hook for managing package audit API calls and state
 import { useState } from 'react';
 
+// API base URL - empty for nginx proxy (local), or full URL for Railway
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 export function useAudit() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -23,7 +26,7 @@ export function useAudit() {
         requestBody.version = version;
       }
       
-      const response = await fetch('/api/audit', {
+      const response = await fetch(`${API_BASE}/api/audit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
