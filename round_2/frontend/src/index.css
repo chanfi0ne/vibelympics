@@ -1,0 +1,185 @@
+/* PURPOSE: Global styles with Tailwind directives and terminal security theme base styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply box-border;
+  }
+
+  body {
+    @apply m-0 p-0 font-mono bg-void text-text-primary antialiased;
+    overflow-x: hidden;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  /* Scanline effect */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 255, 242, 0.03) 0px,
+      transparent 1px,
+      transparent 2px,
+      rgba(0, 255, 242, 0.03) 3px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-primary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-accent-primary/30 rounded;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-accent-primary/50;
+  }
+}
+
+@layer components {
+  /* Glow button */
+  .btn-glow {
+    @apply relative px-6 py-3 bg-transparent border-2 border-accent-primary text-accent-primary font-semibold uppercase tracking-wider transition-all duration-300 overflow-hidden;
+  }
+
+  .btn-glow::before {
+    content: '';
+    @apply absolute inset-0 bg-accent-primary/10 translate-x-[-100%] transition-transform duration-300;
+  }
+
+  .btn-glow:hover::before {
+    @apply translate-x-0;
+  }
+
+  .btn-glow:hover {
+    @apply shadow-glow;
+  }
+
+  .btn-glow:active {
+    @apply scale-95;
+  }
+
+  .btn-glow:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  /* Card component */
+  .card {
+    @apply bg-card border border-accent-dim rounded-lg p-6 shadow-lg relative overflow-hidden;
+  }
+
+  .card::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-primary to-transparent opacity-50;
+  }
+
+  /* Input field */
+  .input-terminal {
+    @apply w-full bg-secondary border-2 border-accent-dim text-text-primary px-4 py-3 rounded font-mono text-base focus:outline-none focus:border-accent-primary focus:shadow-glow-sm transition-all duration-300;
+  }
+
+  .input-terminal::placeholder {
+    @apply text-text-dim;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider;
+  }
+
+  /* Severity badges */
+  .badge-critical {
+    @apply bg-severity-critical/20 text-severity-critical border border-severity-critical/50;
+  }
+
+  .badge-high {
+    @apply bg-severity-high/20 text-severity-high border border-severity-high/50;
+  }
+
+  .badge-medium {
+    @apply bg-severity-medium/20 text-severity-medium border border-severity-medium/50;
+  }
+
+  .badge-low {
+    @apply bg-severity-low/20 text-severity-low border border-severity-low/50;
+  }
+
+  .badge-info {
+    @apply bg-severity-info/20 text-severity-info border border-severity-info/50;
+  }
+
+  /* Terminal line effect */
+  .terminal-line {
+    @apply relative pl-8;
+  }
+
+  .terminal-line::before {
+    content: '>';
+    @apply absolute left-2 text-accent-primary;
+  }
+
+  /* Animated gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-accent-primary via-severity-info to-accent-primary bg-clip-text text-transparent;
+    background-size: 200% auto;
+    animation: gradient-shift 3s linear infinite;
+  }
+
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  /* Grid pattern background */
+  .grid-pattern {
+    background-image:
+      linear-gradient(rgba(0, 255, 242, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 242, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 10px rgba(0, 255, 242, 0.5);
+  }
+
+  .text-glow-critical {
+    text-shadow: 0 0 10px rgba(255, 0, 64, 0.5);
+  }
+
+  .text-glow-high {
+    text-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
+  }
+
+  .text-glow-medium {
+    text-shadow: 0 0 10px rgba(255, 208, 0, 0.5);
+  }
+
+  .text-glow-low {
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  }
+}
