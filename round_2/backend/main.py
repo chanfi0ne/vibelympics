@@ -13,11 +13,16 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Configure CORS - allow all origins for public API
+# Configure CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,  # Must be False when using "*"
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8080",
+        "https://vibelympics-production.up.railway.app",
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
