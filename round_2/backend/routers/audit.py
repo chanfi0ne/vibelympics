@@ -126,7 +126,8 @@ async def audit_package(request: AuditRequest):
         provenance_data = {}
 
         # Always fetch vulnerabilities from OSV and provenance (don't require GitHub)
-        vuln_task = fetch_vulnerabilities(client, package_name)
+        # Pass version to OSV so we only get vulns affecting the current version
+        vuln_task = fetch_vulnerabilities(client, package_name, version=latest_version)
         provenance_task = fetch_provenance_attestations(client, package_name, latest_version)
 
         if repo_url and "github.com" in repo_url:
