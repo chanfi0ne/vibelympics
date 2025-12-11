@@ -26,12 +26,22 @@ def analyze_typosquatting(package_name: str) -> List[RiskFactor]:
     for popular_pkg, similarity in matches[:3]:
         similarity_pct = int(similarity * 100)
 
+        # Primary finding: authenticity issue
         factors.append(RiskFactor(
             name="Typosquatting Detected",
             severity=Severity.CRITICAL,
             description=f"Package name is {similarity_pct}% similar to popular package '{popular_pkg}'",
             details=f"This may be a typosquatting attempt. Verify this is the correct package.",
             category=Category.AUTHENTICITY
+        ))
+
+        # Secondary finding: reputation impact (typosquats shouldn't be trusted)
+        factors.append(RiskFactor(
+            name="Untrusted Package",
+            severity=Severity.HIGH,
+            description=f"Package resembles '{popular_pkg}' - community trust cannot be verified",
+            details="Typosquatted packages often masquerade as popular packages to gain false trust.",
+            category=Category.REPUTATION
         ))
 
     return factors
@@ -265,6 +275,7 @@ def analyze_vulnerabilities(advisories: List[Dict[str, Any]]) -> List[RiskFactor
 
     Critical CVE: Critical
     High CVE: High
+    MAL-* class: Critical + Reputation impact (malicious package)
     etc.
     """
     factors = []
@@ -293,13 +304,43 @@ def analyze_vulnerabilities(advisories: List[Dict[str, Any]]) -> List[RiskFactor
         # Use CVE ID if available, otherwise use OSV ID
         id_suffix = f" ({cve_id})" if cve_id else (f" ({vuln_id})" if vuln_id else "")
 
-        factors.append(RiskFactor(
-            name=f"Known Vulnerability{id_suffix}",
-            severity=severity,
-            description=summary,
-            details=details,
-            category=Category.SECURITY
-        ))
+        # Check for MAL-* class advisories (malware - from OSV/npm)
+        is_malware = (
+            vuln_id.startswith("MAL-") or
+            "malware" in summary.lower() or
+            "malicious" in summary.lower()
+        )
+
+        if is_malware:
+            # Malware is always critical
+            severity = Severity.CRITICAL
+
+            # Primary finding: security issue
+            factors.append(RiskFactor(
+                name=f"Malware Detected{id_suffix}",
+                severity=Severity.CRITICAL,
+                description=summary,
+                details=details,
+                category=Category.SECURITY
+            ))
+
+            # Secondary finding: complete reputation destruction
+            factors.append(RiskFactor(
+                name="Malicious Package",
+                severity=Severity.CRITICAL,
+                description="Package flagged as malware in security advisories",
+                details="This package has been identified as malicious. DO NOT USE.",
+                category=Category.REPUTATION
+            ))
+        else:
+            # Regular vulnerability
+            factors.append(RiskFactor(
+                name=f"Known Vulnerability{id_suffix}",
+                severity=severity,
+                description=summary,
+                details=details,
+                category=Category.SECURITY
+            ))
 
     return factors
 
