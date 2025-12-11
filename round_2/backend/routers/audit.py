@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime
 import httpx
 import asyncio
+import re
 from typing import Optional
 
 from models.request import AuditRequest, CompareRequest
@@ -137,7 +138,30 @@ async def audit_package(request: AuditRequest):
             version_list.sort(key=semver_key, reverse=True)
         except Exception:
             pass  # Keep original order if sorting fails
-        available_versions = version_list[:20]  # Top 20 versions (newest first)
+
+        # Build comprehensive version list for research purposes
+        recent_versions = version_list[:20]  # Top 20 versions (newest first)
+
+        # Add major version milestones (X.0.0) for historical comparison
+        major_milestones = set()
+        for v in version_list:
+            match = re.match(r'^(\d+)\.0\.0$', v)
+            if match:
+                major_milestones.add(v)
+
+        # Also add first minor of each major (X.0.0, X.1.0, etc.) if X.0.0 doesn't exist
+        seen_majors = set()
+        for v in version_list:
+            match = re.match(r'^(\d+)\.(\d+)\.0$', v)
+            if match:
+                major = int(match.group(1))
+                if major not in seen_majors:
+                    major_milestones.add(v)
+                    seen_majors.add(major)
+
+        # Combine and dedupe, maintaining sort order
+        all_versions = list(dict.fromkeys(recent_versions + sorted(major_milestones, key=semver_key, reverse=True)))
+        available_versions = all_versions[:50]  # Cap at 50 for UI sanity
 
         # Extract repository URL
         repo_info = latest_version_data.get("repository") or npm_data.get("repository")
