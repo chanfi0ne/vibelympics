@@ -13,16 +13,11 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Configure CORS for frontend
+# Configure CORS - allow all origins for public API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",  # Vite dev server
-        "http://frontend",
-        "http://frontend:80",
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,  # Must be False when using "*"
     allow_methods=["*"],
     allow_headers=["*"],
 )
