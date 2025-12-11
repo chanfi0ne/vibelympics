@@ -162,14 +162,16 @@ export default function App() {
                 {/* Risk Score - Full Width */}
                 <RiskScore
                   score={result.risk_score}
-                  severity={result.severity}
+                  severity={result.risk_level}
                 />
 
                 {/* Two Column Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Left Column */}
                   <div className="space-y-8">
-                    <RiskRadar scores={result.dimension_scores} />
+                    {result.radar_scores && (
+                      <RiskRadar scores={result.radar_scores} />
+                    )}
                   </div>
 
                   {/* Right Column */}
@@ -179,12 +181,12 @@ export default function App() {
                 </div>
 
                 {/* Findings - Full Width */}
-                {result.findings && result.findings.length > 0 && (
-                  <FindingsList findings={result.findings} />
+                {result.factors && result.factors.length > 0 && (
+                  <FindingsList findings={result.factors} />
                 )}
 
                 {/* No Findings Message */}
-                {(!result.findings || result.findings.length === 0) && (
+                {(!result.factors || result.factors.length === 0) && (
                   <motion.div
                     className="card text-center py-12"
                     initial={{ opacity: 0 }}

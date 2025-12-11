@@ -17,10 +17,10 @@ const DIMENSIONS = [
   { key: 'reputation', label: 'Reputation', description: 'Community trust and adoption' }
 ];
 
-export default function RiskRadar({ scores }) {
+export default function RiskRadar({ scores = {} }) {
   const chartData = DIMENSIONS.map(dim => ({
     dimension: dim.label,
-    value: scores[dim.key] || 0,
+    value: scores?.[dim.key] ?? 0,
     fullMark: 100
   }));
 
@@ -142,12 +142,12 @@ export default function RiskRadar({ scores }) {
                   <motion.div
                     className="h-full bg-gradient-to-r from-accent-primary to-severity-info"
                     initial={{ width: 0 }}
-                    animate={{ width: `${scores[dim.key] || 0}%` }}
+                    animate={{ width: `${scores?.[dim.key] ?? 0}%` }}
                     transition={{ delay: 1.4 + index * 0.1, duration: 0.8 }}
                   />
                 </div>
                 <span className="text-accent-primary text-xs font-bold min-w-[3ch]">
-                  {scores[dim.key] || 0}
+                  {scores?.[dim.key] ?? 0}
                 </span>
               </div>
             </div>
