@@ -176,7 +176,13 @@ export default function App() {
 
                   {/* Right Column */}
                   <div className="space-y-8">
-                    <MetadataCard metadata={result.metadata} />
+                    <MetadataCard
+                      metadata={{
+                        ...result.metadata,
+                        name: result.package_name,
+                        version: result.version,
+                      }}
+                    />
                   </div>
                 </div>
 
