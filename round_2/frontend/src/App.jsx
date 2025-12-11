@@ -210,21 +210,21 @@ export default function App() {
                 )}
 
                 {/* Audit Metadata */}
-                {result.audit_id && (
-                  <motion.div
-                    className="text-center text-text-dim text-xs font-mono mt-12"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1 }}
-                  >
-                    <p>Audit ID: {result.audit_id}</p>
-                    {result.timestamp && (
-                      <p className="mt-1">
-                        Completed: {new Date(result.timestamp).toLocaleString()}
-                      </p>
-                    )}
-                  </motion.div>
-                )}
+                <motion.div
+                  className="text-center text-text-dim text-xs font-mono mt-12"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                >
+                  {result.audit_duration_ms && (
+                    <p>Scanned in {result.audit_duration_ms}ms</p>
+                  )}
+                  {result.timestamp && (
+                    <p className="mt-1">
+                      {new Date(result.timestamp).toLocaleString()}
+                    </p>
+                  )}
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -237,7 +237,7 @@ export default function App() {
               <div className="flex items-center space-x-4 mb-4 md:mb-0">
                 <span>© 2025 Repojacker</span>
                 <span className="hidden md:inline">|</span>
-                <span className="text-accent-primary">0 CVEs</span>
+                <span className="text-accent-primary">Vibelympics Round 2</span>
               </div>
               <div className="flex items-center space-x-4">
                 <a

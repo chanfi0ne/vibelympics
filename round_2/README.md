@@ -31,7 +31,10 @@ Then open http://localhost:3000
 | **Dangerous Commands** | curl, wget, eval, bash in scripts |
 | **Repository Verification** | GitHub repo exists and matches |
 | **Download Velocity** | Suspicious download spikes |
-| **Known Vulnerabilities** | CVEs from GitHub Advisory Database |
+| **Dependency Analysis** | Flags excessive dependencies (>50 or >100) |
+| **License Analysis** | Missing, restrictive, or copyleft licenses |
+| **Known Vulnerabilities** | CVEs from OSV.dev vulnerability database |
+| **Sigstore Provenance** | SLSA build attestations via npm Sigstore |
 
 ### Visual Risk Radar
 Spider chart showing normalized scores across categories:
@@ -48,13 +51,13 @@ Spider chart showing normalized scores across categories:
 │  (nginx:3000)    │  REST   │  (uvicorn:8000)                  │
 └──────────────────┘         └──────────────┬───────────────────┘
                                             │
-              ┌─────────────────────────────┼─────────────────────────┐
-              │                             │                         │
-              ▼                             ▼                         ▼
-     ┌───────────────┐            ┌─────────────────┐       ┌─────────────────┐
-     │ npm Registry  │            │   GitHub API    │       │ GitHub Advisory │
-     │    API        │            │                 │       │    Database     │
-     └───────────────┘            └─────────────────┘       └─────────────────┘
+         ┌──────────────┬───────────────────┼───────────────┬──────────────┐
+         │              │                   │               │              │
+         ▼              ▼                   ▼               ▼              ▼
+  ┌─────────────┐ ┌───────────┐    ┌─────────────┐  ┌───────────┐  ┌────────────┐
+  │npm Registry │ │ OSV.dev   │    │ GitHub API  │  │npm Sigstore│  │   Rekor    │
+  │    API      │ │ (CVEs)    │    │             │  │Attestations│  │Transparency│
+  └─────────────┘ └───────────┘    └─────────────┘  └───────────┘  └────────────┘
 ```
 
 ## API
