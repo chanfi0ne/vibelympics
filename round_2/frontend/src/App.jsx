@@ -137,7 +137,7 @@ export default function App() {
                         : 'text-text-secondary hover:text-accent-primary'
                     }`}
                   >
-                    Audit Package
+                    Deep Inspection
                   </button>
                   <button
                     onClick={() => switchMode('compare')}
@@ -206,7 +206,7 @@ export default function App() {
                     <div className="text-4xl">⚠️</div>
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-severity-critical mb-2">
-                        {mode === 'compare' ? 'Comparison Failed' : 'Audit Failed'}
+                        {mode === 'compare' ? 'Comparison Failed' : 'Inspection Failed'}
                       </h3>
                       <p className="text-text-secondary mb-4">{error || compareError}</p>
                       <button
@@ -253,10 +253,11 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                 >
                   <h2 className="text-3xl font-bold text-accent-primary mb-2">
-                    Audit Results
+                    Inspection Results
                   </h2>
                   <p className="text-text-dim">
-                    Package: <span className="text-text-primary font-semibold">{result.package_name}</span>
+                    <span className="text-text-primary font-semibold">{result.package_name}</span>
+                    <span className="text-accent-primary ml-1">@{result.version}</span>
                   </p>
                 </motion.div>
 
