@@ -19,9 +19,9 @@ export default function App() {
   const [compareResult, setCompareResult] = useState(null);
   const [compareError, setCompareError] = useState(null);
 
-  const handleSearch = async (packageName) => {
+  const handleSearch = async (packageName, version = null) => {
     setShowResults(false);
-    await auditPackage(packageName);
+    await auditPackage(packageName, version);
     if (!error) {
       setTimeout(() => setShowResults(true), 100);
     }
@@ -246,7 +246,7 @@ export default function App() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                {/* Package Name Header */}
+                {/* Package Name Header with Version Picker */}
                 <motion.div
                   className="text-center"
                   initial={{ opacity: 0, y: -20 }}
@@ -255,10 +255,36 @@ export default function App() {
                   <h2 className="text-3xl font-bold text-accent-primary mb-2">
                     Inspection Results
                   </h2>
-                  <p className="text-text-dim">
-                    <span className="text-text-primary font-semibold">{result.package_name}</span>
-                    <span className="text-accent-primary ml-1">@{result.version}</span>
-                  </p>
+                  <div className="flex items-center justify-center gap-2 flex-wrap">
+                    <span className="text-text-primary font-semibold text-lg">{result.package_name}</span>
+                    <span className="text-text-dim">@</span>
+                    {/* Version Picker */}
+                    <select
+                      value={result.version}
+                      onChange={(e) => handleSearch(result.package_name, e.target.value)}
+                      className="bg-secondary border border-accent-dim rounded px-3 py-1 text-accent-primary font-mono text-sm focus:border-accent-primary focus:outline-none cursor-pointer"
+                      disabled={loading}
+                    >
+                      {(result.available_versions || [result.version]).map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {/* Historical CVEs Badge */}
+                  {result.historical_cves_fixed > 0 && (
+                    <motion.div
+                      className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-severity-low/50 bg-severity-low/10"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <span className="text-severity-low text-lg">✓</span>
+                      <span className="text-severity-low text-sm font-medium">
+                        {result.historical_cves_fixed} historical CVE{result.historical_cves_fixed !== 1 ? 's' : ''} fixed in this version
+                      </span>
+                    </motion.div>
+                  )}
                 </motion.div>
 
                 {/* Risk Score - Full Width */}

@@ -26,7 +26,7 @@ from services.github_client import (
     RateLimitError,
     RepositoryNotFoundError,
 )
-from services.osv_client import fetch_vulnerabilities
+from services.osv_client import fetch_vulnerabilities, fetch_all_vulnerabilities, is_version_affected
 from services.provenance_client import fetch_provenance_attestations, analyze_provenance
 from services.analyzer import (
     analyze_typosquatting,
@@ -109,7 +109,21 @@ async def audit_package(request: AuditRequest):
         # Extract basic package info
         latest_version = npm_data.get("dist-tags", {}).get("latest", "unknown")
         versions = npm_data.get("versions", {})
-        latest_version_data = versions.get(latest_version, {})
+        
+        # Use requested version or default to latest
+        target_version = request.version if request.version else latest_version
+        if request.version and request.version not in versions:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": "invalid_version", "message": f"Version '{request.version}' not found"}
+            )
+        
+        latest_version_data = versions.get(target_version, {})
+        
+        # Get recent versions for version picker (last 10)
+        version_list = list(versions.keys())
+        available_versions = version_list[-15:] if len(version_list) > 15 else version_list
+        available_versions.reverse()  # Most recent first
 
         # Extract repository URL
         repo_info = latest_version_data.get("repository") or npm_data.get("repository")
@@ -130,18 +144,22 @@ async def audit_package(request: AuditRequest):
 
         # Always fetch vulnerabilities from OSV and provenance (don't require GitHub)
         # Pass version to OSV so we only get vulns affecting the current version
-        vuln_task = fetch_vulnerabilities(client, package_name, version=latest_version)
-        provenance_task = fetch_provenance_attestations(client, package_name, latest_version)
+        vuln_task = fetch_vulnerabilities(client, package_name, version=target_version)
+        all_vulns_task = fetch_all_vulnerabilities(client, package_name)  # For historical count
+        provenance_task = fetch_provenance_attestations(client, package_name, target_version)
 
+        all_vulns = []  # All historical vulnerabilities
+        
         if repo_url and "github.com" in repo_url:
             github_results = await asyncio.gather(
                 fetch_repository_data(client, repo_url),
                 vuln_task,
+                all_vulns_task,
                 provenance_task,
                 return_exceptions=True
             )
 
-            github_data_result, advisories_result, provenance_result = github_results
+            github_data_result, advisories_result, all_vulns_result, provenance_result = github_results
 
             if not isinstance(github_data_result, Exception):
                 github_data = github_data_result
@@ -149,22 +167,35 @@ async def audit_package(request: AuditRequest):
             if not isinstance(advisories_result, Exception):
                 advisories = advisories_result
 
+            if not isinstance(all_vulns_result, Exception):
+                all_vulns = all_vulns_result
+
             if not isinstance(provenance_result, Exception) and provenance_result:
                 provenance_data = analyze_provenance(provenance_result, package_name)
         else:
             # No GitHub repo, but still fetch vulnerabilities and provenance
             other_results = await asyncio.gather(
                 vuln_task,
+                all_vulns_task,
                 provenance_task,
                 return_exceptions=True
             )
-            advisories_result, provenance_result = other_results
+            advisories_result, all_vulns_result, provenance_result = other_results
 
             if not isinstance(advisories_result, Exception):
                 advisories = advisories_result
 
+            if not isinstance(all_vulns_result, Exception):
+                all_vulns = all_vulns_result
+
             if not isinstance(provenance_result, Exception) and provenance_result:
                 provenance_data = analyze_provenance(provenance_result, package_name)
+        
+        # Calculate historical CVEs fixed (all CVEs that don't affect current version)
+        historical_cves_fixed = 0
+        for vuln in all_vulns:
+            if not is_version_affected(target_version, vuln):
+                historical_cves_fixed += 1
 
         # Build metadata
         time_data = npm_data.get("time", {})
@@ -272,13 +303,15 @@ async def audit_package(request: AuditRequest):
         # Build response
         return AuditResponse(
             package_name=package_name,
-            version=latest_version,
+            version=target_version,
             risk_score=risk_score,
             risk_level=risk_level,
             factors=factors,
             metadata=metadata,
             radar_scores=radar_scores,
             repository_verification=repo_verification,
+            historical_cves_fixed=historical_cves_fixed,
+            available_versions=available_versions,
             timestamp=datetime.utcnow().isoformat() + "Z",
             audit_duration_ms=duration_ms
         )

@@ -1,4 +1,5 @@
 # PURPOSE: Pydantic models for API request validation
+from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -6,6 +7,7 @@ class AuditRequest(BaseModel):
     """Request model for package audit endpoint."""
 
     package_name: str = Field(..., min_length=1, max_length=214, description="npm package name")
+    version: Optional[str] = Field(None, max_length=50, description="Specific version to audit (defaults to latest)")
 
     @field_validator("package_name")
     @classmethod

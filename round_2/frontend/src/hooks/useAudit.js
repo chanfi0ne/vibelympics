@@ -6,7 +6,7 @@ export function useAudit() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  const auditPackage = async (packageName) => {
+  const auditPackage = async (packageName, version = null) => {
     if (!packageName || !packageName.trim()) {
       setError('Package name is required');
       return;
@@ -17,12 +17,17 @@ export function useAudit() {
     setResult(null);
 
     try {
+      const requestBody = { package_name: packageName.trim().toLowerCase() };
+      if (version) {
+        requestBody.version = version;
+      }
+      
       const response = await fetch('/api/audit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ package_name: packageName.trim().toLowerCase() }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {

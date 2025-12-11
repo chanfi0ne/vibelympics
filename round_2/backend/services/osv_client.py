@@ -116,6 +116,33 @@ def is_version_affected(version: str, vuln: Dict[str, Any]) -> bool:
     return False
 
 
+async def fetch_all_vulnerabilities(
+    client: httpx.AsyncClient,
+    package_name: str,
+) -> List[Dict[str, Any]]:
+    """
+    Fetch ALL vulnerabilities for a package from OSV.dev (no version filtering).
+    Used to get historical CVE count.
+    """
+    cache_key = f"osv:{package_name}:all_raw"
+    cached = _osv_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    url = "https://api.osv.dev/v1/query"
+    payload = {"package": {"name": package_name, "ecosystem": "npm"}}
+
+    try:
+        response = await client.post(url, json=payload, timeout=5.0)
+        response.raise_for_status()
+        data = response.json()
+        vulns = data.get("vulns", [])
+        _osv_cache.set(cache_key, vulns)
+        return vulns
+    except Exception:
+        return []
+
+
 async def fetch_vulnerabilities(
     client: httpx.AsyncClient,
     package_name: str,

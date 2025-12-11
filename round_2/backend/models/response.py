@@ -74,6 +74,8 @@ class AuditResponse(BaseModel):
     repository_verification: Optional[RepositoryVerification] = Field(
         None, description="Repository verification results"
     )
+    historical_cves_fixed: int = Field(0, description="Number of historical CVEs fixed in current version")
+    available_versions: List[str] = Field(default_factory=list, description="Recent versions for version picker")
     timestamp: str = Field(..., description="Audit timestamp")
     audit_duration_ms: int = Field(..., description="Audit duration in milliseconds")
 
