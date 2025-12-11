@@ -32,7 +32,8 @@ const SEVERITY_CONFIG = {
 
 function FindingItem({ finding, index }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const config = SEVERITY_CONFIG[finding.severity] || SEVERITY_CONFIG.INFO;
+  const severityKey = finding.severity?.toUpperCase() || 'INFO';
+  const config = SEVERITY_CONFIG[severityKey] || SEVERITY_CONFIG.INFO;
 
   return (
     <motion.div
@@ -160,10 +161,11 @@ export default function FindingsList({ findings }) {
 
   const filteredFindings = filterSeverity === 'ALL'
     ? findings
-    : findings.filter(f => f.severity === filterSeverity);
+    : findings.filter(f => f.severity?.toUpperCase() === filterSeverity);
 
   const severityCounts = findings.reduce((acc, finding) => {
-    acc[finding.severity] = (acc[finding.severity] || 0) + 1;
+    const key = finding.severity?.toUpperCase() || 'INFO';
+    acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
 
