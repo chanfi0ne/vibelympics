@@ -89,11 +89,53 @@ export default function Loading() {
 
       {/* Terminal-style progress indicators */}
       <div className="w-full max-w-md space-y-2 text-xs text-text-dim font-mono">
-        <ProgressLine text="Fetching package metadata" delay={0} />
-        <ProgressLine text="Analyzing repository" delay={0.3} />
-        <ProgressLine text="Checking authenticity signals" delay={0.6} />
-        <ProgressLine text="Scanning for threats" delay={0.9} />
+        <ProgressLine text="Fetching from npm Registry" delay={0} />
+        <ProgressLine text="Verifying GitHub repository" delay={0.3} />
+        <ProgressLine text="Checking Sigstore provenance" delay={0.6} />
+        <ProgressLine text="Scanning for vulnerabilities" delay={0.9} />
       </div>
+
+      {/* Vulnerability sources indicator */}
+      <motion.div
+        className="w-full max-w-md mt-4 p-4 border border-accent-dim/30 rounded-lg bg-secondary/20"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+      >
+        <div className="text-xs text-text-dim uppercase tracking-wider mb-3">
+          Vulnerability Databases
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+          <SourceIndicator name="GitHub Advisory (GHSA)" delay={1.4} />
+          <SourceIndicator name="National Vuln DB (NVD)" delay={1.6} />
+          <SourceIndicator name="npm Security Advisories" delay={1.8} />
+          <SourceIndicator name="OSV Aggregated Feed" delay={2.0} />
+        </div>
+        <div className="text-[10px] text-text-dim mt-3 text-center">
+          Powered by OSV.dev - Open Source Vulnerability Database
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function SourceIndicator({ name, delay }) {
+  return (
+    <motion.div
+      className="flex items-center space-x-2"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay }}
+    >
+      <motion.span
+        className="text-severity-low"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: delay + 0.2, type: "spring" }}
+      >
+        ✓
+      </motion.span>
+      <span className="text-text-secondary">{name}</span>
     </motion.div>
   );
 }
