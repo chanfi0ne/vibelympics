@@ -22,9 +22,8 @@ export default function App() {
   const handleSearch = async (packageName, version = null) => {
     setShowResults(false);
     await auditPackage(packageName, version);
-    if (!error) {
-      setTimeout(() => setShowResults(true), 100);
-    }
+    // Always show results after audit completes - error handling is separate
+    setTimeout(() => setShowResults(true), 100);
   };
 
   const handleCompare = async (data) => {

@@ -120,10 +120,24 @@ async def audit_package(request: AuditRequest):
         
         latest_version_data = versions.get(target_version, {})
         
-        # Get recent versions for version picker (last 10)
+        # Get versions sorted by semver (descending - newest first)
+        def semver_key(v):
+            """Parse version for sorting. Handle pre-release versions."""
+            import re
+            # Extract numeric parts and pre-release info
+            match = re.match(r'^(\d+)\.(\d+)\.(\d+)(?:-(.+))?', v)
+            if match:
+                major, minor, patch = int(match.group(1)), int(match.group(2)), int(match.group(3))
+                pre = match.group(4) or 'zzz'  # No pre-release sorts after pre-release
+                return (major, minor, patch, pre)
+            return (0, 0, 0, v)
+        
         version_list = list(versions.keys())
-        available_versions = version_list[-15:] if len(version_list) > 15 else version_list
-        available_versions.reverse()  # Most recent first
+        try:
+            version_list.sort(key=semver_key, reverse=True)
+        except Exception:
+            pass  # Keep original order if sorting fails
+        available_versions = version_list[:20]  # Top 20 versions (newest first)
 
         # Extract repository URL
         repo_info = latest_version_data.get("repository") or npm_data.get("repository")
