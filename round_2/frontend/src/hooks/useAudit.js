@@ -22,7 +22,7 @@ export function useAudit() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ package_name: packageName.trim() }),
+        body: JSON.stringify({ package_name: packageName.trim().toLowerCase() }),
       });
 
       if (!response.ok) {
