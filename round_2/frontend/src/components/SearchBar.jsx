@@ -67,16 +67,53 @@ export default function SearchBar({ onSearch, loading, disabled }) {
         </motion.button>
       </div>
 
-      {/* Helper text */}
+      {/* Example packages */}
       <motion.div
-        className="mt-3 text-xs text-text-dim text-center sm:text-left"
+        className="mt-4 text-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        <span className="inline-flex items-center space-x-2">
-          <span>Press Enter or click AUDIT to scan package security</span>
-        </span>
+        <span className="text-xs text-text-dim mr-2">Try examples:</span>
+        <div className="inline-flex flex-wrap gap-2 mt-2 sm:mt-0">
+          {[
+            { name: 'lodash', label: 'lodash', risk: 'low' },
+            { name: 'express', label: 'express', risk: 'low' },
+            { name: 'lodahs', label: 'lodahs (typosquat)', risk: 'high' },
+            { name: 'event-stream', label: 'event-stream', risk: 'medium' },
+          ].map((example) => (
+            <motion.button
+              key={example.name}
+              type="button"
+              onClick={() => {
+                setPackageName(example.name);
+                onSearch(example.name);
+              }}
+              disabled={loading || disabled}
+              className={`text-xs px-3 py-1 rounded border transition-all ${
+                example.risk === 'high'
+                  ? 'border-severity-critical/50 text-severity-critical hover:bg-severity-critical/10'
+                  : example.risk === 'medium'
+                  ? 'border-severity-medium/50 text-severity-medium hover:bg-severity-medium/10'
+                  : 'border-accent-dim text-text-secondary hover:border-accent-primary hover:text-accent-primary'
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {example.label}
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Helper text */}
+      <motion.div
+        className="mt-3 text-xs text-text-dim text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <span>Press Enter or click AUDIT to scan package security</span>
       </motion.div>
     </motion.form>
   );
