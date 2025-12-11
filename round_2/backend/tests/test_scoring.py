@@ -92,22 +92,25 @@ class TestCalculateRadarScores:
         """Critical factor should reduce its category significantly."""
         factors = [make_factor(Severity.CRITICAL, Category.SECURITY)]
         scores = calculate_radar_scores(factors)
-        assert scores.security == 60  # 100 - 40
+        # Exponential decay: 100 * (0.5 ^ 0.5) = 70
+        assert scores.security == 70
         assert scores.authenticity == 100
         assert scores.maintenance == 100
         assert scores.reputation == 100
 
     def test_multiple_factors_same_category(self):
-        """Multiple factors in same category should stack deductions."""
+        """Multiple factors in same category should use diminishing returns."""
         factors = [
             make_factor(Severity.HIGH, Category.MAINTENANCE),
             make_factor(Severity.MEDIUM, Category.MAINTENANCE),
         ]
         scores = calculate_radar_scores(factors)
-        assert scores.maintenance == 60  # 100 - 25 - 15
+        # Exponential decay: 100 * (0.5 ^ (0.3 + 0.15)) = 73
+        assert scores.maintenance == 73
 
-    def test_score_floors_at_zero(self):
-        """Category scores should not go below 0."""
+    def test_score_floors_at_minimum(self):
+        """Category scores should not go below minimum (5)."""
         factors = [make_factor(Severity.CRITICAL, Category.AUTHENTICITY) for _ in range(5)]
         scores = calculate_radar_scores(factors)
-        assert scores.authenticity == 0
+        # 5 criticals: 100 * (0.5 ^ 2.5) = 17, above minimum
+        assert scores.authenticity == 17

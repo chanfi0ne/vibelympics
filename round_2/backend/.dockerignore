@@ -14,7 +14,6 @@ build
 .venv
 venv
 env
-tests
 *.md
 .git
 .gitignore
