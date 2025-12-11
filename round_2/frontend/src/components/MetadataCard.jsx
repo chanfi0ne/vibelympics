@@ -99,19 +99,19 @@ export default function MetadataCard({ metadata }) {
 
         <InfoRow
           label="Weekly Downloads"
-          value={formatNumber(metadata.downloads_last_week)}
+          value={formatNumber(metadata.downloads_weekly)}
           icon="⬇️"
         />
 
         <InfoRow
           label="Published"
-          value={formatDate(metadata.created_at)}
+          value={formatDate(metadata.created)}
           icon="📅"
         />
 
         <InfoRow
           label="Last Updated"
-          value={formatDate(metadata.modified_at)}
+          value={formatDate(metadata.modified)}
           icon="🔄"
         />
 

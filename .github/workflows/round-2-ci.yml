@@ -1,0 +1,272 @@
+# PURPOSE: CI/CD pipeline for round_2 (Repojacker) - tests backend, builds Docker Compose services, and verifies deployment
+name: Round 2 - Repojacker CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'round_2/**'
+      - '.github/workflows/round-2-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'round_2/**'
+      - '.github/workflows/round-2-ci.yml'
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE_NAME: ${{ github.repository }}/repojacker-backend
+  FRONTEND_IMAGE_NAME: ${{ github.repository }}/repojacker-frontend
+
+defaults:
+  run:
+    working-directory: round_2
+
+jobs:
+  # ==========================================================================
+  # Backend Tests
+  # ==========================================================================
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('round_2/backend/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Run pytest
+        run: |
+          cd backend
+          pytest tests/ -v --tb=short --color=yes
+        env:
+          PYTHONPATH: .
+
+      - name: Run pytest with coverage
+        run: |
+          cd backend
+          pytest tests/ -v --cov=. --cov-report=xml --cov-report=term
+        env:
+          PYTHONPATH: .
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-report
+          path: round_2/backend/coverage.xml
+
+  # ==========================================================================
+  # Frontend Build & Lint
+  # ==========================================================================
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: round_2/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run ESLint
+        run: |
+          cd frontend
+          npm run lint
+        continue-on-error: true
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: round_2/frontend/dist
+
+  # ==========================================================================
+  # Docker Compose Build & Integration Test
+  # ==========================================================================
+  docker-compose-test:
+    name: Docker Compose Build & Test
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Compose services
+        run: |
+          docker compose build --progress=plain
+        env:
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
+
+      - name: Start Docker Compose services
+        run: |
+          docker compose up -d
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for backend health check
+        run: |
+          timeout 60s bash -c 'until docker compose ps | grep -q "healthy"; do echo "Waiting for backend to be healthy..."; sleep 2; done'
+          echo "Backend is healthy!"
+
+      - name: Verify backend is responding
+        run: |
+          docker compose ps
+          curl -f http://localhost:8000/api/health || exit 1
+          echo "Backend health check passed!"
+
+      - name: Verify frontend is responding
+        run: |
+          curl -f http://localhost:3000/health || exit 1
+          echo "Frontend health check passed!"
+
+      - name: Run integration smoke test
+        run: |
+          # Test backend API endpoint
+          curl -f http://localhost:8000/api/health -v
+          # Verify frontend serves static content
+          curl -f http://localhost:3000/ -I | grep -q "200 OK"
+          echo "Integration smoke tests passed!"
+
+      - name: Show container logs on failure
+        if: failure()
+        run: |
+          echo "=== Backend Logs ==="
+          docker compose logs backend
+          echo "=== Frontend Logs ==="
+          docker compose logs frontend
+          echo "=== Container Status ==="
+          docker compose ps
+
+      - name: Stop Docker Compose services
+        if: always()
+        run: |
+          docker compose down -v
+
+  # ==========================================================================
+  # Build & Push Container Images (main branch only)
+  # ==========================================================================
+  build-and-push:
+    name: Build & Push Container Images
+    runs-on: ubuntu-latest
+    needs: [docker-compose-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU (for multi-platform builds)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image name
+        id: image
+        run: |
+          if [ "${{ matrix.service }}" == "backend" ]; then
+            echo "name=${{ env.BACKEND_IMAGE_NAME }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=${{ env.FRONTEND_IMAGE_NAME }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: round_2/${{ matrix.service }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  # ==========================================================================
+  # Security Scan (on main only)
+  # ==========================================================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      security-events: write
+      contents: read
+    strategy:
+      matrix:
+        service: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image for scanning
+        run: |
+          docker build -t repojacker-${{ matrix.service }}-scan ${{ matrix.service }}
+        working-directory: round_2
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: repojacker-${{ matrix.service }}-scan
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.service }}.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
+          category: repojacker-${{ matrix.service }}
+        if: always()

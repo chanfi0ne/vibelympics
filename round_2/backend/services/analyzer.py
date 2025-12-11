@@ -283,13 +283,175 @@ def analyze_vulnerabilities(advisories: List[Dict[str, Any]]) -> List[RiskFactor
 
         summary = advisory.get("summary", "Known vulnerability")
         cve_id = advisory.get("cve_id", "")
+        vuln_id = advisory.get("id", "")
+
+        # Build details with affected versions if available
+        details = advisory.get("description", "")
+        if advisory.get("affected"):
+            details = f"Affected versions: {advisory['affected']}. {details}"
+
+        # Use CVE ID if available, otherwise use OSV ID
+        id_suffix = f" ({cve_id})" if cve_id else (f" ({vuln_id})" if vuln_id else "")
 
         factors.append(RiskFactor(
-            name=f"Known Vulnerability{' (' + cve_id + ')' if cve_id else ''}",
+            name=f"Known Vulnerability{id_suffix}",
             severity=severity,
             description=summary,
-            details=advisory.get("description", ""),
+            details=details,
             category=Category.SECURITY
+        ))
+
+    return factors
+
+
+def analyze_dependencies(package_data: Dict[str, Any]) -> List[RiskFactor]:
+    """
+    Analyze dependency count and flag excessive dependencies.
+
+    >100 deps: High risk (large attack surface)
+    >50 deps: Medium risk
+    0 deps on non-trivial package: Info (might be bundled)
+    """
+    factors = []
+
+    dependencies = package_data.get("dependencies", {})
+    dep_count = len(dependencies) if isinstance(dependencies, dict) else 0
+
+    if dep_count > 100:
+        factors.append(RiskFactor(
+            name="Excessive Dependencies",
+            severity=Severity.HIGH,
+            description=f"Package has {dep_count} runtime dependencies",
+            details="Large dependency count increases supply chain attack surface.",
+            category=Category.SECURITY
+        ))
+    elif dep_count > 50:
+        factors.append(RiskFactor(
+            name="High Dependency Count",
+            severity=Severity.MEDIUM,
+            description=f"Package has {dep_count} runtime dependencies",
+            details="Consider auditing transitive dependencies for security risks.",
+            category=Category.SECURITY
+        ))
+
+    return factors
+
+
+# Common permissive licenses considered safe
+SAFE_LICENSES = {
+    "mit", "isc", "bsd-2-clause", "bsd-3-clause", "apache-2.0", "apache 2.0",
+    "unlicense", "cc0-1.0", "wtfpl", "0bsd", "artistic-2.0",
+    "(mit or apache-2.0)", "mit or apache-2.0", "apache-2.0 or mit",
+}
+
+# Copyleft licenses that may have compliance requirements
+COPYLEFT_LICENSES = {
+    "gpl-2.0", "gpl-3.0", "gpl-2.0-only", "gpl-3.0-only",
+    "lgpl-2.0", "lgpl-2.1", "lgpl-3.0", "agpl-3.0", "agpl-3.0-only",
+    "mpl-2.0", "eupl-1.2", "osl-3.0", "cc-by-sa-4.0",
+}
+
+
+def analyze_license(license_info: Optional[str]) -> List[RiskFactor]:
+    """
+    Analyze package license for missing or problematic licenses.
+
+    No license: Medium risk (legal uncertainty)
+    Copyleft: Info (compliance requirements)
+    UNLICENSED: High risk (cannot legally use)
+    """
+    factors = []
+
+    if not license_info:
+        factors.append(RiskFactor(
+            name="No License Specified",
+            severity=Severity.MEDIUM,
+            description="Package does not specify a license",
+            details="Using packages without clear licensing may pose legal risks.",
+            category=Category.AUTHENTICITY
+        ))
+        return factors
+
+    license_lower = license_info.lower().strip()
+
+    # Check for explicitly unlicensed
+    if license_lower in ("unlicensed", "none", "proprietary", "see license"):
+        factors.append(RiskFactor(
+            name="Restrictive License",
+            severity=Severity.HIGH,
+            description=f"Package has restrictive license: {license_info}",
+            details="This package may not be legally usable in your project.",
+            category=Category.AUTHENTICITY
+        ))
+        return factors
+
+    # Check for copyleft licenses
+    if license_lower in COPYLEFT_LICENSES:
+        factors.append(RiskFactor(
+            name="Copyleft License",
+            severity=Severity.INFO,
+            description=f"Package uses copyleft license: {license_info}",
+            details="Copyleft licenses may require you to open-source derivative works.",
+            category=Category.AUTHENTICITY
+        ))
+
+    return factors
+
+
+def analyze_provenance(provenance_data: Dict[str, Any]) -> List[RiskFactor]:
+    """
+    Analyze Sigstore provenance attestations for supply chain integrity.
+
+    Checks:
+    - Has provenance attestations (Sigstore)
+    - SLSA build level
+    - Transparency log entries (Rekor)
+    - Verified build source
+
+    Packages with provenance are more trustworthy as they have
+    cryptographic proof of their build origin.
+    """
+    factors = []
+
+    has_provenance = provenance_data.get("has_provenance", False)
+    provenance_type = provenance_data.get("provenance_type", "none")
+    slsa_level = provenance_data.get("slsa_level")
+    is_verified = provenance_data.get("is_verified", False)
+    transparency_log = provenance_data.get("transparency_log", False)
+    build_source = provenance_data.get("build_source")
+
+    if not has_provenance:
+        # No provenance is not necessarily bad, but having it is a positive signal
+        factors.append(RiskFactor(
+            name="No Sigstore Provenance",
+            severity=Severity.LOW,
+            description="Package lacks cryptographic provenance attestations",
+            details="Packages with Sigstore provenance provide verifiable proof of build origin. "
+                    "Consider preferring packages with SLSA provenance for critical dependencies.",
+            category=Category.AUTHENTICITY
+        ))
+        return factors
+
+    # Has provenance - this is good! But check the details
+
+    if transparency_log and is_verified:
+        # This is excellent - fully verified with transparency log
+        factors.append(RiskFactor(
+            name="Sigstore Provenance Verified",
+            severity=Severity.INFO,
+            description=f"Package has verified Sigstore provenance (SLSA Level {slsa_level or 'N/A'})",
+            details=f"Build source: {build_source or 'CI/CD'}. "
+                    "Cryptographic attestations recorded in Rekor transparency log.",
+            category=Category.AUTHENTICITY
+        ))
+    elif has_provenance and not is_verified:
+        # Has provenance but couldn't fully verify
+        factors.append(RiskFactor(
+            name="Provenance Present (Unverified)",
+            severity=Severity.INFO,
+            description="Package has provenance attestations but verification incomplete",
+            details="Sigstore attestations are present but could not be fully verified.",
+            category=Category.AUTHENTICITY
         ))
 
     return factors
