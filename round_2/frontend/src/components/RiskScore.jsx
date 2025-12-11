@@ -50,17 +50,14 @@ const SEVERITY_CONFIG = {
   }
 };
 
-function getSeverityConfig(score) {
-  if (score >= 80) return SEVERITY_CONFIG.CRITICAL;
-  if (score >= 60) return SEVERITY_CONFIG.HIGH;
-  if (score >= 40) return SEVERITY_CONFIG.MEDIUM;
-  if (score >= 20) return SEVERITY_CONFIG.LOW;
-  return SEVERITY_CONFIG.INFO;
+function getSeverityConfig(severity) {
+  const key = severity?.toUpperCase() || 'LOW';
+  return SEVERITY_CONFIG[key] || SEVERITY_CONFIG.LOW;
 }
 
 export default function RiskScore({ score, severity }) {
   const [displayScore, setDisplayScore] = useState(0);
-  const config = getSeverityConfig(score);
+  const config = getSeverityConfig(severity);
   const circumference = 2 * Math.PI * 120;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
@@ -184,11 +181,10 @@ export default function RiskScore({ score, severity }) {
         animate={{ opacity: 1 }}
         transition={{ delay: 1.4 }}
       >
-        {score >= 80 && 'Severe supply chain threats detected. Exercise extreme caution.'}
-        {score >= 60 && score < 80 && 'Significant security concerns identified. Review carefully.'}
-        {score >= 40 && score < 60 && 'Moderate risk factors present. Additional verification recommended.'}
-        {score >= 20 && score < 40 && 'Low risk profile with minor concerns. Generally safe to use.'}
-        {score < 20 && 'Minimal security concerns detected. Package appears legitimate.'}
+        {score >= 76 && 'Severe supply chain threats detected. Exercise extreme caution.'}
+        {score >= 51 && score < 76 && 'Significant security concerns identified. Review carefully.'}
+        {score >= 26 && score < 51 && 'Moderate risk factors present. Additional verification recommended.'}
+        {score < 26 && 'Low risk profile with minor concerns. Generally safe to use.'}
       </motion.div>
 
       {/* Progress bar */}
