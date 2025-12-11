@@ -113,6 +113,42 @@ npm run dev
 - **Frontend:** React 18, Vite, TailwindCSS, Recharts
 - **Deployment:** Docker, Docker Compose, nginx
 
+## Container Security
+
+Repojacker practices what it preaches. Our containers are built with supply chain security in mind.
+
+### Zero-CVE Base Images
+
+Both containers use [Chainguard](https://chainguard.dev) base images:
+
+| Container | Base Image | CVEs |
+|-----------|------------|------|
+| Backend | `cgr.dev/chainguard/python` | **0** |
+| Frontend | `cgr.dev/chainguard/nginx` | **0** |
+
+### SLSA Provenance
+
+All container builds include SLSA provenance attestations. Verify the supply chain integrity:
+
+```bash
+# Verify backend image provenance
+gh attestation verify oci://ghcr.io/chanfi0ne/vibelympics/repojacker-backend:latest \
+  --owner chanfi0ne
+
+# Verify frontend image provenance
+gh attestation verify oci://ghcr.io/chanfi0ne/vibelympics/repojacker-frontend:latest \
+  --owner chanfi0ne
+```
+
+### Pre-built Images
+
+Pull from GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/chanfi0ne/vibelympics/repojacker-backend:latest
+docker pull ghcr.io/chanfi0ne/vibelympics/repojacker-frontend:latest
+```
+
 ## License
 
 MIT
