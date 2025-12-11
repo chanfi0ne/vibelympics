@@ -1,32 +1,32 @@
-# PURPOSE: Multi-platform Python backend container with security best practices
-FROM python:3.12-slim AS builder
+# PURPOSE: Chainguard-based Python backend - minimal attack surface, near-zero CVEs
+# Build stage - use dev variant that includes pip
+FROM cgr.dev/chainguard/python:latest-dev AS builder
 
 WORKDIR /app
 
-# Install dependencies
+# Copy requirements and install dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Production stage - use slim image with non-root user
-FROM python:3.12-slim
-
-# Create non-root user for security
-RUN useradd --create-home --shell /bin/bash appuser
+# Production stage - minimal Chainguard Python image
+FROM cgr.dev/chainguard/python:latest
 
 WORKDIR /app
 
 # Copy installed packages from builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Chainguard Python uses /home/nonroot/.local for user packages
+COPY --from=builder /home/nonroot/.local /home/nonroot/.local
 
 # Copy application code
-COPY --chown=appuser:appuser . .
+COPY --chown=nonroot:nonroot . .
 
-# Switch to non-root user
-USER appuser
+# Set Python path to include user packages
+ENV PATH="/home/nonroot/.local/bin:$PATH"
+ENV PYTHONPATH="/home/nonroot/.local/lib/python3.12/site-packages"
 
 # Expose port
 EXPOSE 8000
 
-# Run uvicorn server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run uvicorn server - use python -m to ensure module is found
+ENTRYPOINT ["python", "-m", "uvicorn"]
+CMD ["main:app", "--host", "0.0.0.0", "--port", "8000"]

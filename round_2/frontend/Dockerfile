@@ -1,6 +1,6 @@
-# PURPOSE: Multi-stage Docker build with security best practices
-# Build stage
-FROM node:20-alpine AS builder
+# PURPOSE: Chainguard-based frontend build - minimal attack surface, near-zero CVEs
+# Build stage - use dev variant that includes npm
+FROM cgr.dev/chainguard/node:latest-dev AS builder
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production=false
+RUN npm ci
 
 # Copy source code
 COPY . .
@@ -16,27 +16,17 @@ COPY . .
 # Build application
 RUN npm run build
 
-# Production stage - nginx with non-root user
-FROM nginx:alpine
+# Production stage - minimal Chainguard nginx image
+FROM cgr.dev/chainguard/nginx:latest
 
-# Remove default nginx config
-RUN rm /etc/nginx/conf.d/default.conf
-
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copy built application from builder stage
+# Copy built application to nginx html directory
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Fix permissions
-RUN chmod -R 755 /usr/share/nginx/html
-
-# Add healthcheck
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost/health || exit 1
+# Copy custom nginx configuration - replace the full nginx.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Expose port
-EXPOSE 80
+EXPOSE 8080
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Chainguard nginx runs on port 8080 by default as nonroot
+# No CMD needed - image has default entrypoint
