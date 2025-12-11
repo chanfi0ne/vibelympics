@@ -89,9 +89,13 @@ export default function RiskScore({ score, severity }) {
       {/* Title */}
       <div className="text-center">
         <h2 className="text-2xl font-bold text-accent-primary tracking-wider uppercase">
-          Risk Score
+          Threat Level
         </h2>
-        <p className="text-text-dim text-sm mt-1">Supply Chain Security Assessment</p>
+        <p className="text-text-dim text-sm mt-1">
+          <span className="text-severity-low">0 = Safe</span>
+          <span className="mx-2">→</span>
+          <span className="text-severity-critical">100 = Dangerous</span>
+        </p>
       </div>
 
       {/* Score Circle */}
@@ -174,17 +178,45 @@ export default function RiskScore({ score, severity }) {
         </div>
       </motion.div>
 
-      {/* Score interpretation - based on actual risk level from backend */}
+      {/* Verdict and recommendation */}
       <motion.div
-        className="text-center text-text-secondary text-sm max-w-md"
+        className="text-center max-w-md space-y-2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.4 }}
       >
-        {severity?.toLowerCase() === 'critical' && 'Severe supply chain threats detected. Exercise extreme caution.'}
-        {severity?.toLowerCase() === 'high' && 'Significant security concerns identified. Review carefully before use.'}
-        {severity?.toLowerCase() === 'medium' && 'Moderate risk factors present. Additional verification recommended.'}
-        {severity?.toLowerCase() === 'low' && 'Low risk profile with minor concerns. Generally safe to use.'}
+        {severity?.toLowerCase() === 'critical' && (
+          <>
+            <p className="text-severity-critical font-bold text-lg">DO NOT USE</p>
+            <p className="text-text-secondary text-sm">
+              Critical vulnerabilities or supply chain threats detected. Find an alternative or upgrade immediately.
+            </p>
+          </>
+        )}
+        {severity?.toLowerCase() === 'high' && (
+          <>
+            <p className="text-severity-high font-bold text-lg">USE WITH EXTREME CAUTION</p>
+            <p className="text-text-secondary text-sm">
+              Significant security issues found. Review all findings before proceeding.
+            </p>
+          </>
+        )}
+        {severity?.toLowerCase() === 'medium' && (
+          <>
+            <p className="text-severity-medium font-bold text-lg">REVIEW BEFORE USING</p>
+            <p className="text-text-secondary text-sm">
+              Moderate concerns detected. Verify findings are acceptable for your use case.
+            </p>
+          </>
+        )}
+        {severity?.toLowerCase() === 'low' && (
+          <>
+            <p className="text-severity-low font-bold text-lg">GENERALLY SAFE</p>
+            <p className="text-text-secondary text-sm">
+              Minor or no concerns detected. Package appears safe for production use.
+            </p>
+          </>
+        )}
       </motion.div>
 
       {/* Progress bar */}
