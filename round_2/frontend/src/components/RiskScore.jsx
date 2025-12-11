@@ -289,7 +289,7 @@ export default function RiskScore({ score, severity, factors = [], versionDate }
               <span className="font-mono">
                 {versionAge.isOld ? '⚠️ ' : '📅 '}
                 This version is <span className="font-bold">{versionAge.value} {versionAge.unit}</span> old
-                {versionAge.isOld && ' — consider upgrading'}
+                {versionAge.isOld && ' — consider upgrading or use an alternate library'}
               </span>
             </div>
           )}
