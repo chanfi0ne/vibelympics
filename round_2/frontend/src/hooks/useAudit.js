@@ -14,7 +14,8 @@ export function useAudit() {
 
     setLoading(true);
     setError(null);
-    setResult(null);
+    // Don't clear result - keep showing old data while loading new version
+    // This prevents the results section from unmounting/remounting
 
     try {
       const requestBody = { package_name: packageName.trim().toLowerCase() };

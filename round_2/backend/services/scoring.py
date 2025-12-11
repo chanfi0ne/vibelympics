@@ -98,30 +98,42 @@ def calculate_radar_scores(factors: List[RiskFactor]) -> RadarScores:
             "reputation": 98
         }
 
-    Each category starts at 100, deductions based on findings.
+    Each category starts at 100, deductions with diminishing returns.
+    Formula: score = 100 * (decay_factor ^ weighted_issues)
+    This gives a smooth curve that doesn't instantly hit 0.
     """
-    # Start all categories at 100
-    scores = {
-        Category.AUTHENTICITY: 100,
-        Category.MAINTENANCE: 100,
-        Category.SECURITY: 100,
-        Category.REPUTATION: 100,
-    }
-
-    # Deduction amounts by severity
-    deductions = {
-        Severity.CRITICAL: 40,
-        Severity.HIGH: 25,
-        Severity.MEDIUM: 15,
-        Severity.LOW: 5,
+    # Base impact per severity (used as exponent weight)
+    severity_weight = {
+        Severity.CRITICAL: 0.5,   # Critical = half point
+        Severity.HIGH: 0.3,       # High = 0.3 points
+        Severity.MEDIUM: 0.15,    # Medium = 0.15 points
+        Severity.LOW: 0.05,       # Low = 0.05 points
         Severity.INFO: 0,
     }
 
-    # Apply deductions for each factor
+    # Collect weighted issues per category
+    category_weights = {
+        Category.AUTHENTICITY: 0.0,
+        Category.MAINTENANCE: 0.0,
+        Category.SECURITY: 0.0,
+        Category.REPUTATION: 0.0,
+    }
+
     for factor in factors:
-        category = factor.category
-        deduction = deductions[factor.severity]
-        scores[category] = max(0, scores[category] - deduction)
+        weight = severity_weight.get(factor.severity, 0)
+        category_weights[factor.category] = category_weights.get(factor.category, 0) + weight
+
+    # Calculate scores using exponential decay (base 0.5 per weighted point)
+    # This gives: 1 crit (0.5) = 71, 2 crit (1.0) = 50, 3 crit (1.5) = 35
+    # 1 crit + 3 high + 3 medium + 1 low = 0.5 + 0.9 + 0.45 + 0.05 = 1.9 -> ~27
+    decay_base = 0.5
+    scores = {}
+    for cat, weight in category_weights.items():
+        if weight == 0:
+            scores[cat] = 100
+        else:
+            # score = 100 * (0.3 ^ weight), minimum 5
+            scores[cat] = max(5, int(100 * (decay_base ** weight)))
 
     # Convert to RadarScores model
     return RadarScores(

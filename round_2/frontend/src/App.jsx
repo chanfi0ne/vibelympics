@@ -20,10 +20,16 @@ export default function App() {
   const [compareError, setCompareError] = useState(null);
 
   const handleSearch = async (packageName, version = null) => {
-    setShowResults(false);
+    // Don't hide results when switching versions - keeps UI stable
+    const isVersionSwitch = result && result.package_name === packageName;
+    if (!isVersionSwitch) {
+      setShowResults(false);
+    }
     await auditPackage(packageName, version);
-    // Always show results after audit completes - error handling is separate
-    setTimeout(() => setShowResults(true), 100);
+    // Show results after audit completes
+    if (!showResults) {
+      setTimeout(() => setShowResults(true), 100);
+    }
   };
 
   const handleCompare = async (data) => {
@@ -240,11 +246,20 @@ export default function App() {
             {result && showResults && (
               <motion.div
                 key="results"
-                className="space-y-8"
+                className="space-y-8 relative"
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                animate={{ opacity: loading ? 0.6 : 1 }}
+                transition={{ duration: 0.2 }}
                 exit={{ opacity: 0 }}
               >
+                {/* Loading overlay for version switches */}
+                {loading && (
+                  <div className="absolute inset-0 flex items-center justify-center z-50 bg-void/50 backdrop-blur-sm rounded-lg">
+                    <div className="text-accent-primary text-lg font-mono animate-pulse">
+                      Loading version...
+                    </div>
+                  </div>
+                )}
                 {/* Package Name Header with Version Picker */}
                 <motion.div
                   className="text-center"
