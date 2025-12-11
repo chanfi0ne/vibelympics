@@ -7,7 +7,7 @@ Welcome to Chainguard's Vibelympics, our first ever vibe coding tournament, wher
 | Round | Project | Description | Tech Stack | Link |
 |-------|---------|-------------|------------|------|
 | 1 | 🕳️ Emoji Zork | Dungeon crawler with 100% emoji UI | Python, Flask, Chainguard Containers | [round_1/](./round_1/) |
-| 2 | TBD | - | - | - |
+| 2 | 🔍 Repojacker | npm supply chain security auditor | Python, FastAPI, React, Docker Compose | [round_2/](./round_2/) |
 | 3 | TBD | - | - | - |
 
 ### Round 1: Emoji Zork
@@ -25,6 +25,26 @@ A text-adventure game inspired by the classic Zork, reimagined with an all-emoji
 - Ambient room particles
 
 **Container:** `ghcr.io/chanfi0ne/vibelympics/emoji-zork:latest`
+
+### Round 2: Repojacker
+
+A containerized npm supply chain security auditor that detects threats before they detect you. Analyze packages for typosquatting, malware, vulnerabilities, and suspicious signals.
+
+**Features:**
+- 🔒 **0 CVEs** - Security-hardened containers with non-root execution
+- 8+ security signals analyzed per package
+- Typosquatting detection (100+ popular packages, Levenshtein distance)
+- MAL-* class malware detection from OSV/GitHub Advisory Database
+- Install script analysis (preinstall/postinstall hooks)
+- Sigstore provenance verification
+- Risk scoring (0-100) with visual radar chart
+- Terminal security aesthetic with dark theme
+
+**Containers:**
+- `ghcr.io/chanfi0ne/vibelympics/repojacker-backend:latest`
+- `ghcr.io/chanfi0ne/vibelympics/repojacker-frontend:latest`
+
+**Quick Start:** `docker compose up --build` then visit http://localhost:3000
 
 ---
 
