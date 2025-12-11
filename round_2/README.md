@@ -1,8 +1,8 @@
-# REPOJACKER
+# CHAINSAW
 
-**Detect supply chain threats before they detect you**
+**Cutting through supply chain threats**
 
-Repojacker is a supply chain security analysis tool that audits npm packages for legitimacy, security risks, and potential threats. Given a package name, it generates a comprehensive security-focused audit report with actionable risk scoring.
+Chainsaw is a supply chain security analysis tool that audits npm packages for legitimacy, security risks, and potential threats. Given a package name, it generates a comprehensive security-focused audit report with actionable risk scoring.
 
 ## Quick Start
 
@@ -115,7 +115,7 @@ npm run dev
 
 ## Container Security
 
-Repojacker practices what it preaches. Our containers are built with supply chain security in mind.
+Chainsaw practices what it preaches. Our containers are built with supply chain security in mind.
 
 ### Zero-CVE Base Images
 
@@ -132,11 +132,11 @@ All container builds include SLSA provenance attestations. Verify the supply cha
 
 ```bash
 # Verify backend image provenance
-gh attestation verify oci://ghcr.io/chanfi0ne/vibelympics/repojacker-backend:latest \
+gh attestation verify oci://ghcr.io/chanfi0ne/vibelympics/chainsaw-backend:latest \
   --owner chanfi0ne
 
 # Verify frontend image provenance
-gh attestation verify oci://ghcr.io/chanfi0ne/vibelympics/repojacker-frontend:latest \
+gh attestation verify oci://ghcr.io/chanfi0ne/vibelympics/chainsaw-frontend:latest \
   --owner chanfi0ne
 ```
 
@@ -145,8 +145,8 @@ gh attestation verify oci://ghcr.io/chanfi0ne/vibelympics/repojacker-frontend:la
 Pull from GitHub Container Registry:
 
 ```bash
-docker pull ghcr.io/chanfi0ne/vibelympics/repojacker-backend:latest
-docker pull ghcr.io/chanfi0ne/vibelympics/repojacker-frontend:latest
+docker pull ghcr.io/chanfi0ne/vibelympics/chainsaw-backend:latest
+docker pull ghcr.io/chanfi0ne/vibelympics/chainsaw-frontend:latest
 ```
 
 ## License

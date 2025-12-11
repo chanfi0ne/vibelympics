@@ -85,10 +85,10 @@ export default function App() {
                 transition={{ duration: 0.5 }}
               >
                 <h1 className="text-3xl md:text-4xl font-bold gradient-text tracking-wider">
-                  REPOJACKER
+                  CHAINSAW
                 </h1>
                 <p className="text-text-dim text-xs md:text-sm mt-1 font-mono">
-                  Detect supply chain threats before they detect you
+                  Cutting through supply chain threats
                 </p>
               </motion.div>
 
@@ -336,7 +336,7 @@ export default function App() {
           <div className="container mx-auto px-4 py-6">
             <div className="flex flex-col md:flex-row items-center justify-between text-text-dim text-sm">
               <div className="flex items-center space-x-4 mb-4 md:mb-0">
-                <span>© 2025 Repojacker</span>
+                <span>© 2025 Chainsaw</span>
                 <span className="hidden md:inline">|</span>
                 <span className="text-accent-primary">Vibelympics Round 2</span>
               </div>

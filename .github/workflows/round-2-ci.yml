@@ -1,5 +1,5 @@
-# PURPOSE: CI/CD pipeline for round_2 (Repojacker) - tests backend, builds Docker Compose services, and verifies deployment
-name: Round 2 - Repojacker CI/CD
+# PURPOSE: CI/CD pipeline for round_2 (Chainsaw) - tests backend, builds Docker Compose services, and verifies deployment
+name: Round 2 - Chainsaw CI/CD
 
 on:
   push:
@@ -17,8 +17,8 @@ env:
   PYTHON_VERSION: "3.12"
   NODE_VERSION: "20"
   REGISTRY: ghcr.io
-  BACKEND_IMAGE_NAME: ${{ github.repository }}/repojacker-backend
-  FRONTEND_IMAGE_NAME: ${{ github.repository }}/repojacker-frontend
+  BACKEND_IMAGE_NAME: ${{ github.repository }}/chainsaw-backend
+  FRONTEND_IMAGE_NAME: ${{ github.repository }}/chainsaw-frontend
 
 defaults:
   run:
@@ -268,13 +268,13 @@ jobs:
 
       - name: Build image for scanning
         run: |
-          docker build -t repojacker-${{ matrix.service }}-scan ${{ matrix.service }}
+          docker build -t chainsaw-${{ matrix.service }}-scan ${{ matrix.service }}
         working-directory: round_2
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: repojacker-${{ matrix.service }}-scan
+          image-ref: chainsaw-${{ matrix.service }}-scan
           format: 'sarif'
           output: 'trivy-results-${{ matrix.service }}.sarif'
           severity: 'CRITICAL,HIGH'
@@ -283,5 +283,5 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
-          category: repojacker-${{ matrix.service }}
+          category: chainsaw-${{ matrix.service }}
         if: always()

@@ -1,4 +1,4 @@
-# PURPOSE: FastAPI application entry point for Repojacker backend
+# PURPOSE: FastAPI application entry point for Chainsaw backend
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,8 +6,8 @@ from routers import audit_router
 
 # Create FastAPI app
 app = FastAPI(
-    title="Repojacker API",
-    description="npm supply chain security auditor",
+    title="Chainsaw API",
+    description="Cutting through supply chain threats",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -35,9 +35,9 @@ app.include_router(audit_router)
 async def root():
     """Root endpoint with API information."""
     return {
-        "service": "Repojacker API",
+        "service": "Chainsaw API",
         "version": "1.0.0",
-        "description": "npm supply chain security auditor",
+        "description": "Cutting through supply chain threats",
         "docs": "/docs",
         "health": "/api/health",
     }
