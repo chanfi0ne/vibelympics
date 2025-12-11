@@ -1,20 +1,39 @@
 # PURPOSE: Risk score calculation and categorization
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from models.response import RiskFactor, Severity, Category, RadarScores
 
 
-def calculate_risk_score(factors: List[RiskFactor]) -> int:
+# Category weights - authenticity and security issues are more severe
+CATEGORY_MULTIPLIERS = {
+    Category.AUTHENTICITY: 1.5,  # Typosquatting, provenance issues
+    Category.SECURITY: 1.5,      # Vulnerabilities, dangerous scripts
+    Category.MAINTENANCE: 1.0,   # Maintainer issues, age
+    Category.REPUTATION: 0.8,    # Download counts, community trust
+}
+
+# High-risk categories where critical findings should escalate overall risk
+HIGH_RISK_CATEGORIES = {Category.AUTHENTICITY, Category.SECURITY}
+
+
+def calculate_risk_score(factors: List[RiskFactor]) -> Tuple[int, bool]:
     """
     Calculate overall risk score (0-100).
 
-    Severity weights:
+    Severity base points:
         Critical: 25 points
         High: 15 points
         Medium: 8 points
         Low: 3 points
         Info: 0 points
 
-    Score is capped at 100.
+    Category multipliers applied:
+        Authenticity: 1.5x (typosquatting is serious)
+        Security: 1.5x (vulnerabilities are serious)
+        Maintenance: 1.0x (standard)
+        Reputation: 0.8x (less critical)
+
+    Returns:
+        Tuple of (score, has_critical_in_high_risk_category)
     """
     severity_points = {
         Severity.CRITICAL: 25,
@@ -24,21 +43,39 @@ def calculate_risk_score(factors: List[RiskFactor]) -> int:
         Severity.INFO: 0,
     }
 
-    total = sum(severity_points[factor.severity] for factor in factors)
+    total = 0.0
+    has_critical_high_risk = False
+
+    for factor in factors:
+        base_points = severity_points[factor.severity]
+        multiplier = CATEGORY_MULTIPLIERS.get(factor.category, 1.0)
+        total += base_points * multiplier
+
+        # Track if there's a critical finding in a high-risk category
+        if factor.severity == Severity.CRITICAL and factor.category in HIGH_RISK_CATEGORIES:
+            has_critical_high_risk = True
 
     # Cap at 100
-    return min(100, total)
+    return min(100, int(total)), has_critical_high_risk
 
 
-def get_risk_level(score: int) -> str:
+def get_risk_level(score: int, has_critical_high_risk: bool = False) -> str:
     """
     Map score to risk level.
 
-    76-100: critical
-    51-75: high
-    26-50: medium
-    0-25: low
+    Base thresholds:
+        76-100: critical
+        51-75: high
+        26-50: medium
+        0-25: low
+
+    Special rule: If there's a CRITICAL finding in authenticity or security,
+    the minimum risk level is HIGH (regardless of score).
     """
+    # Critical finding in high-risk category forces at least HIGH
+    if has_critical_high_risk and score < 51:
+        return "high"
+
     if score >= 76:
         return "critical"
     elif score >= 51:

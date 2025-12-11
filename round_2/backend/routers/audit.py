@@ -202,8 +202,8 @@ async def audit_package(request: AuditRequest):
         factors.extend(analyze_vulnerabilities(advisories))
 
         # Calculate scores
-        risk_score = calculate_risk_score(factors)
-        risk_level = get_risk_level(risk_score)
+        risk_score, has_critical_high_risk = calculate_risk_score(factors)
+        risk_level = get_risk_level(risk_score, has_critical_high_risk)
         radar_scores = calculate_radar_scores(factors)
 
         # Build repository verification
