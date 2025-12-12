@@ -1,5 +1,5 @@
 // PURPOSE: Expandable findings list component with severity-based styling and animations
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const SEVERITY_CONFIG = {
@@ -159,6 +159,11 @@ function FindingItem({ finding, index }) {
 export default function FindingsList({ findings }) {
   const [filterSeverity, setFilterSeverity] = useState('ALL');
 
+  // Reset filter when findings change (e.g., version switch)
+  useEffect(() => {
+    setFilterSeverity('ALL');
+  }, [findings]);
+
   const filteredFindings = filterSeverity === 'ALL'
     ? findings
     : findings.filter(f => f.severity?.toUpperCase() === filterSeverity);
@@ -216,7 +221,7 @@ export default function FindingsList({ findings }) {
       <div className="space-y-3">
         {filteredFindings.length > 0 ? (
           filteredFindings.map((finding, index) => (
-            <FindingItem key={index} finding={finding} index={index} />
+            <FindingItem key={`${finding.name}-${finding.severity}-${index}`} finding={finding} index={index} />
           ))
         ) : (
           <motion.div
