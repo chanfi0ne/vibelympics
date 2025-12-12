@@ -1,10 +1,15 @@
 # PURPOSE: API route handlers for package audit endpoints
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from datetime import datetime
 import httpx
 import asyncio
 import re
 from typing import Optional
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+# Rate limiter instance - shared with main app
+limiter = Limiter(key_func=get_remote_address)
 
 from models.request import AuditRequest, CompareRequest
 from models.response import (
@@ -61,7 +66,8 @@ async def health_check():
 
 
 @router.post("/audit", response_model=AuditResponse)
-async def audit_package(request: AuditRequest):
+@limiter.limit("10/minute")
+async def audit_package(request: Request, audit_request: AuditRequest):
     """
     Perform comprehensive security audit on an npm package.
 
@@ -75,7 +81,7 @@ async def audit_package(request: AuditRequest):
     Graceful degradation: If external APIs fail, returns partial results.
     """
     start_time = datetime.now()
-    package_name = request.package_name
+    package_name = audit_request.package_name
 
     async with httpx.AsyncClient() as client:
         # Parallel API calls with exception handling
@@ -112,11 +118,11 @@ async def audit_package(request: AuditRequest):
         versions = npm_data.get("versions", {})
         
         # Use requested version or default to latest
-        target_version = request.version if request.version else latest_version
-        if request.version and request.version not in versions:
+        target_version = audit_request.version if audit_request.version else latest_version
+        if audit_request.version and audit_request.version not in versions:
             raise HTTPException(
                 status_code=400,
-                detail={"error": "invalid_version", "message": f"Version '{request.version}' not found"}
+                detail={"error": "invalid_version", "message": f"Version '{audit_request.version}' not found"}
             )
         
         latest_version_data = versions.get(target_version, {})
@@ -358,7 +364,8 @@ async def audit_package(request: AuditRequest):
 
 
 @router.post("/audit/compare", response_model=CompareResponse)
-async def compare_versions(request: CompareRequest):
+@limiter.limit("10/minute")
+async def compare_versions(request: Request, compare_request: CompareRequest):
     """
     Compare security vulnerabilities between two versions of a package.
 
@@ -370,9 +377,9 @@ async def compare_versions(request: CompareRequest):
     - Upgrade recommendation
     """
     start_time = datetime.now()
-    package_name = request.package_name
-    version_old = request.version_old
-    version_new = request.version_new
+    package_name = compare_request.package_name
+    version_old = compare_request.version_old
+    version_new = compare_request.version_new
 
     async with httpx.AsyncClient() as client:
         # Verify package exists
