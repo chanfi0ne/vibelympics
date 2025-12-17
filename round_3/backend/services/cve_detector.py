@@ -25,6 +25,23 @@ def load_cve_db():
 
 load_cve_db()
 
+# Package name aliases - map variants to canonical names in CVE DB
+PACKAGE_ALIASES = {
+    "lodash-es": "lodash",
+    "lodash.merge": "lodash",
+    "lodash.template": "lodash",
+    "lodash.set": "lodash",
+    "lodash.get": "lodash",
+    "lodash.clonedeep": "lodash",
+    "underscore.js": "underscore",
+    "jquery-slim": "jquery",
+    "jquery.min": "jquery",
+    "axios-http": "axios",
+    "node-fetch": "node-fetch",
+    "isomorphic-fetch": "node-fetch",
+    "whatwg-fetch": "node-fetch",
+}
+
 
 @dataclass
 class CVEMatch:
@@ -102,8 +119,11 @@ def detect_cves(package_name: str, version: Optional[str] = None) -> list[CVEMat
     if pkg_name.startswith("_"):
         return matches
     
+    # Check for package aliases (e.g., lodash-es -> lodash)
+    canonical_name = PACKAGE_ALIASES.get(pkg_name, pkg_name)
+    
     # Look up in CVE database
-    cves = CVE_DB.get(pkg_name, [])
+    cves = CVE_DB.get(canonical_name, [])
     
     for cve in cves:
         affected = cve.get("affected_versions", "*")
