@@ -66,6 +66,9 @@ def encode_text(text: str) -> str:
     text = text.replace(":", "~c")      # colon -> ~c
     text = text.replace(";", "~c")      # semicolon -> ~c
     text = text.replace("%", "")        # remove percent signs
+    text = text.replace(",", "")        # remove commas (cause 404s when encoded)
+    text = text.replace("(", "")        # remove parens
+    text = text.replace(")", "")
     
     # Clean up any triple underscores from removed chars
     while "___" in text:
