@@ -323,7 +323,8 @@ function showResults(data) {
 async function doRoast() {
     const type = inputType.value;
     const content = inputContent.value.trim();
-    const useAi = document.getElementById('use-ai')?.checked || false;
+    const aiToggle = document.getElementById('ai-toggle');
+    const useAi = aiToggle?.dataset.enabled === 'true';
 
     if (!content) {
         showError('Your input is empty. Much like your security strategy.');
@@ -495,13 +496,36 @@ async function resetParanoia() {
     }
 }
 
+// AI Toggle button
+function toggleAi() {
+    const aiToggle = document.getElementById('ai-toggle');
+    if (!aiToggle) return;
+    
+    const isEnabled = aiToggle.dataset.enabled === 'true';
+    const newState = !isEnabled;
+    
+    aiToggle.dataset.enabled = newState.toString();
+    aiToggle.textContent = newState ? 'AI: ON' : 'AI: OFF';
+    
+    // Update styling
+    if (newState) {
+        aiToggle.classList.remove('border-terminal-blue', 'text-terminal-blue', 'hover:bg-terminal-blue/20');
+        aiToggle.classList.add('bg-terminal-blue', 'text-terminal-bg', 'hover:bg-terminal-blue/80');
+    } else {
+        aiToggle.classList.remove('bg-terminal-blue', 'text-terminal-bg', 'hover:bg-terminal-blue/80');
+        aiToggle.classList.add('border-terminal-blue', 'text-terminal-blue', 'hover:bg-terminal-blue/20');
+    }
+}
+
 // Event listeners
 const panicBtn = document.getElementById('panic-btn');
 const resetBtn = document.getElementById('reset-btn');
+const aiToggle = document.getElementById('ai-toggle');
 roastBtn.addEventListener('click', doRoast);
 randomBtn.addEventListener('click', loadRandomExample);
 panicBtn.addEventListener('click', loadPanicExample);
 if (resetBtn) resetBtn.addEventListener('click', resetParanoia);
+if (aiToggle) aiToggle.addEventListener('click', toggleAi);
 
 // Allow Ctrl+Enter to submit
 inputContent.addEventListener('keydown', (e) => {
