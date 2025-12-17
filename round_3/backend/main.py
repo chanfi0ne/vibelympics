@@ -8,6 +8,8 @@ from typing import Literal, Optional
 import random
 import uuid
 
+from services.analyzer import analyze
+
 
 class RoastRequest(BaseModel):
     input_type: Literal["package_json", "requirements_txt", "go_mod", "sbom", "single_package"]
@@ -108,7 +110,6 @@ STUB_CAPTIONS = [
 async def roast(request: RoastRequest):
     """Main roast endpoint - analyzes dependencies and generates meme."""
 
-    # Stub: count "dependencies" (lines or entries)
     content = request.content.strip()
     if not content:
         raise HTTPException(
@@ -116,20 +117,27 @@ async def roast(request: RoastRequest):
             detail="Your input is empty. Much like your security strategy."
         )
 
-    # Very basic "analysis" - just count lines for now
-    lines = [l for l in content.split('\n') if l.strip()]
-    dep_count = len(lines)
+    # Parse and analyze dependencies
+    result = analyze(request.input_type, content)
+
+    if result.errors:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Parse error: {result.errors[0]}. Your dependencies are as broken as your JSON."
+        )
+
+    dep_count = result.dep_count
 
     # Update stats
     stats["roasts_completed"] += 1
     stats["dependencies_judged"] += dep_count
     stats["sboms_generated"] += 1 if request.include_sbom else 0
 
-    # Generate stub response
+    # Generate response
     meme_id = str(uuid.uuid4())[:8]
     caption = random.choice(STUB_CAPTIONS).format(count=dep_count)
 
-    # Stub findings
+    # Build findings based on actual analysis
     findings = [
         Finding(
             type="dependency_count",
@@ -138,9 +146,25 @@ async def roast(request: RoastRequest):
         )
     ]
 
-    # Stub SBOM (sarcastic)
+    # List some actual dependency names in findings
+    if result.dependencies:
+        sample_deps = result.dependencies[:5]
+        dep_names = ", ".join(d.name for d in sample_deps)
+        if dep_count > 5:
+            dep_names += f" (+{dep_count - 5} more)"
+        findings.append(Finding(
+            type="packages",
+            severity="info",
+            detail=f"Found: {dep_names}"
+        ))
+
+    # SBOM with actual components
     sbom = None
     if request.include_sbom:
+        components = [
+            {"name": d.name, "version": d.version or "unknown", "type": "library"}
+            for d in result.dependencies
+        ]
         sbom = {
             "format": "CycloneDX",
             "version": "1.4",
@@ -150,16 +174,16 @@ async def roast(request: RoastRequest):
             "completeness_note": f"We found {dep_count} components. We probably missed {dep_count * 3}.",
             "will_prevent_next_attack": False,
             "will_make_auditors_happy": True,
-            "components": []  # Stub - will populate later
+            "components": components
         }
 
     return RoastResponse(
-        meme_url=f"/memes/{meme_id}.png",  # Stub URL - meme gen comes later
+        meme_url=f"/memes/{meme_id}.png",
         meme_id=meme_id,
         roast_summary=f"You have {dep_count} dependencies. Your SBOM completeness is estimated at {random.randint(15,35)}%. This is fine.",
         findings=findings,
         caption=caption,
-        template_used="this-is-fine",  # Stub
+        template_used="this-is-fine",
         sbom=sbom,
         paranoia={
             "level": 0,
