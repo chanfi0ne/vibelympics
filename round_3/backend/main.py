@@ -20,6 +20,7 @@ from services import paranoia as paranoia_service
 from services.meme_generator import generate_meme, get_meme_path
 from services.cve_detector import detect_cves_batch, get_worst_severity, CVEMatch
 from services.cursed_detector import detect_cursed_batch, get_worst_cursed, CursedMatch
+from services.ai_roaster import generate_ai_roast, is_ai_available, AIRoastResult
 
 # Configuration
 MAX_INPUT_SIZE = int(os.environ.get("MAX_INPUT_SIZE", 102400))  # 100KB
@@ -267,17 +268,45 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
 
     # Generate response
     meme_id = str(uuid.uuid4())[:8]
+    ai_generated = False
+    template_used = "fine"
     
-    # Select caption based on findings (prioritize cursed > CVE > dep count)
-    if worst_cursed:
-        caption = worst_cursed.roast
-    elif cve_count > 0:
-        caption = select_caption("cve", severity=worst_cve_severity)
-    else:
-        caption = select_caption("dependency_count", dep_count=dep_count)
+    # Try AI generation if requested and available
+    if request.use_ai and is_ai_available():
+        # Prepare data for AI
+        cve_data = [
+            {"package": c.package, "version": c.version, "cve_id": c.cve_id, 
+             "severity": c.severity, "description": c.description}
+            for c in cve_matches[:5]
+        ]
+        cursed_data = [
+            {"package": c.package, "description": c.description}
+            for c in cursed_matches
+        ]
+        
+        ai_result = await generate_ai_roast(
+            dep_count=dep_count,
+            package_names=package_names,
+            cve_list=cve_data,
+            cursed_list=cursed_data
+        )
+        
+        if ai_result:
+            caption = ai_result.roast
+            template_used = ai_result.template
+            ai_generated = True
+    
+    # Fallback to pre-written captions if AI not used or failed
+    if not ai_generated:
+        if worst_cursed:
+            caption = worst_cursed.roast
+        elif cve_count > 0:
+            caption = select_caption("cve", severity=worst_cve_severity)
+        else:
+            caption = select_caption("dependency_count", dep_count=dep_count)
 
     # Generate the meme image
-    generate_meme(meme_id, caption, template="this-is-fine")
+    generate_meme(meme_id, caption, template=template_used)
 
     # Build findings based on actual analysis
     dep_severity = "high" if dep_count > 50 else "medium" if dep_count > 10 else "low"
@@ -363,10 +392,10 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
         roast_summary=roast_summary,
         findings=findings,
         caption=caption,
-        template_used="this-is-fine",
+        template_used=template_used,
         sbom=sbom,
         paranoia=paranoia_state,
-        ai_generated=False,  # Will be True when AI is used
+        ai_generated=ai_generated,
         cve_count=cve_count,
         cursed_count=cursed_count
     )
