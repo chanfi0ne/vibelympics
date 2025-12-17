@@ -4,6 +4,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Optional
+import random
 import uuid
 
 # Paranoia levels
@@ -130,7 +131,6 @@ def get_paranoia_state(session: Session) -> dict:
 def should_refuse_request(session: Session) -> bool:
     """At MELTDOWN level, 50% chance of refusing request."""
     if session.level == MELTDOWN:
-        import random
         return random.random() < 0.5
     return False
 
