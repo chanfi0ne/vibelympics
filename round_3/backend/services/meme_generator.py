@@ -59,6 +59,11 @@ def encode_text(text: str) -> str:
     text = text.replace("'", "''")      # apostrophe -> ''
     text = text.replace('"', "''")      # quote -> ''
     text = text.replace("/", "~s")      # slash -> ~s
+    text = text.replace(".", "~p")      # period -> ~p (prevents URL issues)
+    
+    # Remove any remaining problematic chars at end
+    text = text.rstrip("~p")  # Don't end with encoded period
+    
     return urllib.parse.quote(text, safe="_~-'")
 
 
