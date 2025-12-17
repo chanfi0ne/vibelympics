@@ -22,6 +22,7 @@ const roastSummary = document.getElementById('roast-summary').querySelector('p')
 const caption = document.getElementById('caption');
 const findingsList = document.getElementById('findings-list');
 const sbomJson = document.getElementById('sbom-json');
+const memeImage = document.getElementById('meme-image');
 
 // Paranoia display
 const levelName = document.getElementById('level-name');
@@ -112,6 +113,9 @@ function showResults(data) {
     errorBox.classList.add('hidden');
     loading.classList.add('hidden');
     results.classList.remove('hidden');
+
+    // Meme image
+    memeImage.src = `${API_BASE}${data.meme_url}`;
 
     // Roast summary
     roastSummary.textContent = data.roast_summary;
