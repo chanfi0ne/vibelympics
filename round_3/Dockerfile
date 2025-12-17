@@ -17,12 +17,12 @@ FROM cgr.dev/chainguard/python:latest
 WORKDIR /app
 
 # Copy installed dependencies
-COPY --from=builder /app/deps /app/deps
+COPY --from=builder --chown=nonroot:nonroot /app/deps /app/deps
 
-# Copy application code
-COPY backend/ /app/backend/
-COPY frontend/ /app/frontend/
-COPY run.py /app/
+# Copy application code (chown for nonroot user to write memes)
+COPY --chown=nonroot:nonroot backend/ /app/backend/
+COPY --chown=nonroot:nonroot frontend/ /app/frontend/
+COPY --chown=nonroot:nonroot run.py /app/
 
 # Set Python path to include deps and backend
 ENV PYTHONPATH=/app/deps:/app/backend

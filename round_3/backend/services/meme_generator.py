@@ -1,21 +1,34 @@
-# PURPOSE: Simple meme generator using Pillow
-# Creates "this is fine" style memes with captions - kept minimal per navigator guidance
+# PURPOSE: Meme generator using memegen.link API for REAL memes
+# Falls back to Pillow if API fails
 
 from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 import textwrap
-
-# Meme dimensions
-MEME_WIDTH = 600
-MEME_HEIGHT = 400
-
-# Colors
-BG_COLOR = (30, 30, 30)  # Dark background
-TEXT_COLOR = (255, 255, 255)  # White text
-ACCENT_COLOR = (249, 115, 22)  # Orange accent (fire theme)
+import random
+import urllib.request
+import urllib.parse
 
 # Output directory
 OUTPUT_DIR = Path(__file__).parent.parent / "static" / "memes"
+
+# memegen.link API - no auth required!
+MEMEGEN_API = "https://api.memegen.link/images"
+
+# Meme templates with security-themed top text
+MEME_TEMPLATES = [
+    {"id": "fine", "top": "This is fine", "bottom_prefix": ""},
+    {"id": "doge", "top": "Such dependencies", "bottom_prefix": "Very "},
+    {"id": "drake", "top": "Reading the CVE list", "bottom_prefix": ""},
+    {"id": "buzz", "top": "Vulnerabilities", "bottom_prefix": ""},
+    {"id": "batman", "top": "Let me just npm install--", "bottom_prefix": ""},
+    {"id": "afraid", "top": "I'm afraid", "bottom_prefix": ""},
+    {"id": "aliens", "top": "", "bottom_prefix": "Dependencies"},
+    {"id": "rollsafe", "top": "Can't have vulnerabilities", "bottom_prefix": "If you "},
+    {"id": "success", "top": "Zero CVEs in production", "bottom_prefix": ""},
+    {"id": "boat", "top": "", "bottom_prefix": "I should audit my "},
+    {"id": "fry", "top": "", "bottom_prefix": "Not sure if secure or "},
+    {"id": "pigeon", "top": "Is this", "bottom_prefix": ""},
+]
 
 
 def ensure_output_dir():
@@ -23,87 +36,90 @@ def ensure_output_dir():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def wrap_text(text: str, max_chars: int = 40) -> list[str]:
-    """Wrap text to fit within meme width."""
-    return textwrap.wrap(text, width=max_chars)
+def encode_text(text: str) -> str:
+    """Encode text for memegen URL (replace spaces with _, special chars)."""
+    # memegen uses _ for spaces and -- for underscores
+    text = text.replace("_", "__").replace(" ", "_").replace("?", "~q").replace("#", "~h")
+    return urllib.parse.quote(text, safe="_~")
+
+
+def generate_meme_memegen(meme_id: str, caption: str) -> Path | None:
+    """Generate a real meme using memegen.link API (no auth needed!)."""
+    ensure_output_dir()
+    
+    template = random.choice(MEME_TEMPLATES)
+    
+    # Build the caption
+    if template["top"]:
+        top_text = template["top"]
+        bottom_text = template["bottom_prefix"] + caption
+    else:
+        words = caption.split()
+        mid = len(words) // 2
+        top_text = " ".join(words[:mid]) if mid > 0 else caption
+        bottom_text = template["bottom_prefix"] + " ".join(words[mid:]) if mid > 0 else ""
+    
+    # Truncate for URL length limits
+    top_encoded = encode_text(top_text[:50])
+    bottom_encoded = encode_text(bottom_text[:80])
+    
+    # Build URL: https://api.memegen.link/images/{template}/{top}/{bottom}.png
+    meme_url = f"{MEMEGEN_API}/{template['id']}/{top_encoded}/{bottom_encoded}.png"
+    
+    try:
+        output_path = OUTPUT_DIR / f"{meme_id}.png"
+        urllib.request.urlretrieve(meme_url, output_path)
+        
+        # Verify it's a valid image
+        if output_path.exists() and output_path.stat().st_size > 1000:
+            return output_path
+    except Exception as e:
+        print(f"memegen API failed: {e}")
+    
+    return None
+
+
+def generate_meme_fallback(meme_id: str, caption: str) -> Path:
+    """Fallback: generate simple meme with Pillow if API fails."""
+    ensure_output_dir()
+    
+    img = Image.new("RGB", (600, 400), (30, 30, 30))
+    draw = ImageDraw.Draw(img)
+    
+    try:
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
+    except (OSError, IOError):
+        font = ImageFont.load_default()
+    
+    # Draw text with wrapping
+    lines = textwrap.wrap(caption, width=35)
+    y = 150
+    for line in lines:
+        bbox = draw.textbbox((0, 0), line, font=font)
+        x = (600 - (bbox[2] - bbox[0])) // 2
+        # Draw outline
+        for dx, dy in [(-2, 0), (2, 0), (0, -2), (0, 2)]:
+            draw.text((x + dx, y + dy), line, font=font, fill=(0, 0, 0))
+        draw.text((x, y), line, font=font, fill=(255, 255, 255))
+        y += 40
+    
+    # Add watermark
+    draw.text((200, 370), "PARANOID // SBOM ROAST", font=font, fill=(100, 100, 100))
+    
+    output_path = OUTPUT_DIR / f"{meme_id}.png"
+    img.save(output_path, "PNG")
+    return output_path
 
 
 def generate_meme(meme_id: str, caption: str, template: str = "this-is-fine") -> Path:
-    """
-    Generate a meme image with the given caption.
-    Returns path to the generated image.
-    """
-    ensure_output_dir()
-
-    # Create base image
-    img = Image.new("RGB", (MEME_WIDTH, MEME_HEIGHT), BG_COLOR)
-    draw = ImageDraw.Draw(img)
-
-    # Try to use a nice font, fall back to default
-    try:
-        # Try common system fonts
-        font_large = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 28)
-        font_small = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 18)
-    except (OSError, IOError):
-        try:
-            font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
-            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
-        except (OSError, IOError):
-            font_large = ImageFont.load_default()
-            font_small = ImageFont.load_default()
-
-    # Draw "THIS IS FINE" header
-    header = "THIS IS FINE"
-    header_bbox = draw.textbbox((0, 0), header, font=font_large)
-    header_width = header_bbox[2] - header_bbox[0]
-    header_x = (MEME_WIDTH - header_width) // 2
-    draw.text((header_x, 30), header, font=font_large, fill=ACCENT_COLOR)
-
-    # Draw flame decorations (simple rectangles for fire effect)
-    for i in range(5):
-        x = 50 + i * 110
-        flame_height = 60 + (i % 3) * 20
-        draw.polygon([
-            (x, MEME_HEIGHT - 80),
-            (x + 30, MEME_HEIGHT - 80 - flame_height),
-            (x + 60, MEME_HEIGHT - 80)
-        ], fill=ACCENT_COLOR)
-
-    # Draw caption text (wrapped)
-    lines = wrap_text(caption, max_chars=45)
-    y_offset = 100
-    line_height = 35
-
-    for line in lines:
-        line_bbox = draw.textbbox((0, 0), line, font=font_small)
-        line_width = line_bbox[2] - line_bbox[0]
-        line_x = (MEME_WIDTH - line_width) // 2
-        draw.text((line_x, y_offset), line, font=font_small, fill=TEXT_COLOR)
-        y_offset += line_height
-
-    # Draw border
-    draw.rectangle(
-        [(5, 5), (MEME_WIDTH - 5, MEME_HEIGHT - 5)],
-        outline=ACCENT_COLOR,
-        width=3
-    )
-
-    # Add paranoid watermark
-    watermark = "PARANOID // SBOM ROAST"
-    wm_bbox = draw.textbbox((0, 0), watermark, font=font_small)
-    wm_width = wm_bbox[2] - wm_bbox[0]
-    draw.text(
-        ((MEME_WIDTH - wm_width) // 2, MEME_HEIGHT - 50),
-        watermark,
-        font=font_small,
-        fill=(100, 100, 100)
-    )
-
-    # Save image
-    output_path = OUTPUT_DIR / f"{meme_id}.png"
-    img.save(output_path, "PNG")
-
-    return output_path
+    """Generate a meme - tries memegen.link API first, falls back to Pillow."""
+    # Try real meme generation first
+    result = generate_meme_memegen(meme_id, caption)
+    if result:
+        return result
+    
+    # Fallback to simple generation
+    return generate_meme_fallback(meme_id, caption)
 
 
 def get_meme_path(meme_id: str) -> Path | None:
