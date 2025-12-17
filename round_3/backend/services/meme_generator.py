@@ -306,8 +306,8 @@ def draw_meme_text(draw: ImageDraw, text: str, position: str, img_width: int, im
     target_width = img_width - (margin * 2)
     wrap_chars = max(12, int(target_width / avg_char_width))
 
-    # Limit to 2 lines per section - classic meme style
-    max_lines = 2
+    # Allow up to 3 lines to avoid cutting off punchlines
+    max_lines = 3
 
     # Minimum margin to prevent clipping
     margin = 10
