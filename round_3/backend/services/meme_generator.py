@@ -277,13 +277,17 @@ def draw_meme_text(draw: ImageDraw, text: str, position: str, img_width: int, im
         top_text = text if position == "top" else ""
         bottom_text = text if position != "top" else ""
     
-    line_height = font.size + 5 if hasattr(font, 'size') else 50
-    outline = max(3, font.size // 12) if hasattr(font, 'size') else 3
+    line_height = int(font.size * 1.2) if hasattr(font, 'size') else 60
+    outline = max(4, font.size // 8) if hasattr(font, 'size') else 5  # THICK outline
+    
+    # Calculate wrap width based on image and font - fill ~90% of width
+    avg_char_width = font.size * 0.6  # Approximate character width
+    wrap_chars = max(15, int((img_width * 0.9) / avg_char_width))
     
     # Draw TOP text
     if top_text:
-        lines = textwrap.wrap(top_text, width=20)
-        y = 10
+        lines = textwrap.wrap(top_text, width=wrap_chars)
+        y = 15
         for line in lines:
             bbox = draw.textbbox((0, 0), line, font=font)
             text_width = bbox[2] - bbox[0]
@@ -293,9 +297,9 @@ def draw_meme_text(draw: ImageDraw, text: str, position: str, img_width: int, im
     
     # Draw BOTTOM text
     if bottom_text:
-        lines = textwrap.wrap(bottom_text, width=20)
+        lines = textwrap.wrap(bottom_text, width=wrap_chars)
         total_height = len(lines) * line_height
-        y = img_height - total_height - 10
+        y = img_height - total_height - 15
         for line in lines:
             bbox = draw.textbbox((0, 0), line, font=font)
             text_width = bbox[2] - bbox[0]
@@ -335,8 +339,8 @@ def generate_meme_pillow(meme_id: str, caption: str, template_id: str | None = N
         
         draw = ImageDraw.Draw(img)
         
-        # BIG font for classic meme look - scale with image size
-        font_size = max(40, min(img.width, img.height) // 8)
+        # HUGE font for classic meme look - like memegen.link
+        font_size = max(48, img.width // 12)  # Much bigger!
         font = get_font(size=font_size)
         logger.info(f"Using font size {font_size} for {img.width}x{img.height} image")
         
