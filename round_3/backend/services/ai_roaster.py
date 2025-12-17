@@ -161,8 +161,15 @@ GOOD examples (notice how SHORT they are):
 BAD examples (TOO LONG - don't do this):
 - "Using left-pad AND event-stream? That's not a dependency tree..." (WAY too long)
 
-## MEME TEMPLATES
+## MEME TEMPLATES (pick ONE that best fits - VARY your choices, don't always use "fine")
 {template_list}
+
+Pick the template that BEST matches the roast. Examples:
+- Found CVEs? Use "disaster" or "fine" 
+- Old deprecated packages? Use "harold" or "fry"
+- Left-pad/event-stream? Use "spiderman" or "surprisedpikachu"
+- Bad security logic? Use "rollsafe" or "changemymind"
+- Clean deps? Use "aliens" (suspicious!)
 
 ## OUTPUT FORMAT
 Return ONLY valid JSON with a SHORT roast (under 100 chars):
@@ -231,10 +238,13 @@ async def generate_ai_roast(
             
             result = json.loads(content.strip())
             
-            # Validate template
-            template = result.get("template", "fine")
+            # Validate template - random fallback if invalid
+            template = result.get("template", "")
             if template not in MEME_TEMPLATES:
-                template = "fine"
+                import random
+                old_template = template
+                template = random.choice(list(MEME_TEMPLATES.keys()))
+                logger.warning(f"AI returned invalid template '{old_template}', using random: {template}")
             
             # Get roast and enforce length limit
             roast = result.get("roast", "Your dependencies are concerning.")
