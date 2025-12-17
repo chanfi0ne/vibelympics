@@ -1,29 +1,50 @@
 # PURPOSE: FastAPI application entry point for PARANOID SBOM Roast Generator
 # Provides /healthz and /roast endpoints with paranoia-aware responses
 
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel, field_validator
 from typing import Literal, Optional
 from pathlib import Path
 import random
 import uuid
+import os
+import time
+from collections import defaultdict
 
 from services.analyzer import analyze
 from services.caption_selector import select_caption, get_sbom_commentary, get_paranoia_message
 from services import paranoia as paranoia_service
 from services.meme_generator import generate_meme, get_meme_path
 
+# Configuration
+MAX_INPUT_SIZE = int(os.environ.get("MAX_INPUT_SIZE", 102400))  # 100KB
+MAX_DEPENDENCIES = int(os.environ.get("MAX_DEPENDENCIES", 500))
+RATE_LIMIT_PER_MINUTE = int(os.environ.get("RATE_LIMIT_PER_MINUTE", 10))
+MEME_TTL_SECONDS = int(os.environ.get("MEME_TTL_SECONDS", 3600))  # 1 hour
+
+# Rate limiting state (in-memory, resets on restart)
+rate_limit_store: dict[str, list[float]] = defaultdict(list)
+
 # Path to frontend directory
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
+MEMES_DIR = Path(__file__).parent / "static" / "memes"
 
 
 class RoastRequest(BaseModel):
     input_type: Literal["package_json", "requirements_txt", "go_mod", "sbom", "single_package"]
     content: str
     include_sbom: bool = True
+    use_ai: bool = False  # Enable AI-generated roasts (requires ANTHROPIC_API_KEY)
+
+    @field_validator('content')
+    @classmethod
+    def validate_content_size(cls, v):
+        if len(v) > MAX_INPUT_SIZE:
+            raise ValueError(f"Input too large. Maximum {MAX_INPUT_SIZE // 1024}KB. Your input weighs as much as your node_modules.")
+        return v
 
 
 class Finding(BaseModel):
@@ -49,14 +70,45 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# CORS - permissive for now, tighten later
+# CORS configuration - tightened from wildcard
+ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS if ALLOWED_ORIGINS != ["*"] else ["*"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Session-Id"],
 )
+
+
+def check_rate_limit(client_ip: str) -> bool:
+    """Check if client has exceeded rate limit. Returns True if allowed."""
+    now = time.time()
+    minute_ago = now - 60
+    
+    # Clean old entries
+    rate_limit_store[client_ip] = [t for t in rate_limit_store[client_ip] if t > minute_ago]
+    
+    # Check limit
+    if len(rate_limit_store[client_ip]) >= RATE_LIMIT_PER_MINUTE:
+        return False
+    
+    # Record request
+    rate_limit_store[client_ip].append(now)
+    return True
+
+
+def cleanup_old_memes():
+    """Delete memes older than TTL."""
+    if not MEMES_DIR.exists():
+        return
+    now = time.time()
+    for meme_file in MEMES_DIR.glob("*.png"):
+        if meme_file.stat().st_mtime < (now - MEME_TTL_SECONDS):
+            try:
+                meme_file.unlink()
+            except Exception:
+                pass  # Ignore cleanup errors
 
 # Simple in-memory state
 stats = {
@@ -134,8 +186,20 @@ async def get_paranoia(x_session_id: Optional[str] = Header(None)):
 
 
 @app.post("/roast", response_model=RoastResponse)
-async def roast(request: RoastRequest, x_session_id: Optional[str] = Header(None)):
+async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str] = Header(None)):
     """Main roast endpoint - analyzes dependencies and generates meme."""
+    
+    # Rate limiting
+    client_ip = req.client.host if req.client else "unknown"
+    if not check_rate_limit(client_ip):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many requests. Are you stress-testing me? I'm logging everything. EVERYTHING."
+        )
+    
+    # Cleanup old memes periodically (1 in 10 chance per request)
+    if random.random() < 0.1:
+        cleanup_old_memes()
 
     content = request.content.strip()
     if not content:
