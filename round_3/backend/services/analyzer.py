@@ -63,8 +63,8 @@ def parse_requirements_txt(content: str) -> AnalysisResult:
     errors = []
 
     # Regex for requirement lines: package==version, package>=version, etc.
-    # Also handles bare package names
-    req_pattern = re.compile(r'^([a-zA-Z0-9_-]+)([<>=!~]+.*)?$')
+    # Also handles bare package names and dotted names (zope.interface, ruamel.yaml)
+    req_pattern = re.compile(r'^([a-zA-Z0-9_.-]+)([<>=!~]+.*)?$')
 
     for line in content.split('\n'):
         line = line.strip()
