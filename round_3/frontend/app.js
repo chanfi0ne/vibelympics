@@ -184,6 +184,7 @@ function updateParanoiaDisplay(paranoia) {
     const level = paranoia.level || 0;
     const name = paranoia.level_name || 'CHILL';
     const message = paranoia.message || '';
+    const resetBtn = document.getElementById('reset-btn');
 
     // Update level name and color
     levelName.textContent = name;
@@ -211,6 +212,15 @@ function updateParanoiaDisplay(paranoia) {
 
     // Update message
     paranoiaMessage.textContent = message;
+    
+    // Show reset button when paranoia is elevated
+    if (resetBtn) {
+        if (level > 0) {
+            resetBtn.classList.remove('hidden');
+        } else {
+            resetBtn.classList.add('hidden');
+        }
+    }
 }
 
 function showError(message) {
@@ -452,11 +462,46 @@ async function fetchParanoiaState() {
     }
 }
 
+// Reset paranoia level
+async function resetParanoia() {
+    try {
+        const response = await fetch(`${API_BASE}/reset`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session-Id': sessionId
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            // Update paranoia display with reset state
+            updateParanoiaDisplay({
+                level: data.paranoia_level,
+                level_name: 'CHILL',
+                message: data.message
+            });
+            
+            // Clear any error displays
+            errorBox.classList.add('hidden');
+            
+            // Flash green to confirm reset
+            const paranoiaBar = document.getElementById('paranoia-bar');
+            paranoiaBar.classList.add('border-terminal-green');
+            setTimeout(() => paranoiaBar.classList.remove('border-terminal-green'), 500);
+        }
+    } catch (err) {
+        console.error('Reset failed:', err);
+    }
+}
+
 // Event listeners
 const panicBtn = document.getElementById('panic-btn');
+const resetBtn = document.getElementById('reset-btn');
 roastBtn.addEventListener('click', doRoast);
 randomBtn.addEventListener('click', loadRandomExample);
 panicBtn.addEventListener('click', loadPanicExample);
+if (resetBtn) resetBtn.addEventListener('click', resetParanoia);
 
 // Allow Ctrl+Enter to submit
 inputContent.addEventListener('keydown', (e) => {

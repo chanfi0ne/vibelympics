@@ -232,6 +232,18 @@ async def get_paranoia(x_session_id: Optional[str] = Header(None)):
     return state
 
 
+@app.post("/reset")
+async def reset_paranoia(x_session_id: Optional[str] = Header(None)):
+    """Reset paranoia level to CHILL. For demo purposes."""
+    session = paranoia_service.reset_session(x_session_id)
+    return {
+        "status": "reset",
+        "message": "Deep breaths. Trust restored. For now.",
+        "paranoia_level": session.level,
+        "session_id": session.session_id
+    }
+
+
 @app.post("/panic")
 async def panic(x_session_id: Optional[str] = Header(None)):
     """PANIC button endpoint - behavior changes based on paranoia level.
