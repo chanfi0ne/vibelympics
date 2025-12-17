@@ -1,0 +1,11 @@
+# PURPOSE: Docker ignore file to keep image lean
+.git
+.gitignore
+*.md
+docs/
+*.pyc
+__pycache__
+.pytest_cache
+.env
+*.png
+backend/static/memes/*.png
