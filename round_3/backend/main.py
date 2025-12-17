@@ -18,6 +18,8 @@ from services.analyzer import analyze
 from services.caption_selector import select_caption, get_sbom_commentary, get_paranoia_message
 from services import paranoia as paranoia_service
 from services.meme_generator import generate_meme, get_meme_path
+from services.cve_detector import detect_cves_batch, get_worst_severity, CVEMatch
+from services.cursed_detector import detect_cursed_batch, get_worst_cursed, CursedMatch
 
 # Configuration
 MAX_INPUT_SIZE = int(os.environ.get("MAX_INPUT_SIZE", 102400))  # 100KB
@@ -63,6 +65,10 @@ class RoastResponse(BaseModel):
     sbom: Optional[dict] = None
     paranoia: dict
     signature: Optional[str] = None
+    # v0.0.2 additions
+    ai_generated: bool = False
+    cve_count: int = 0
+    cursed_count: int = 0
 
 app = FastAPI(
     title="PARANOID",
@@ -247,9 +253,28 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
     stats["dependencies_judged"] += dep_count
     stats["sboms_generated"] += 1 if request.include_sbom else 0
 
+    # CVE Detection
+    packages_to_check = [(d.name, d.version) for d in result.dependencies]
+    cve_matches = detect_cves_batch(packages_to_check)
+    cve_count = len(cve_matches)
+    worst_cve_severity = get_worst_severity(cve_matches)
+
+    # Cursed Package Detection
+    package_names = [d.name for d in result.dependencies]
+    cursed_matches = detect_cursed_batch(package_names)
+    cursed_count = len(cursed_matches)
+    worst_cursed = get_worst_cursed(cursed_matches)
+
     # Generate response
     meme_id = str(uuid.uuid4())[:8]
-    caption = select_caption("dependency_count", dep_count=dep_count)
+    
+    # Select caption based on findings (prioritize cursed > CVE > dep count)
+    if worst_cursed:
+        caption = worst_cursed.roast
+    elif cve_count > 0:
+        caption = select_caption("cve", severity=worst_cve_severity)
+    else:
+        caption = select_caption("dependency_count", dep_count=dep_count)
 
     # Generate the meme image
     generate_meme(meme_id, caption, template="this-is-fine")
@@ -263,6 +288,28 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
             detail=f"{dep_count} dependencies detected"
         )
     ]
+
+    # Add CVE findings
+    for cve in cve_matches[:5]:  # Limit to top 5
+        findings.append(Finding(
+            type="cve",
+            severity=cve.severity,
+            detail=f"{cve.package}@{cve.version}: {cve.cve_id} - {cve.description}"
+        ))
+    if cve_count > 5:
+        findings.append(Finding(
+            type="cve",
+            severity="info",
+            detail=f"...and {cve_count - 5} more CVEs"
+        ))
+
+    # Add cursed package findings
+    for cursed in cursed_matches:
+        findings.append(Finding(
+            type="cursed" if not cursed.is_typosquat else "typosquat",
+            severity=cursed.severity,
+            detail=cursed.roast
+        ))
 
     # List some actual dependency names in findings
     if result.dependencies:
@@ -301,13 +348,25 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
     paranoia_state["message"] = get_paranoia_message(session.level)
     paranoia_state["session_id"] = session.session_id
 
+    # Build roast summary
+    summary_parts = [f"You have {dep_count} dependencies."]
+    if cve_count > 0:
+        summary_parts.append(f"{cve_count} CVE{'s' if cve_count > 1 else ''} detected.")
+    if cursed_count > 0:
+        summary_parts.append(f"{cursed_count} cursed package{'s' if cursed_count > 1 else ''} found.")
+    summary_parts.append(sbom_commentary)
+    roast_summary = " ".join(summary_parts)
+
     return RoastResponse(
         meme_url=f"/memes/{meme_id}.png",
         meme_id=meme_id,
-        roast_summary=f"You have {dep_count} dependencies. {sbom_commentary}",
+        roast_summary=roast_summary,
         findings=findings,
         caption=caption,
         template_used="this-is-fine",
         sbom=sbom,
-        paranoia=paranoia_state
+        paranoia=paranoia_state,
+        ai_generated=False,  # Will be True when AI is used
+        cve_count=cve_count,
+        cursed_count=cursed_count
     )
