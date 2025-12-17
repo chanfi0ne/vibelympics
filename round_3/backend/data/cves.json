@@ -1,0 +1,330 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "total_cves": 55,
+    "last_updated": "2025-12-17",
+    "note": "Pre-cached famous CVEs for roasting. Not a complete database."
+  },
+  "lodash": [
+    {
+      "id": "CVE-2019-10744",
+      "severity": "critical",
+      "affected_versions": "<4.17.12",
+      "fixed_version": "4.17.12",
+      "description": "Prototype pollution via defaultsDeep"
+    },
+    {
+      "id": "CVE-2020-8203",
+      "severity": "high",
+      "affected_versions": "<4.17.19",
+      "fixed_version": "4.17.19",
+      "description": "Prototype pollution via zipObjectDeep"
+    },
+    {
+      "id": "CVE-2021-23337",
+      "severity": "high",
+      "affected_versions": "<4.17.21",
+      "fixed_version": "4.17.21",
+      "description": "Command injection via template"
+    }
+  ],
+  "express": [
+    {
+      "id": "CVE-2024-29041",
+      "severity": "medium",
+      "affected_versions": "<4.19.2",
+      "fixed_version": "4.19.2",
+      "description": "Open redirect vulnerability"
+    },
+    {
+      "id": "CVE-2022-24999",
+      "severity": "high",
+      "affected_versions": "<4.17.3",
+      "fixed_version": "4.17.3",
+      "description": "Prototype pollution via qs"
+    }
+  ],
+  "axios": [
+    {
+      "id": "CVE-2023-45857",
+      "severity": "high",
+      "affected_versions": "<1.6.0",
+      "fixed_version": "1.6.0",
+      "description": "SSRF via protocol override"
+    }
+  ],
+  "moment": [
+    {
+      "id": "CVE-2022-31129",
+      "severity": "high",
+      "affected_versions": "<2.29.4",
+      "fixed_version": "2.29.4",
+      "description": "ReDoS in string parsing"
+    },
+    {
+      "id": "CVE-2022-24785",
+      "severity": "high",
+      "affected_versions": "<2.29.2",
+      "fixed_version": "2.29.2",
+      "description": "Path traversal vulnerability"
+    }
+  ],
+  "minimist": [
+    {
+      "id": "CVE-2021-44906",
+      "severity": "critical",
+      "affected_versions": "<1.2.6",
+      "fixed_version": "1.2.6",
+      "description": "Prototype pollution"
+    },
+    {
+      "id": "CVE-2020-7598",
+      "severity": "medium",
+      "affected_versions": "<1.2.3",
+      "fixed_version": "1.2.3",
+      "description": "Prototype pollution via constructor"
+    }
+  ],
+  "jquery": [
+    {
+      "id": "CVE-2020-11022",
+      "severity": "medium",
+      "affected_versions": "<3.5.0",
+      "fixed_version": "3.5.0",
+      "description": "XSS via HTML parsing"
+    },
+    {
+      "id": "CVE-2020-11023",
+      "severity": "medium",
+      "affected_versions": "<3.5.0",
+      "fixed_version": "3.5.0",
+      "description": "XSS via option element"
+    },
+    {
+      "id": "CVE-2019-11358",
+      "severity": "medium",
+      "affected_versions": "<3.4.0",
+      "fixed_version": "3.4.0",
+      "description": "Prototype pollution via extend"
+    }
+  ],
+  "json5": [
+    {
+      "id": "CVE-2022-46175",
+      "severity": "high",
+      "affected_versions": "<2.2.2",
+      "fixed_version": "2.2.2",
+      "description": "Prototype pollution via parse"
+    }
+  ],
+  "node-fetch": [
+    {
+      "id": "CVE-2022-0235",
+      "severity": "high",
+      "affected_versions": "<2.6.7",
+      "fixed_version": "2.6.7",
+      "description": "Header exposure to third-party sites"
+    }
+  ],
+  "request": [
+    {
+      "id": "CVE-2023-28155",
+      "severity": "medium",
+      "affected_versions": "*",
+      "fixed_version": "NONE",
+      "description": "SSRF via protocol override (DEPRECATED - no fix coming)"
+    }
+  ],
+  "tar": [
+    {
+      "id": "CVE-2021-37701",
+      "severity": "high",
+      "affected_versions": "<6.1.11",
+      "fixed_version": "6.1.11",
+      "description": "Arbitrary file creation via symlink"
+    }
+  ],
+  "glob-parent": [
+    {
+      "id": "CVE-2020-28469",
+      "severity": "high",
+      "affected_versions": "<5.1.2",
+      "fixed_version": "5.1.2",
+      "description": "ReDoS via malicious path"
+    }
+  ],
+  "underscore": [
+    {
+      "id": "CVE-2021-23358",
+      "severity": "high",
+      "affected_versions": "<1.13.0-2",
+      "fixed_version": "1.13.0-2",
+      "description": "Arbitrary code execution via template"
+    }
+  ],
+  "handlebars": [
+    {
+      "id": "CVE-2021-23369",
+      "severity": "critical",
+      "affected_versions": "<4.7.7",
+      "fixed_version": "4.7.7",
+      "description": "Remote code execution via template"
+    }
+  ],
+  "async": [
+    {
+      "id": "CVE-2021-43138",
+      "severity": "high",
+      "affected_versions": "<2.6.4",
+      "fixed_version": "2.6.4",
+      "description": "Prototype pollution via mapValues"
+    }
+  ],
+  "path-parse": [
+    {
+      "id": "CVE-2021-23343",
+      "severity": "medium",
+      "affected_versions": "<1.0.7",
+      "fixed_version": "1.0.7",
+      "description": "ReDoS via splitPath"
+    }
+  ],
+  "django": [
+    {
+      "id": "CVE-2023-36053",
+      "severity": "high",
+      "affected_versions": "<3.2.20",
+      "fixed_version": "3.2.20",
+      "description": "ReDoS in EmailValidator"
+    },
+    {
+      "id": "CVE-2024-24680",
+      "severity": "high",
+      "affected_versions": "<4.2.10",
+      "fixed_version": "4.2.10",
+      "description": "ReDoS in truncatechars_html"
+    }
+  ],
+  "flask": [
+    {
+      "id": "CVE-2023-30861",
+      "severity": "high",
+      "affected_versions": "<2.3.2",
+      "fixed_version": "2.3.2",
+      "description": "Cookie session timing attack"
+    }
+  ],
+  "requests": [
+    {
+      "id": "CVE-2023-32681",
+      "severity": "medium",
+      "affected_versions": "<2.31.0",
+      "fixed_version": "2.31.0",
+      "description": "Proxy credential leak in redirects"
+    }
+  ],
+  "pillow": [
+    {
+      "id": "CVE-2023-50447",
+      "severity": "critical",
+      "affected_versions": "<10.2.0",
+      "fixed_version": "10.2.0",
+      "description": "Arbitrary code execution via PIL.ImageMath.eval"
+    }
+  ],
+  "urllib3": [
+    {
+      "id": "CVE-2023-45803",
+      "severity": "medium",
+      "affected_versions": "<2.0.7",
+      "fixed_version": "2.0.7",
+      "description": "Cookie leak on cross-origin redirect"
+    },
+    {
+      "id": "CVE-2023-43804",
+      "severity": "high",
+      "affected_versions": "<2.0.6",
+      "fixed_version": "2.0.6",
+      "description": "Authorization header leak on redirect"
+    }
+  ],
+  "pyyaml": [
+    {
+      "id": "CVE-2020-14343",
+      "severity": "critical",
+      "affected_versions": "<5.4",
+      "fixed_version": "5.4",
+      "description": "Arbitrary code execution via full_load"
+    }
+  ],
+  "tensorflow": [
+    {
+      "id": "CVE-2023-25801",
+      "severity": "critical",
+      "affected_versions": "<2.11.1",
+      "fixed_version": "2.11.1",
+      "description": "Heap buffer overflow in TFLite"
+    }
+  ],
+  "numpy": [
+    {
+      "id": "CVE-2021-41496",
+      "severity": "medium",
+      "affected_versions": "<1.22.0",
+      "fixed_version": "1.22.0",
+      "description": "Buffer overflow in array_from_pyobj"
+    }
+  ],
+  "sqlalchemy": [
+    {
+      "id": "CVE-2023-40587",
+      "severity": "medium",
+      "affected_versions": "<2.0.8",
+      "fixed_version": "2.0.8",
+      "description": "Integer overflow in row processor"
+    }
+  ],
+  "log4j": [
+    {
+      "id": "CVE-2021-44228",
+      "severity": "critical",
+      "affected_versions": "<2.17.0",
+      "fixed_version": "2.17.0",
+      "description": "LOG4SHELL - Remote code execution via JNDI lookup"
+    },
+    {
+      "id": "CVE-2021-45046",
+      "severity": "critical",
+      "affected_versions": "<2.17.0",
+      "fixed_version": "2.17.0",
+      "description": "Log4Shell bypass via Thread Context"
+    }
+  ],
+  "spring-core": [
+    {
+      "id": "CVE-2022-22965",
+      "severity": "critical",
+      "affected_versions": "<5.3.18",
+      "fixed_version": "5.3.18",
+      "description": "SPRING4SHELL - RCE via data binding"
+    }
+  ],
+  "openssl": [
+    {
+      "id": "CVE-2014-0160",
+      "severity": "critical",
+      "affected_versions": "<1.0.1g",
+      "fixed_version": "1.0.1g",
+      "description": "HEARTBLEED - Memory disclosure"
+    }
+  ],
+  "bash": [
+    {
+      "id": "CVE-2014-6271",
+      "severity": "critical",
+      "affected_versions": "<4.3",
+      "fixed_version": "4.3",
+      "description": "SHELLSHOCK - Remote code execution"
+    }
+  ]
+}

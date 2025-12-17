@@ -1,29 +1,53 @@
 # PURPOSE: FastAPI application entry point for PARANOID SBOM Roast Generator
 # Provides /healthz and /roast endpoints with paranoia-aware responses
 
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel, field_validator
 from typing import Literal, Optional
 from pathlib import Path
 import random
 import uuid
+import os
+import time
+from collections import defaultdict
 
 from services.analyzer import analyze
 from services.caption_selector import select_caption, get_sbom_commentary, get_paranoia_message
 from services import paranoia as paranoia_service
 from services.meme_generator import generate_meme, get_meme_path
+from services.cve_detector import detect_cves_batch, get_worst_severity, CVEMatch
+from services.cursed_detector import detect_cursed_batch, get_worst_cursed, CursedMatch
+from services.ai_roaster import generate_ai_roast, is_ai_available, AIRoastResult
+
+# Configuration
+MAX_INPUT_SIZE = int(os.environ.get("MAX_INPUT_SIZE", 102400))  # 100KB
+MAX_DEPENDENCIES = int(os.environ.get("MAX_DEPENDENCIES", 500))
+RATE_LIMIT_PER_MINUTE = int(os.environ.get("RATE_LIMIT_PER_MINUTE", 10))
+MEME_TTL_SECONDS = int(os.environ.get("MEME_TTL_SECONDS", 3600))  # 1 hour
+
+# Rate limiting state (in-memory, resets on restart)
+rate_limit_store: dict[str, list[float]] = defaultdict(list)
 
 # Path to frontend directory
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
+MEMES_DIR = Path(__file__).parent / "static" / "memes"
 
 
 class RoastRequest(BaseModel):
     input_type: Literal["package_json", "requirements_txt", "go_mod", "sbom", "single_package"]
     content: str
     include_sbom: bool = True
+    use_ai: bool = False  # Enable AI-generated roasts (requires ANTHROPIC_API_KEY)
+
+    @field_validator('content')
+    @classmethod
+    def validate_content_size(cls, v):
+        if len(v) > MAX_INPUT_SIZE:
+            raise ValueError(f"Input too large. Maximum {MAX_INPUT_SIZE // 1024}KB. Your input weighs as much as your node_modules.")
+        return v
 
 
 class Finding(BaseModel):
@@ -42,6 +66,10 @@ class RoastResponse(BaseModel):
     sbom: Optional[dict] = None
     paranoia: dict
     signature: Optional[str] = None
+    # v0.0.2 additions
+    ai_generated: bool = False
+    cve_count: int = 0
+    cursed_count: int = 0
 
 app = FastAPI(
     title="PARANOID",
@@ -49,14 +77,45 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# CORS - permissive for now, tighten later
+# CORS configuration - tightened from wildcard
+ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS if ALLOWED_ORIGINS != ["*"] else ["*"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Session-Id"],
 )
+
+
+def check_rate_limit(client_ip: str) -> bool:
+    """Check if client has exceeded rate limit. Returns True if allowed."""
+    now = time.time()
+    minute_ago = now - 60
+    
+    # Clean old entries
+    rate_limit_store[client_ip] = [t for t in rate_limit_store[client_ip] if t > minute_ago]
+    
+    # Check limit
+    if len(rate_limit_store[client_ip]) >= RATE_LIMIT_PER_MINUTE:
+        return False
+    
+    # Record request
+    rate_limit_store[client_ip].append(now)
+    return True
+
+
+def cleanup_old_memes():
+    """Delete memes older than TTL."""
+    if not MEMES_DIR.exists():
+        return
+    now = time.time()
+    for meme_file in MEMES_DIR.glob("*.png"):
+        if meme_file.stat().st_mtime < (now - MEME_TTL_SECONDS):
+            try:
+                meme_file.unlink()
+            except Exception:
+                pass  # Ignore cleanup errors
 
 # Simple in-memory state
 stats = {
@@ -134,8 +193,20 @@ async def get_paranoia(x_session_id: Optional[str] = Header(None)):
 
 
 @app.post("/roast", response_model=RoastResponse)
-async def roast(request: RoastRequest, x_session_id: Optional[str] = Header(None)):
+async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str] = Header(None)):
     """Main roast endpoint - analyzes dependencies and generates meme."""
+    
+    # Rate limiting
+    client_ip = req.client.host if req.client else "unknown"
+    if not check_rate_limit(client_ip):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many requests. Are you stress-testing me? I'm logging everything. EVERYTHING."
+        )
+    
+    # Cleanup old memes periodically (1 in 10 chance per request)
+    if random.random() < 0.1:
+        cleanup_old_memes()
 
     content = request.content.strip()
     if not content:
@@ -183,12 +254,59 @@ async def roast(request: RoastRequest, x_session_id: Optional[str] = Header(None
     stats["dependencies_judged"] += dep_count
     stats["sboms_generated"] += 1 if request.include_sbom else 0
 
+    # CVE Detection
+    packages_to_check = [(d.name, d.version) for d in result.dependencies]
+    cve_matches = detect_cves_batch(packages_to_check)
+    cve_count = len(cve_matches)
+    worst_cve_severity = get_worst_severity(cve_matches)
+
+    # Cursed Package Detection
+    package_names = [d.name for d in result.dependencies]
+    cursed_matches = detect_cursed_batch(package_names)
+    cursed_count = len(cursed_matches)
+    worst_cursed = get_worst_cursed(cursed_matches)
+
     # Generate response
     meme_id = str(uuid.uuid4())[:8]
-    caption = select_caption("dependency_count", dep_count=dep_count)
+    ai_generated = False
+    template_used = "fine"
+    
+    # Try AI generation if requested and available
+    if request.use_ai and is_ai_available():
+        # Prepare data for AI
+        cve_data = [
+            {"package": c.package, "version": c.version, "cve_id": c.cve_id, 
+             "severity": c.severity, "description": c.description}
+            for c in cve_matches[:5]
+        ]
+        cursed_data = [
+            {"package": c.package, "description": c.description}
+            for c in cursed_matches
+        ]
+        
+        ai_result = await generate_ai_roast(
+            dep_count=dep_count,
+            package_names=package_names,
+            cve_list=cve_data,
+            cursed_list=cursed_data
+        )
+        
+        if ai_result:
+            caption = ai_result.roast
+            template_used = ai_result.template
+            ai_generated = True
+    
+    # Fallback to pre-written captions if AI not used or failed
+    if not ai_generated:
+        if worst_cursed:
+            caption = worst_cursed.roast
+        elif cve_count > 0:
+            caption = select_caption("cve", severity=worst_cve_severity)
+        else:
+            caption = select_caption("dependency_count", dep_count=dep_count)
 
     # Generate the meme image
-    generate_meme(meme_id, caption, template="this-is-fine")
+    generate_meme(meme_id, caption, template=template_used)
 
     # Build findings based on actual analysis
     dep_severity = "high" if dep_count > 50 else "medium" if dep_count > 10 else "low"
@@ -199,6 +317,28 @@ async def roast(request: RoastRequest, x_session_id: Optional[str] = Header(None
             detail=f"{dep_count} dependencies detected"
         )
     ]
+
+    # Add CVE findings
+    for cve in cve_matches[:5]:  # Limit to top 5
+        findings.append(Finding(
+            type="cve",
+            severity=cve.severity,
+            detail=f"{cve.package}@{cve.version}: {cve.cve_id} - {cve.description}"
+        ))
+    if cve_count > 5:
+        findings.append(Finding(
+            type="cve",
+            severity="info",
+            detail=f"...and {cve_count - 5} more CVEs"
+        ))
+
+    # Add cursed package findings
+    for cursed in cursed_matches:
+        findings.append(Finding(
+            type="cursed" if not cursed.is_typosquat else "typosquat",
+            severity=cursed.severity,
+            detail=cursed.roast
+        ))
 
     # List some actual dependency names in findings
     if result.dependencies:
@@ -237,13 +377,25 @@ async def roast(request: RoastRequest, x_session_id: Optional[str] = Header(None
     paranoia_state["message"] = get_paranoia_message(session.level)
     paranoia_state["session_id"] = session.session_id
 
+    # Build roast summary
+    summary_parts = [f"You have {dep_count} dependencies."]
+    if cve_count > 0:
+        summary_parts.append(f"{cve_count} CVE{'s' if cve_count > 1 else ''} detected.")
+    if cursed_count > 0:
+        summary_parts.append(f"{cursed_count} cursed package{'s' if cursed_count > 1 else ''} found.")
+    summary_parts.append(sbom_commentary)
+    roast_summary = " ".join(summary_parts)
+
     return RoastResponse(
         meme_url=f"/memes/{meme_id}.png",
         meme_id=meme_id,
-        roast_summary=f"You have {dep_count} dependencies. {sbom_commentary}",
+        roast_summary=roast_summary,
         findings=findings,
         caption=caption,
-        template_used="this-is-fine",
+        template_used=template_used,
         sbom=sbom,
-        paranoia=paranoia_state
+        paranoia=paranoia_state,
+        ai_generated=ai_generated,
+        cve_count=cve_count,
+        cursed_count=cursed_count
     )

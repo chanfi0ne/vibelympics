@@ -1,0 +1,157 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "note": "Infamous packages that triggered supply chain incidents"
+  },
+  "packages": {
+    "left-pad": {
+      "severity": "legendary",
+      "incident_date": "2016-03-22",
+      "incident_type": "deletion",
+      "description": "11-line package that broke the internet when unpublished from npm",
+      "roasts": [
+        "left-pad detected. The 11 lines of code that taught npm about trust issues.",
+        "Ah, left-pad. The package that proved the entire JavaScript ecosystem depended on string padding.",
+        "left-pad survivor detected. March 22, 2016. Never forget.",
+        "You have left-pad in your ancestry. The trauma is hereditary."
+      ]
+    },
+    "event-stream": {
+      "severity": "critical",
+      "incident_date": "2018-11-26",
+      "incident_type": "malicious_takeover",
+      "description": "Maintainer handed over to attacker who injected cryptocurrency miner",
+      "roasts": [
+        "event-stream found. The package that showed us what 'supply chain attack' really means.",
+        "I see event-stream. Hope you weren't holding any Bitcoin in 2018.",
+        "event-stream: When 'I'll maintain this for you' became 'I'll mine crypto for me'.",
+        "The event-stream incident: A cautionary tale about npm trust."
+      ]
+    },
+    "colors": {
+      "severity": "high",
+      "incident_date": "2022-01-08",
+      "incident_type": "maintainer_sabotage",
+      "description": "Maintainer intentionally broke the package to protest unpaid open source work",
+      "roasts": [
+        "colors detected. Remember when it started printing LIBERTY LIBERTY LIBERTY?",
+        "The colors incident: When a maintainer had enough of working for free.",
+        "colors: The package that turned console output into a political statement.",
+        "I see colors. The package that proved maintainer burnout is a security issue."
+      ]
+    },
+    "faker": {
+      "severity": "high",
+      "incident_date": "2022-01-08",
+      "incident_type": "maintainer_sabotage",
+      "description": "Same maintainer as colors, deleted code and replaced with 'endgame' message",
+      "roasts": [
+        "faker found. Another casualty of the great npm meltdown of 2022.",
+        "The faker incident taught us all about single maintainer risk.",
+        "faker: When 'fake data generator' became 'real problems generator'.",
+        "I see faker. The package that faked its own death."
+      ]
+    },
+    "ua-parser-js": {
+      "severity": "critical",
+      "incident_date": "2021-10-22",
+      "incident_type": "account_compromise",
+      "description": "Maintainer account compromised, malicious versions published with crypto miner",
+      "roasts": [
+        "ua-parser-js detected. The 2021 supply chain attack classic.",
+        "Remember when ua-parser-js shipped a cryptocurrency miner? Good times.",
+        "ua-parser-js: Parsing user agents AND mining cryptocurrency since 2021.",
+        "I see ua-parser-js. Hope you checked which version you have."
+      ]
+    },
+    "node-ipc": {
+      "severity": "critical",
+      "incident_date": "2022-03-15",
+      "incident_type": "maintainer_sabotage",
+      "description": "Maintainer added code to wipe files on Russian/Belarusian systems as Ukraine protest",
+      "roasts": [
+        "node-ipc detected. The package that turned 'npm install' into geopolitical warfare.",
+        "node-ipc: When your build process becomes a political statement.",
+        "I see node-ipc. The package that proved dependencies can be weapons.",
+        "node-ipc: Protesting war by attacking computers. What could go wrong?"
+      ]
+    },
+    "flatmap-stream": {
+      "severity": "critical",
+      "incident_date": "2018-11-26",
+      "incident_type": "malicious_injection",
+      "description": "Malicious package injected into event-stream dependency chain",
+      "roasts": [
+        "flatmap-stream found. The actual malware in the event-stream incident.",
+        "flatmap-stream: The package that was literally designed to steal Bitcoin.",
+        "I see flatmap-stream. This is the payload, not the victim.",
+        "flatmap-stream: When 'dependency' means 'backdoor'."
+      ]
+    },
+    "eslint-scope": {
+      "severity": "high",
+      "incident_date": "2018-07-12",
+      "incident_type": "account_compromise",
+      "description": "Maintainer credentials stolen, malicious version published",
+      "roasts": [
+        "eslint-scope detected. npm credentials on pastebin, classic.",
+        "eslint-scope: The package that taught us about 2FA.",
+        "I see eslint-scope. Another credential stuffing victim.",
+        "eslint-scope incident: When 'password123' meets supply chain."
+      ]
+    },
+    "is-promise": {
+      "severity": "medium",
+      "incident_date": "2020-04-25",
+      "incident_type": "accidental_break",
+      "description": "Innocent update broke thousands of packages due to ES module export",
+      "roasts": [
+        "is-promise found. The 2-line package that broke the world. Again.",
+        "is-promise: Proof that even tiny packages can cause massive outages.",
+        "I see is-promise. Another 'it's just a few lines' incident.",
+        "is-promise: Breaking builds since 2020 with just 2 lines of code."
+      ]
+    },
+    "crossenv": {
+      "severity": "critical",
+      "incident_date": "2017-08-01",
+      "incident_type": "typosquatting",
+      "description": "Typosquat of cross-env that stole environment variables",
+      "roasts": [
+        "crossenv detected. The typosquat that taught us to read package names.",
+        "crossenv: It's cross-env with a dash. THE DASH MATTERS.",
+        "I see crossenv. Did you mean cross-env? Because attackers hoped you didn't.",
+        "crossenv: Typosquatting 101."
+      ]
+    },
+    "lodahs": {
+      "severity": "high",
+      "incident_date": "2017-07-01",
+      "incident_type": "typosquatting",
+      "description": "Typosquat of lodash designed to steal credentials",
+      "roasts": [
+        "lodahs detected. LODAHS. Not LODASH. Read it again.",
+        "I see lodahs. The typosquat that preyed on fast typists.",
+        "lodahs: When autocomplete fails you and attackers win.",
+        "lodahs detected. Spell check your dependencies, people."
+      ]
+    }
+  },
+  "typosquats": {
+    "lodahs": "lodash",
+    "crossenv": "cross-env",
+    "cross-env.js": "cross-env",
+    "mongose": "mongoose",
+    "expres": "express",
+    "expresss": "express",
+    "reqeusts": "requests",
+    "djang": "django",
+    "fask": "flask",
+    "coffe-script": "coffee-script",
+    "cofee-script": "coffee-script",
+    "babel-cors": "babel-core",
+    "babelcli": "babel-cli",
+    "jquey": "jquery",
+    "jqeury": "jquery"
+  }
+}
