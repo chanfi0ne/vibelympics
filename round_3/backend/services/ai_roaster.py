@@ -57,6 +57,7 @@ MEME_TEMPLATES = {
     "doge": "Doge - 'such vulnerability, very CVE, much concern, wow'",
     "pigeon": "Is This a Pigeon - misidentifying something obvious",
     "afraid": "Afraid to Ask Andy - 'too scared to ask at this point'",
+    "spiderman": "Spider-Man pointing at Spider-Man - two identical things blaming each other",
 }
 
 

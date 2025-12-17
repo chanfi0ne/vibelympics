@@ -216,6 +216,7 @@ BUNDLED_TEMPLATES = {
     "doge": {"file": "doge.jpg", "text_position": "bottom"},
     "pigeon": {"file": "pigeon.jpg", "text_position": "bottom"},
     "afraid": {"file": "afraid.jpg", "text_position": "bottom"},
+    "spiderman": {"file": "spiderman.jpg", "text_position": "bottom"},
 }
 
 
