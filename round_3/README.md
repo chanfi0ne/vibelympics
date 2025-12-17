@@ -85,7 +85,7 @@ ghcr.io/chanfi0ne/vibelympics/paranoid:latest
 
 ## Live Demo
 
-https://chainsaw.up.railway.app
+https://paranoid.up.railway.app
 
 ---
 
