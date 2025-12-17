@@ -161,7 +161,6 @@ const PANIC_EXAMPLE = `{
     "subprocess-helper": "latest",
     "shell-tools": "*",
     "__import__-utils": "^0.1.0",
-    "lodash": "4.17.4",
     "lodahs": "^1.0.0",
     "left-pad": "0.0.1",
     "event-stream": "3.3.6",
