@@ -50,21 +50,27 @@ def encode_text(text: str) -> str:
 
     See: https://memegen.link/docs#special-characters
     """
-    # memegen special character encoding
+    # memegen special character encoding (order matters!)
     text = text.replace("-", "--")      # hyphen -> --
     text = text.replace("_", "__")      # underscore -> __
     text = text.replace(" ", "_")       # space -> _
     text = text.replace("?", "~q")      # question mark -> ~q
     text = text.replace("#", "~h")      # hash -> ~h
-    text = text.replace("'", "''")      # apostrophe -> ''
-    text = text.replace('"', "''")      # quote -> ''
     text = text.replace("/", "~s")      # slash -> ~s
-    text = text.replace(".", "~p")      # period -> ~p (prevents URL issues)
+    text = text.replace(".", "~p")      # period -> ~p
+    text = text.replace("'", "")        # remove apostrophes (cause 404s)
+    text = text.replace('"', "")        # remove quotes (cause 404s)
+    text = text.replace(":", "~c")      # colon -> ~c
+    text = text.replace(";", "~c")      # semicolon -> ~c
     
-    # Remove any remaining problematic chars at end
-    text = text.rstrip("~p")  # Don't end with encoded period
+    # Clean up any double underscores from removed chars
+    while "__" in text and not text.startswith("__"):
+        text = text.replace("___", "_")
     
-    return urllib.parse.quote(text, safe="_~-'")
+    # Remove problematic chars at end
+    text = text.rstrip("_~")
+    
+    return urllib.parse.quote(text, safe="_~-")
 
 
 def validate_memegen_url(url: str, allow_any_path: bool = False) -> bool:
