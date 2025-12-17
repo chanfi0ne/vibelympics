@@ -144,23 +144,29 @@ def build_prompt(
 
 ## YOUR MISSION
 
-Generate a roast that will:
-1. Make security engineers snort-laugh at their desks
-2. Reference specific findings when juicy (CVE IDs, package names, incidents)
-3. Be quotable - something they'd paste in Slack
-4. Match the severity - gentle ribbing for clean deps, existential horror for left-pad
+Generate a SHORT meme caption. This goes ON A MEME IMAGE so it MUST be brief.
 
-IMPORTANT: The roast will be split across TOP and BOTTOM of a meme image.
-- Write TWO short parts separated by a period: "Setup line. Punchline."
-- Each part should be under 50 characters
-- Example: "Log4Shell in your deps. At least you're consistent."
+STRICT LENGTH LIMIT:
+- MAXIMUM 100 characters total (both parts combined)
+- Format: "Top text. Bottom text."
+- Each part: 5-50 characters
+- If you write more than 100 chars, the meme will be unreadable
 
-## MEME TEMPLATES (pick the perfect one)
+GOOD examples (notice how SHORT they are):
+- "8 CVEs in production. This is fine."
+- "Left-pad in your deps. Bold move."
+- "Django 1.11 in 2024. Vintage security."
+- "No CVEs found. The audit lied."
+
+BAD examples (TOO LONG - don't do this):
+- "Using left-pad AND event-stream? That's not a dependency tree..." (WAY too long)
+
+## MEME TEMPLATES
 {template_list}
 
 ## OUTPUT FORMAT
-Return ONLY valid JSON:
-{{"roast": "Your devastating roast here", "template": "template_id", "severity": "low|medium|high|critical"}}"""
+Return ONLY valid JSON with a SHORT roast (under 100 chars):
+{{"roast": "Short top text. Short bottom text.", "template": "template_id", "severity": "low|medium|high|critical"}}"""
 
     return prompt
 
@@ -230,8 +236,20 @@ async def generate_ai_roast(
             if template not in MEME_TEMPLATES:
                 template = "fine"
             
+            # Get roast and enforce length limit
+            roast = result.get("roast", "Your dependencies are concerning.")
+            if len(roast) > 120:
+                # AI ignored length limit - truncate intelligently
+                logger.warning(f"AI roast too long ({len(roast)} chars), truncating")
+                # Try to cut at a sentence boundary
+                if ". " in roast[:100]:
+                    parts = roast[:100].rsplit(". ", 1)
+                    roast = parts[0] + "."
+                else:
+                    roast = roast[:100] + "..."
+            
             return AIRoastResult(
-                roast=result.get("roast", "Your dependencies are concerning."),
+                roast=roast,
                 template=template,
                 severity=result.get("severity", "medium"),
                 ai_generated=True
