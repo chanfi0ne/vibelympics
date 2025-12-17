@@ -46,10 +46,20 @@ def ensure_output_dir():
 
 
 def encode_text(text: str) -> str:
-    """Encode text for memegen URL (replace spaces with _, special chars)."""
-    # memegen uses _ for spaces and -- for underscores
-    text = text.replace("_", "__").replace(" ", "_").replace("?", "~q").replace("#", "~h")
-    return urllib.parse.quote(text, safe="_~")
+    """Encode text for memegen URL (replace spaces with _, special chars).
+
+    See: https://memegen.link/docs#special-characters
+    """
+    # memegen special character encoding
+    text = text.replace("-", "--")      # hyphen -> --
+    text = text.replace("_", "__")      # underscore -> __
+    text = text.replace(" ", "_")       # space -> _
+    text = text.replace("?", "~q")      # question mark -> ~q
+    text = text.replace("#", "~h")      # hash -> ~h
+    text = text.replace("'", "''")      # apostrophe -> ''
+    text = text.replace('"', "''")      # quote -> ''
+    text = text.replace("/", "~s")      # slash -> ~s
+    return urllib.parse.quote(text, safe="_~-'")
 
 
 def validate_memegen_url(url: str, allow_any_path: bool = False) -> bool:
