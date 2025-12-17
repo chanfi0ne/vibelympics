@@ -217,6 +217,12 @@ BUNDLED_TEMPLATES = {
     "pigeon": {"file": "pigeon.jpg", "text_position": "bottom"},
     "afraid": {"file": "afraid.jpg", "text_position": "bottom"},
     "spiderman": {"file": "spiderman.jpg", "text_position": "bottom"},
+    "changemymind": {"file": "changemymind.jpg", "text_position": "top"},
+    "distractedbf": {"file": "distractedbf.jpg", "text_position": "bottom"},
+    "surprisedpikachu": {"file": "surprisedpikachu.jpg", "text_position": "bottom"},
+    "onedoesnot": {"file": "onedoesnot.jpg", "text_position": "bottom"},
+    "harold": {"file": "harold.jpg", "text_position": "bottom"},
+    "aliens": {"file": "aliens.jpg", "text_position": "bottom"},
 }
 
 

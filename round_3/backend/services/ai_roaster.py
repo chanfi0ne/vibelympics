@@ -58,6 +58,12 @@ MEME_TEMPLATES = {
     "pigeon": "Is This a Pigeon - misidentifying something obvious",
     "afraid": "Afraid to Ask Andy - 'too scared to ask at this point'",
     "spiderman": "Spider-Man pointing at Spider-Man - two identical things blaming each other",
+    "changemymind": "Change My Mind guy at table - hot take that's actually true",
+    "distractedbf": "Distracted Boyfriend - ignoring good option for bad option",
+    "surprisedpikachu": "Surprised Pikachu - shocked by obvious consequence",
+    "onedoesnot": "One Does Not Simply (Boromir) - something that's harder than it looks",
+    "harold": "Hide the Pain Harold - smiling through the pain of bad code",
+    "aliens": "Ancient Aliens guy - blaming everything on mysterious forces",
 }
 
 
