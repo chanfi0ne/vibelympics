@@ -1,0 +1,6 @@
+# PURPOSE: Python dependencies for PARANOID backend
+# Keeping it minimal - only what we need
+
+fastapi==0.115.6
+uvicorn==0.34.0
+pydantic==2.10.3
