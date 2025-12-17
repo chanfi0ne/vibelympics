@@ -178,10 +178,11 @@ def get_sbom_commentary() -> str:
     return select_caption("sbom", sub_type="commentary")
 
 
-def get_paranoia_message(level: int) -> str:
+def get_paranoia_message(level: int, request_count: int = 0) -> str:
     """Get paranoia message for level (0=chill, 1=anxious, 2=meltdown)."""
     level_names = {0: "chill", 1: "anxious", 2: "meltdown"}
-    return select_caption("paranoia", severity=level_names.get(level, "chill"))
+    # Pass request_count as dep_count so {count} gets replaced correctly
+    return select_caption("paranoia", severity=level_names.get(level, "chill"), dep_count=request_count)
 
 
 def get_error_message(status_code: int) -> str:

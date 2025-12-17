@@ -228,7 +228,7 @@ async def get_paranoia(x_session_id: Optional[str] = Header(None)):
     """Get current paranoia state for session."""
     session = paranoia_service.get_or_create_session(x_session_id)
     state = paranoia_service.get_paranoia_state(session)
-    state["message"] = get_paranoia_message(session.level)
+    state["message"] = get_paranoia_message(session.level, session.request_count)
     state["session_id"] = session.session_id
     return state
 
@@ -471,7 +471,7 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
 
     # Get paranoia state for response
     paranoia_state = paranoia_service.get_paranoia_state(session)
-    paranoia_state["message"] = get_paranoia_message(session.level)
+    paranoia_state["message"] = get_paranoia_message(session.level, session.request_count)
     paranoia_state["session_id"] = session.session_id
 
     # Build roast summary
