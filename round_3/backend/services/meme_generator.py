@@ -258,13 +258,19 @@ def generate_meme(meme_id: str, caption: str, template: str | None = None) -> Pa
         caption: The roast text
         template: Template ID from AI (e.g., "fine", "drake"). None for random.
     """
+    logger.info(f"Generating meme {meme_id}, template={template}")
+    
     # Try real meme generation first
     result = generate_meme_memegen(meme_id, caption, template_id=template)
     if result:
+        logger.info(f"Memegen succeeded: {result}")
         return result
     
     # Fallback to simple generation
-    return generate_meme_fallback(meme_id, caption)
+    logger.info(f"Memegen failed, using Pillow fallback")
+    fallback_result = generate_meme_fallback(meme_id, caption)
+    logger.info(f"Fallback result: {fallback_result}")
+    return fallback_result
 
 
 def get_meme_path(meme_id: str) -> Path | None:
