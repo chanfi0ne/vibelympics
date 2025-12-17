@@ -3,14 +3,20 @@
 
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Literal, Optional
+from pathlib import Path
 import random
 import uuid
 
 from services.analyzer import analyze
 from services.caption_selector import select_caption, get_sbom_commentary, get_paranoia_message
 from services import paranoia as paranoia_service
+
+# Path to frontend directory
+FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
 
 
 class RoastRequest(BaseModel):
@@ -86,7 +92,10 @@ async def healthz():
 
 @app.get("/")
 async def root():
-    """Root endpoint - redirect to docs or show welcome."""
+    """Serve frontend index.html."""
+    index_path = FRONTEND_DIR / "index.html"
+    if index_path.exists():
+        return FileResponse(index_path)
     return {
         "name": "PARANOID",
         "tagline": "Paste your dependencies. Get roasted. Question everything.",
@@ -96,6 +105,12 @@ async def root():
             "docs": "/docs"
         }
     }
+
+
+@app.get("/app.js")
+async def serve_app_js():
+    """Serve frontend JavaScript."""
+    return FileResponse(FRONTEND_DIR / "app.js", media_type="application/javascript")
 
 
 @app.get("/paranoia")

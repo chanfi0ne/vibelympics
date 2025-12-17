@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PARANOID - SBOM Roast Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        terminal: {
+                            bg: '#0d1117',
+                            text: '#c9d1d9',
+                            green: '#39d353',
+                            amber: '#d29922',
+                            red: '#f85149',
+                            blue: '#58a6ff'
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'Fira Code', 'Monaco', 'Consolas', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0d1117; }
+        .glow-green { text-shadow: 0 0 10px #39d353; }
+        .glow-amber { text-shadow: 0 0 10px #d29922; }
+        .glow-red { text-shadow: 0 0 10px #f85149; }
+        .blink { animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body class="min-h-screen font-mono text-terminal-text p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-terminal-green glow-green mb-2">PARANOID</h1>
+            <p class="text-terminal-text opacity-80">Paste your dependencies. Get roasted. Question everything.</p>
+        </header>
+
+        <!-- Paranoia Indicator -->
+        <div id="paranoia-bar" class="mb-6 p-3 rounded border border-terminal-green/30 bg-terminal-bg">
+            <div class="flex items-center justify-between">
+                <span class="text-sm">PARANOIA LEVEL:</span>
+                <div class="flex gap-2 items-center">
+                    <div id="level-0" class="w-4 h-4 rounded bg-terminal-green"></div>
+                    <div id="level-1" class="w-4 h-4 rounded bg-gray-700"></div>
+                    <div id="level-2" class="w-4 h-4 rounded bg-gray-700"></div>
+                    <span id="level-name" class="ml-2 text-terminal-green">CHILL</span>
+                </div>
+            </div>
+            <p id="paranoia-message" class="text-xs mt-2 opacity-60">System nominal.</p>
+        </div>
+
+        <!-- Input Section -->
+        <div class="mb-6">
+            <div class="flex gap-4 mb-3">
+                <select id="input-type" class="bg-terminal-bg border border-terminal-green/50 rounded px-3 py-2 text-terminal-text focus:outline-none focus:border-terminal-green">
+                    <option value="package_json">package.json</option>
+                    <option value="requirements_txt">requirements.txt</option>
+                    <option value="single_package">Single Package</option>
+                </select>
+                <button id="roast-btn" class="bg-terminal-green text-terminal-bg px-6 py-2 rounded font-bold hover:bg-terminal-green/80 transition">
+                    ROAST ME
+                </button>
+                <button id="random-btn" class="border border-terminal-amber text-terminal-amber px-4 py-2 rounded hover:bg-terminal-amber/20 transition">
+                    Random
+                </button>
+            </div>
+            <textarea
+                id="input-content"
+                class="w-full h-48 bg-terminal-bg border border-terminal-green/30 rounded p-4 text-terminal-text font-mono resize-none focus:outline-none focus:border-terminal-green"
+                placeholder="Paste your package.json, requirements.txt, or enter a package name..."
+            ></textarea>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="hidden">
+            <!-- Roast Summary -->
+            <div id="roast-summary" class="mb-6 p-4 rounded border border-terminal-amber/50 bg-terminal-amber/10">
+                <p class="text-terminal-amber font-bold"></p>
+            </div>
+
+            <!-- Caption -->
+            <div id="caption-box" class="mb-6 p-4 rounded border border-terminal-green/50 bg-terminal-green/10 text-center">
+                <p id="caption" class="text-xl text-terminal-green font-bold"></p>
+            </div>
+
+            <!-- Findings -->
+            <div id="findings" class="mb-6">
+                <h3 class="text-terminal-blue mb-2">Findings:</h3>
+                <div id="findings-list" class="space-y-2"></div>
+            </div>
+
+            <!-- SBOM (Collapsible) -->
+            <details class="mb-6 border border-terminal-text/20 rounded">
+                <summary class="p-3 cursor-pointer hover:bg-terminal-text/5">
+                    SBOM Output <span class="text-xs opacity-60">(click to expand)</span>
+                </summary>
+                <div id="sbom-content" class="p-4 bg-terminal-bg">
+                    <pre id="sbom-json" class="text-xs text-terminal-text/80 overflow-auto max-h-64"></pre>
+                </div>
+            </details>
+        </div>
+
+        <!-- Error Display -->
+        <div id="error-box" class="hidden mb-6 p-4 rounded border border-terminal-red/50 bg-terminal-red/10">
+            <p id="error-message" class="text-terminal-red"></p>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden text-center py-8">
+            <p class="text-terminal-green">Analyzing dependencies<span class="blink">_</span></p>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-xs opacity-40">
+            <p>Built on Chainguard images. No shell. Maximum paranoia.</p>
+            <p class="mt-1">SBOM confidence: LOW (as is tradition)</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
