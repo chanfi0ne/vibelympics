@@ -14,6 +14,7 @@ import uuid
 from services.analyzer import analyze
 from services.caption_selector import select_caption, get_sbom_commentary, get_paranoia_message
 from services import paranoia as paranoia_service
+from services.meme_generator import generate_meme, get_meme_path
 
 # Path to frontend directory
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
@@ -113,6 +114,15 @@ async def serve_app_js():
     return FileResponse(FRONTEND_DIR / "app.js", media_type="application/javascript")
 
 
+@app.get("/memes/{meme_id}.png")
+async def serve_meme(meme_id: str):
+    """Serve generated meme images."""
+    meme_path = get_meme_path(meme_id)
+    if meme_path and meme_path.exists():
+        return FileResponse(meme_path, media_type="image/png")
+    raise HTTPException(status_code=404, detail="Meme not found. It probably questioned its own existence.")
+
+
 @app.get("/paranoia")
 async def get_paranoia(x_session_id: Optional[str] = Header(None)):
     """Get current paranoia state for session."""
@@ -176,6 +186,9 @@ async def roast(request: RoastRequest, x_session_id: Optional[str] = Header(None
     # Generate response
     meme_id = str(uuid.uuid4())[:8]
     caption = select_caption("dependency_count", dep_count=dep_count)
+
+    # Generate the meme image
+    generate_meme(meme_id, caption, template="this-is-fine")
 
     # Build findings based on actual analysis
     dep_severity = "high" if dep_count > 50 else "medium" if dep_count > 10 else "low"
