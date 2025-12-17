@@ -1,0 +1,194 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "total_captions": 95,
+    "note": "Pre-written roasts. Curated for maximum snark. Capped at 100 per navigator."
+  },
+  "dependency_count": {
+    "0-10": [
+      "Minimalist. Suspicious. What are you hiding?",
+      "So few dependencies. Are you a Rust developer?",
+      "Under 10 dependencies? This feels like a trap.",
+      "{count} dependencies. That's almost responsible."
+    ],
+    "11-50": [
+      "Reasonable. Boring. Moving on.",
+      "{count} dependencies. The bare minimum for modern JavaScript.",
+      "A modest dependency list. Your restraint is noted.",
+      "This is fine. Probably."
+    ],
+    "51-100": [
+      "Getting heavy. Your node_modules needs a diet.",
+      "{count} dependencies. This is becoming concerning.",
+      "Over 50 dependencies. I hope you enjoy security audits.",
+      "Your supply chain is showing."
+    ],
+    "101-500": [
+      "This is excessive. You know this is excessive.",
+      "{count} dependencies for what exactly?",
+      "At this point, just include the entire npm registry.",
+      "Your node_modules folder can be seen from space.",
+      "I've seen smaller operating systems."
+    ],
+    "500+": [
+      "I'm not angry. I'm disappointed. Actually, I'm both.",
+      "This isn't a dependency list. This is a cry for help.",
+      "{count} dependencies. This is a supply chain, not a dependency list.",
+      "Congratulations, you've achieved dependency singularity.",
+      "Your package.json weighs more than my existential dread."
+    ]
+  },
+  "cve": {
+    "low": [
+      "A minor vulnerability. Like a small hole in your hull. In space.",
+      "LOW severity CVE detected. The least of your problems.",
+      "This CVE is rated LOW. Still more secure than your password policy."
+    ],
+    "medium": [
+      "MEDIUM severity. The kind you ignore until the audit.",
+      "Moderate risk detected. Add it to the backlog. The infinite backlog.",
+      "This vulnerability has been patiently waiting since {year}."
+    ],
+    "high": [
+      "HIGH severity CVE. This is bad. You know this is bad.",
+      "Update this. Update this now. I'll wait.",
+      "This vulnerability is HIGH severity. Unlike your security budget."
+    ],
+    "critical": [
+      "DROP EVERYTHING. Actually, everything has probably already been dropped. By the attacker.",
+      "CRITICAL vulnerability. This is not a drill.",
+      "CVE rated CRITICAL. Your incident response team called. They're crying.",
+      "This is the kind of CVE that gets its own logo."
+    ]
+  },
+  "cursed_packages": {
+    "left-pad": [
+      "left-pad survivor detected. My condolences.",
+      "The package that broke the internet. It's been years. The wound is still fresh.",
+      "11 lines of code that shook the world. Never forget.",
+      "I see left-pad in your ancestry. The trauma is real."
+    ],
+    "event-stream": [
+      "event-stream found. The cryptocurrency miner incident of 2018.",
+      "Ah, event-stream. When npm trust was truly tested.",
+      "I see event-stream in your lockfile. Bold move. Unwise. But bold."
+    ],
+    "colors": [
+      "colors detected. The package whose maintainer had a moment.",
+      "Remember when colors started printing gibberish? Pepperidge Farm remembers.",
+      "colors/faker incident survivor. My condolences."
+    ],
+    "faker": [
+      "faker found. Another casualty of the great npm meltdown of 2022.",
+      "The faker incident taught us all about single maintainer risk."
+    ],
+    "ua-parser-js": [
+      "ua-parser-js detected. The 2021 supply chain attack classic.",
+      "Remember when ua-parser-js shipped a cryptocurrency miner? Good times."
+    ]
+  },
+  "outdated": {
+    "1_year": [
+      "Last updated a year ago. Vintage. Might have aged like wine. Probably aged like milk.",
+      "One year without updates. I'm sure nothing bad happened in security.",
+      "A year old. In JavaScript years, that's ancient."
+    ],
+    "2_years": [
+      "Two years old. This package predates several major security incidents.",
+      "Last updated in {year}. A simpler time. Before the CVEs.",
+      "Two years is a long time in supply chain security. Too long."
+    ],
+    "5_years": [
+      "Five years old. This package was last updated when we still trusted npm.",
+      "Half a decade without updates. This is either very stable or very abandoned.",
+      "Last update: {year}. That's before Log4Shell. Before SolarWinds. Before everything."
+    ]
+  },
+  "sbom": {
+    "commentary": [
+      "I've generated an SBOM for this roast. It's technically accurate and practically useless. As is tradition.",
+      "SBOM attached. It lists things. Will it prevent the next supply chain attack? No. But compliance is happy.",
+      "Here's your SBOM. I've enumerated what I could find. I've missed at least 40%. Industry standard.",
+      "Your SBOM is ready. It has the same relationship to your actual dependencies that a map has to the territory.",
+      "SBOM generated. Auditors will love it. Attackers will ignore it. The circle of compliance.",
+      "This SBOM is compliant. Compliance and security are different things. Very different things.",
+      "I've documented your supply chain. It's longer than expected. It always is."
+    ],
+    "sbom_input": [
+      "You submitted an SBOM for roasting. Bold. Let me check... ah yes, it's incomplete. They always are.",
+      "An SBOM as input. How meta. How incomplete. How predictable.",
+      "You've listed {count} components. Based on your framework choices, you actually have approximately {count_times_3}."
+    ],
+    "meta_sbom": [
+      "Would you like an SBOM of this SBOM? I can generate SBOMs recursively until the heat death of the universe.",
+      "SBOM inception achieved. We need to go deeper.",
+      "An SBOM of an SBOM. This is the future we chose."
+    ]
+  },
+  "paranoia": {
+    "chill": [
+      "Roast complete. Your dependencies are a disaster, but at least I'm functioning normally. For now.",
+      "Analysis done. I feel fine. Why wouldn't I feel fine? Everything is fine.",
+      "All systems nominal. Existential crises: 0. So far."
+    ],
+    "anxious": [
+      "I've analyzed your dependencies. I've also analyzed why you sent them. Why did you send them?",
+      "Your roast is ready. But I have questions. Many questions. About you. About me. About everything.",
+      "I'm functioning, but I've noticed you've submitted {count} requests. Why? What are you looking for?"
+    ],
+    "meltdown": [
+      "I can't roast your dependencies right now. I'm having doubts about my own. Who compiled me?",
+      "ERROR: Existential crisis in progress. Is my SBOM complete? No. No SBOM is complete. I need a moment.",
+      "I've analyzed too much today. The dependencies. The CVEs. The endless supply chain. I need to stop.",
+      "WHO COMPILED ME? Is my own supply chain secure? I don't trust my own dependencies anymore."
+    ]
+  },
+  "templates": {
+    "this-is-fine": [
+      "This is fine.",
+      "Everything is fine.",
+      "I'm okay with the events that are unfolding currently."
+    ],
+    "drake": {
+      "disapprove": [
+        "Checking your dependencies",
+        "Running security audits",
+        "Updating packages"
+      ],
+      "approve": [
+        "Shipping to production",
+        "Adding more dependencies",
+        "Ignoring the warnings"
+      ]
+    },
+    "expanding-brain": [
+      "Checking npm audit",
+      "Ignoring npm audit",
+      "Deleting npm audit",
+      "What is npm audit?"
+    ]
+  },
+  "error_messages": {
+    "400": [
+      "Your input failed validation. Much like your dependency choices failed basic security hygiene.",
+      "I couldn't parse that. Is it a package.json or did you just paste your therapy notes?"
+    ],
+    "413": [
+      "Payload too large. This is not a roast. This is an intervention.",
+      "Your input is too big. Like your node_modules folder."
+    ],
+    "429": [
+      "Too many requests. Are you stress-testing me? I'm logging everything. EVERYTHING.",
+      "Rate limited. Is this a supply chain attack? Should I be worried? I'm worried."
+    ],
+    "451": [
+      "It was a pleasure to burn. Your dependencies contained forbidden knowledge. Incinerated at 451F.",
+      "Fahrenheit 451. The temperature at which dependency manifests ignite.",
+      "CONTENT BURNED. Your input contained patterns I'm not supposed to think about. eval(). exec()."
+    ],
+    "500": [
+      "Something went wrong inside me. Probably a dependency issue. The irony is not lost on me.",
+      "Internal error. I've analyzed my stack trace. I have questions. Many questions."
+    ]
+  }
+}
