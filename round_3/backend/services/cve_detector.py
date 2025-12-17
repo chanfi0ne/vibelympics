@@ -206,9 +206,9 @@ async def query_osv(package_name: str, version: str, ecosystem: str = "npm") -> 
         }
     }
     
-    # Add version if available for more accurate results
+    # Add version to package object for accurate results
     if version:
-        payload["version"] = version
+        payload["package"]["version"] = version
     
     try:
         async with httpx.AsyncClient() as client:
