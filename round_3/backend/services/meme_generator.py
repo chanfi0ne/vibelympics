@@ -369,17 +369,17 @@ def generate_meme_pillow(meme_id: str, caption: str, template_id: str | None = N
         
         draw = ImageDraw.Draw(img)
 
-        # Scale font based on caption length - readable but not overwhelming
+        # Scale font based on caption length - smaller for readability
         caption_len = len(caption)
         if caption_len > 80:
             # Long text - smaller font
-            font_size = max(36, img.width // 14)
+            font_size = max(28, img.width // 18)
         elif caption_len > 50:
             # Medium text
-            font_size = max(42, img.width // 12)
+            font_size = max(32, img.width // 16)
         else:
-            # Short text - bigger
-            font_size = max(48, img.width // 10)
+            # Short text
+            font_size = max(36, img.width // 14)
 
         font = get_font(size=font_size)
         logger.info(f"Using font size {font_size}px for {img.width}x{img.height} image (caption len: {caption_len})")
