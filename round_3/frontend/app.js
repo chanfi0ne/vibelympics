@@ -217,6 +217,41 @@ function showError(message) {
     errorBox.classList.remove('hidden');
     results.classList.add('hidden');
     loading.classList.add('hidden');
+    // Hide any previous burn meme
+    const burnMeme = document.getElementById('burn-meme');
+    if (burnMeme) burnMeme.classList.add('hidden');
+}
+
+function showBurnError(message) {
+    // Show error with a fire meme for 451 errors
+    errorMessage.textContent = message;
+    errorBox.classList.remove('hidden');
+    results.classList.add('hidden');
+    loading.classList.add('hidden');
+    
+    // Show the burn meme
+    let burnMeme = document.getElementById('burn-meme');
+    if (!burnMeme) {
+        // Create burn meme container if it doesn't exist
+        burnMeme = document.createElement('div');
+        burnMeme.id = 'burn-meme';
+        burnMeme.className = 'mt-4 flex justify-center';
+        burnMeme.innerHTML = `<img src="" alt="It was a pleasure to burn" class="max-w-full rounded border border-terminal-red/50" />`;
+        errorBox.appendChild(burnMeme);
+    }
+    
+    // Generate a random burned meme using memegen.link
+    const burnCaptions = [
+        { top: "It_was_a_pleasure", bottom: "to_burn" },
+        { top: "Your_dependencies", bottom: "have_been_incinerated" },
+        { top: "Fahrenheit_451", bottom: "Your_code_is_forbidden" },
+        { top: "This_request", bottom: "has_been_burned" },
+        { top: "Security_says", bottom: "NOPE" }
+    ];
+    const caption = burnCaptions[Math.floor(Math.random() * burnCaptions.length)];
+    const burnImg = burnMeme.querySelector('img');
+    burnImg.src = `https://api.memegen.link/images/fine/${caption.top}/${caption.bottom}.png`;
+    burnMeme.classList.remove('hidden');
 }
 
 function showResults(data) {
@@ -298,7 +333,8 @@ async function doRoast() {
         if (!response.ok) {
             // Handle special error codes
             if (response.status === 451) {
-                showError(`HTTP 451 - ${data.detail}`);
+                // Fahrenheit 451 - show burn meme!
+                showBurnError(`HTTP 451 - ${data.detail}`);
             } else if (response.status === 503) {
                 showError(data.detail);
             } else {
