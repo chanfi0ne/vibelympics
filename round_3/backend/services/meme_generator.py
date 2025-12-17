@@ -5,8 +5,16 @@ from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 import textwrap
 import random
-import urllib.request
 import urllib.parse
+import httpx
+import logging
+
+logger = logging.getLogger(__name__)
+
+# H-2 Security: Constants for safe meme fetching
+MEMEGEN_ALLOWED_HOST = "api.memegen.link"
+MAX_MEME_SIZE = 5 * 1024 * 1024  # 5MB max
+MEME_FETCH_TIMEOUT = 5.0  # seconds
 
 # Output directory
 OUTPUT_DIR = Path(__file__).parent.parent / "static" / "memes"
@@ -43,8 +51,24 @@ def encode_text(text: str) -> str:
     return urllib.parse.quote(text, safe="_~")
 
 
+def validate_memegen_url(url: str) -> bool:
+    """H-2 Security: Validate that URL is actually memegen.link."""
+    try:
+        parsed = urllib.parse.urlparse(url)
+        return (
+            parsed.scheme == "https" and
+            parsed.netloc == MEMEGEN_ALLOWED_HOST and
+            parsed.path.startswith("/images/")
+        )
+    except Exception:
+        return False
+
+
 def generate_meme_memegen(meme_id: str, caption: str) -> Path | None:
-    """Generate a real meme using memegen.link API (no auth needed!)."""
+    """Generate a real meme using memegen.link API (no auth needed!).
+    
+    H-2 Security: Uses httpx with timeout, content-type validation, and size limits.
+    """
     ensure_output_dir()
     
     template = random.choice(MEME_TEMPLATES)
@@ -66,15 +90,46 @@ def generate_meme_memegen(meme_id: str, caption: str) -> Path | None:
     # Build URL: https://api.memegen.link/images/{template}/{top}/{bottom}.png
     meme_url = f"{MEMEGEN_API}/{template['id']}/{top_encoded}/{bottom_encoded}.png"
     
+    # H-2 Security: Validate URL before fetching
+    if not validate_memegen_url(meme_url):
+        logger.warning(f"Invalid meme URL rejected: {meme_url[:100]}")
+        return None
+    
     try:
-        output_path = OUTPUT_DIR / f"{meme_id}.png"
-        urllib.request.urlretrieve(meme_url, output_path)
-        
-        # Verify it's a valid image
-        if output_path.exists() and output_path.stat().st_size > 1000:
+        # H-2 Security: Use httpx with timeout and validation
+        with httpx.Client(timeout=MEME_FETCH_TIMEOUT, follow_redirects=False) as client:
+            response = client.get(meme_url)
+            
+            # Validate response status
+            if response.status_code != 200:
+                logger.warning(f"Meme API returned {response.status_code}")
+                return None
+            
+            # H-2 Security: Validate content-type is an image
+            content_type = response.headers.get("content-type", "")
+            if not content_type.startswith("image/"):
+                logger.warning(f"Invalid content-type from meme API: {content_type}")
+                return None
+            
+            # H-2 Security: Validate size limit
+            content_length = len(response.content)
+            if content_length > MAX_MEME_SIZE:
+                logger.warning(f"Meme too large: {content_length} bytes")
+                return None
+            
+            if content_length < 1000:
+                logger.warning(f"Meme too small (likely error): {content_length} bytes")
+                return None
+            
+            # Write file
+            output_path = OUTPUT_DIR / f"{meme_id}.png"
+            output_path.write_bytes(response.content)
             return output_path
+            
+    except httpx.TimeoutException:
+        logger.warning("Meme API timeout")
     except Exception as e:
-        print(f"memegen API failed: {e}")
+        logger.warning(f"Meme API failed: {e}")
     
     return None
 

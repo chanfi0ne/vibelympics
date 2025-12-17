@@ -5,14 +5,20 @@ from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel, field_validator
 from typing import Literal, Optional
 from pathlib import Path
+import logging
 import random
 import uuid
 import os
 import time
 from collections import defaultdict
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from services.analyzer import analyze
 from services.caption_selector import select_caption, get_sbom_commentary, get_paranoia_message
@@ -74,8 +80,39 @@ class RoastResponse(BaseModel):
 app = FastAPI(
     title="PARANOID",
     description="SBOM Roast Generator - Paste your dependencies. Get roasted. Question everything.",
-    version="0.1.0"
+    version="0.1.0",
+    debug=False  # Never True in production
 )
+
+
+# H-1 Security Fix: Add security headers to all responses
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Add security headers to prevent clickjacking, XSS, and MIME sniffing attacks."""
+    
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        # Prevent clickjacking
+        response.headers["X-Frame-Options"] = "DENY"
+        # Prevent MIME-type sniffing
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        # XSS protection (legacy but still useful)
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        # Content Security Policy
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "img-src 'self' https://api.memegen.link data:; "
+            "style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; "
+            "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; "
+            "font-src 'self' https://fonts.gstatic.com"
+        )
+        # Referrer policy
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        # Permissions policy (modern replacement for Feature-Policy)
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        return response
+
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 # CORS configuration - tightened from wildcard
 ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:3000").split(",")
@@ -228,6 +265,14 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
         )
 
     dep_count = result.dep_count
+
+    # M-2 Security Fix: Enforce MAX_DEPENDENCIES limit
+    if dep_count > MAX_DEPENDENCIES:
+        logger.warning(f"Dependency limit exceeded: {dep_count} > {MAX_DEPENDENCIES}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too many dependencies ({dep_count}). Maximum {MAX_DEPENDENCIES} allowed. Your supply chain has serious trust issues."
+        )
 
     # Apply paranoia triggers
     is_simple = request.input_type == "single_package"

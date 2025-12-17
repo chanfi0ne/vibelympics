@@ -4,14 +4,29 @@
 import os
 import json
 import httpx
+import logging
 from dataclasses import dataclass
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 # Configuration
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 AI_TIMEOUT = 10  # seconds
 AI_MODEL = "claude-3-haiku-20240307"  # Fast and cheap
+
+
+def mask_api_key(key: str | None) -> str:
+    """M-4 Security: Mask API key for safe logging."""
+    if not key or len(key) < 12:
+        return "***"
+    return f"{key[:8]}...{key[-4:]}"
+
+
+def validate_api_key_format(key: str | None) -> bool:
+    """M-4 Security: Validate Anthropic API key format."""
+    return bool(key and key.startswith("sk-ant-") and len(key) > 20)
 
 # Available meme templates
 MEME_TEMPLATES = {
@@ -38,8 +53,13 @@ class AIRoastResult:
 
 
 def is_ai_available() -> bool:
-    """Check if AI roasting is available (API key configured)."""
-    return bool(ANTHROPIC_API_KEY)
+    """Check if AI roasting is available (API key configured and valid format)."""
+    if not ANTHROPIC_API_KEY:
+        return False
+    if not validate_api_key_format(ANTHROPIC_API_KEY):
+        logger.warning(f"Invalid ANTHROPIC_API_KEY format detected: {mask_api_key(ANTHROPIC_API_KEY)}")
+        return False
+    return True
 
 
 def build_prompt(
@@ -145,7 +165,8 @@ async def generate_ai_roast(
             )
             
             if response.status_code != 200:
-                print(f"AI API error: {response.status_code} - {response.text}")
+                # M-4 Security: Log error without exposing full response (may contain key info)
+                logger.warning(f"AI API error: status={response.status_code}")
                 return None
             
             data = response.json()
@@ -173,13 +194,13 @@ async def generate_ai_roast(
             )
             
     except json.JSONDecodeError as e:
-        print(f"AI response parse error: {e}")
+        logger.warning(f"AI response parse error: {e}")
         return None
     except httpx.TimeoutException:
-        print("AI API timeout")
+        logger.warning("AI API timeout")
         return None
     except Exception as e:
-        print(f"AI API error: {e}")
+        logger.warning(f"AI API error: {type(e).__name__}")
         return None
 
 
@@ -194,5 +215,5 @@ def generate_ai_roast_sync(
     try:
         return asyncio.run(generate_ai_roast(dep_count, package_names, cve_list, cursed_list))
     except Exception as e:
-        print(f"AI sync wrapper error: {e}")
+        logger.warning(f"AI sync wrapper error: {type(e).__name__}")
         return None
