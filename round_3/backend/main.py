@@ -183,6 +183,7 @@ async def healthz():
         "status": "healthy",
         "message": message,
         "paranoia_level": 0,
+        "ai_available": is_ai_available(),  # For frontend to auto-enable AI toggle
         "roasts_completed": stats["roasts_completed"],
         "dependencies_judged": stats["dependencies_judged"],
         "sboms_generated": stats["sboms_generated"],

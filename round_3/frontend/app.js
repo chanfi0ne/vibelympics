@@ -534,5 +534,26 @@ inputContent.addEventListener('keydown', (e) => {
     }
 });
 
+// Check if AI is available and auto-enable toggle
+async function checkAiAvailability() {
+    try {
+        const response = await fetch(`${API_BASE}/healthz`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.ai_available) {
+                // Auto-enable AI toggle
+                const aiToggle = document.getElementById('ai-toggle');
+                if (aiToggle && aiToggle.dataset.enabled !== 'true') {
+                    toggleAi();  // Turn it ON
+                    console.log('AI available - auto-enabled');
+                }
+            }
+        }
+    } catch (err) {
+        console.log('Could not check AI availability:', err);
+    }
+}
+
 // Initialize
 fetchParanoiaState();
+checkAiAvailability();
