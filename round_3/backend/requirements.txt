@@ -2,6 +2,7 @@
 # Keeping it minimal - only what we need
 
 fastapi==0.115.6
+starlette>=0.45.0  # Pin to fix CVE-2025-27110 (DoS via Range header)
 uvicorn==0.34.0
 pydantic==2.10.3
 pillow==11.0.0
