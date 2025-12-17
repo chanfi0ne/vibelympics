@@ -1,11 +1,15 @@
 # PURPOSE: CVE detection service for PARANOID
-# Matches packages against pre-cached CVE database
+# Matches packages against pre-cached CVE database + live OSV.dev API
 
 import json
 import re
+import logging
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional
+import httpx
+
+logger = logging.getLogger(__name__)
 
 # Load CVE database
 CVE_DB_PATH = Path(__file__).parent.parent / "data" / "cves.json"
@@ -174,3 +178,167 @@ def get_worst_severity(matches: list[CVEMatch]) -> str:
     if not matches:
         return "none"
     return max(matches, key=lambda m: get_severity_order(m.severity)).severity
+
+
+# --- OSV.dev Live API Integration ---
+
+OSV_API_URL = "https://api.osv.dev/v1/query"
+OSV_TIMEOUT = 3.0  # Fast timeout to not slow down roasts
+
+
+async def query_osv(package_name: str, version: str, ecosystem: str = "npm") -> list[CVEMatch]:
+    """Query OSV.dev API for real vulnerabilities.
+    
+    Args:
+        package_name: Package name
+        version: Version string
+        ecosystem: Package ecosystem (npm, PyPI, etc.)
+    
+    Returns:
+        List of CVEMatch objects from OSV.dev
+    """
+    matches = []
+    
+    payload = {
+        "package": {
+            "name": package_name,
+            "ecosystem": ecosystem
+        }
+    }
+    
+    # Add version if available for more accurate results
+    if version:
+        payload["version"] = version
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(OSV_API_URL, json=payload, timeout=OSV_TIMEOUT)
+            
+            if response.status_code != 200:
+                return matches
+            
+            data = response.json()
+            vulns = data.get("vulns", [])
+            
+            for vuln in vulns:
+                # Extract CVE ID from aliases
+                cve_id = vuln.get("id", "")
+                for alias in vuln.get("aliases", []):
+                    if alias.startswith("CVE-"):
+                        cve_id = alias
+                        break
+                
+                # Extract severity
+                severity = "medium"
+                for sev in vuln.get("severity", []):
+                    if sev.get("type") == "CVSS_V3":
+                        score_str = sev.get("score", "")
+                        # Parse CVSS vector for severity
+                        if "/S:" in score_str:
+                            # Extract severity from CVSS vector
+                            pass
+                        # Try to get base score
+                        try:
+                            base_score = float(score_str.split("/")[0].replace("CVSS:3.1/AV:", "").split(":")[0])
+                            if base_score >= 9.0:
+                                severity = "critical"
+                            elif base_score >= 7.0:
+                                severity = "high"
+                            elif base_score >= 4.0:
+                                severity = "medium"
+                            else:
+                                severity = "low"
+                        except:
+                            pass
+                
+                # Check database_specific for severity
+                db_specific = vuln.get("database_specific", {})
+                if db_specific.get("severity"):
+                    severity = db_specific["severity"].lower()
+                
+                matches.append(CVEMatch(
+                    package=package_name,
+                    version=version or "unknown",
+                    cve_id=cve_id,
+                    severity=severity,
+                    description=vuln.get("summary", "Security vulnerability")[:200],
+                    fixed_version=None  # Would need to parse from affected ranges
+                ))
+            
+            logger.info(f"OSV.dev: {package_name}@{version} -> {len(matches)} vulns")
+            
+    except httpx.TimeoutException:
+        logger.debug(f"OSV.dev timeout for {package_name}")
+    except Exception as e:
+        logger.debug(f"OSV.dev error for {package_name}: {e}")
+    
+    return matches
+
+
+async def detect_cves_live(package_name: str, version: Optional[str] = None, ecosystem: str = "npm") -> list[CVEMatch]:
+    """Detect CVEs using both cached database AND live OSV.dev API.
+    
+    Args:
+        package_name: Package name
+        version: Version string
+        ecosystem: Package ecosystem
+    
+    Returns:
+        Combined list of CVE matches (deduplicated by CVE ID)
+    """
+    # First check cached database (fast)
+    cached_matches = detect_cves(package_name, version)
+    
+    # Then query OSV.dev for live data
+    live_matches = await query_osv(package_name, version, ecosystem)
+    
+    # Combine and deduplicate by CVE ID
+    seen_cves = {m.cve_id for m in cached_matches}
+    combined = list(cached_matches)
+    
+    for match in live_matches:
+        if match.cve_id not in seen_cves:
+            combined.append(match)
+            seen_cves.add(match.cve_id)
+    
+    return combined
+
+
+async def detect_cves_batch_live(
+    packages: list[tuple[str, Optional[str]]], 
+    ecosystem: str = "npm",
+    max_osv_queries: int = 20  # Limit API calls
+) -> list[CVEMatch]:
+    """Detect CVEs for multiple packages using cached + live OSV.dev.
+    
+    Args:
+        packages: List of (package_name, version) tuples
+        ecosystem: Package ecosystem
+        max_osv_queries: Max number of OSV.dev API calls (to avoid rate limiting)
+    
+    Returns:
+        Combined list of all CVE matches
+    """
+    all_matches = []
+    osv_queries = 0
+    
+    for pkg_name, version in packages:
+        # Always check cached database
+        cached = detect_cves(pkg_name, version)
+        all_matches.extend(cached)
+        
+        # Query OSV.dev for packages without cached CVEs (up to limit)
+        if osv_queries < max_osv_queries:
+            try:
+                live = await query_osv(pkg_name, version, ecosystem)
+                # Add only new CVEs not in cached
+                cached_ids = {m.cve_id for m in cached}
+                for match in live:
+                    if match.cve_id not in cached_ids:
+                        all_matches.append(match)
+                osv_queries += 1
+            except:
+                pass
+    
+    logger.info(f"CVE detection: {len(packages)} packages, {osv_queries} OSV queries, {len(all_matches)} total CVEs")
+    return all_matches

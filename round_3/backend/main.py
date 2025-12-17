@@ -27,7 +27,7 @@ from services.caption_selector import (
 )
 from services import paranoia as paranoia_service
 from services.meme_generator import generate_meme, get_meme_path
-from services.cve_detector import detect_cves_batch, get_worst_severity, CVEMatch
+from services.cve_detector import detect_cves_batch, detect_cves_batch_live, get_worst_severity, CVEMatch
 from services.cursed_detector import detect_cursed_batch, get_worst_cursed, CursedMatch
 from services.ai_roaster import generate_ai_roast, is_ai_available, AIRoastResult
 
@@ -348,9 +348,9 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
     stats["dependencies_judged"] += dep_count
     stats["sboms_generated"] += 1 if request.include_sbom else 0
 
-    # CVE Detection
+    # CVE Detection - uses cached DB + live OSV.dev API
     packages_to_check = [(d.name, d.version) for d in result.dependencies]
-    cve_matches = detect_cves_batch(packages_to_check)
+    cve_matches = await detect_cves_batch_live(packages_to_check, ecosystem="npm", max_osv_queries=25)
     cve_count = len(cve_matches)
     worst_cve_severity = get_worst_severity(cve_matches)
 
