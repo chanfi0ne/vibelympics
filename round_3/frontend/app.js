@@ -263,8 +263,18 @@ function showResults(data) {
     // Meme image
     memeImage.src = `${API_BASE}${data.meme_url}`;
 
-    // Roast summary
-    roastSummary.textContent = data.roast_summary;
+    // Roast summary with AI badge
+    let summaryHtml = data.roast_summary;
+    if (data.ai_generated) {
+        summaryHtml += ' <span class="inline-block ml-2 px-2 py-0.5 text-xs bg-terminal-blue/20 text-terminal-blue rounded">AI Generated</span>';
+    }
+    if (data.cve_count > 0) {
+        summaryHtml += ` <span class="inline-block ml-1 px-2 py-0.5 text-xs bg-terminal-red/20 text-terminal-red rounded">${data.cve_count} CVEs</span>`;
+    }
+    if (data.cursed_count > 0) {
+        summaryHtml += ` <span class="inline-block ml-1 px-2 py-0.5 text-xs bg-terminal-amber/20 text-terminal-amber rounded">${data.cursed_count} Cursed</span>`;
+    }
+    roastSummary.innerHTML = summaryHtml;
 
     // Caption
     caption.textContent = data.caption;
@@ -303,14 +313,21 @@ function showResults(data) {
 async function doRoast() {
     const type = inputType.value;
     const content = inputContent.value.trim();
+    const useAi = document.getElementById('use-ai')?.checked || false;
 
     if (!content) {
         showError('Your input is empty. Much like your security strategy.');
         return;
     }
 
-    // Show loading
+    // Show loading (with different message for AI)
     loading.classList.remove('hidden');
+    const loadingText = loading.querySelector('p');
+    if (loadingText) {
+        loadingText.innerHTML = useAi 
+            ? 'AI is crafting your personalized roast<span class="blink">_</span>' 
+            : 'Analyzing dependencies<span class="blink">_</span>';
+    }
     results.classList.add('hidden');
     errorBox.classList.add('hidden');
     roastBtn.disabled = true;
@@ -325,7 +342,8 @@ async function doRoast() {
             body: JSON.stringify({
                 input_type: type,
                 content: content,
-                include_sbom: true
+                include_sbom: true,
+                use_ai: useAi
             })
         });
 
