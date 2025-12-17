@@ -1,0 +1,42 @@
+# PURPOSE: APKO config for secure Python 3.12 base image
+# Build with: apko build python-3.12.yaml paranoid-python:latest paranoid-python.tar
+# Or publish: apko publish python-3.12.yaml ghcr.io/chanfi0ne/vibelympics/paranoid-python:latest
+
+contents:
+  repositories:
+    - https://packages.wolfi.dev/os
+  keyring:
+    - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+  packages:
+    # Python 3.12 runtime
+    - python-3.12
+    - python-3.12-base
+    - py3.12-pip
+    # Required for pillow
+    - py3.12-pillow
+    # CA certificates for HTTPS
+    - ca-certificates-bundle
+    # Timezone data
+    - tzdata
+
+accounts:
+  groups:
+    - groupname: nonroot
+      gid: 65532
+  users:
+    - username: nonroot
+      uid: 65532
+      gid: 65532
+  run-as: 65532
+
+environment:
+  PATH: /usr/bin:/usr/local/bin
+  PYTHONUNBUFFERED: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+entrypoint:
+  command: /usr/bin/python3.12
+
+archs:
+  - amd64
+  - arm64
