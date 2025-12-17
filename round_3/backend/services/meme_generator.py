@@ -340,7 +340,7 @@ def generate_meme_pillow(meme_id: str, caption: str, template_id: str | None = N
         draw = ImageDraw.Draw(img)
         
         # HUGE font for classic meme look - like memegen.link
-        font_size = max(48, img.width // 12)  # Much bigger!
+        font_size = max(52, img.width // 10)  # Even bigger!
         font = get_font(size=font_size)
         logger.info(f"Using font size {font_size} for {img.width}x{img.height} image")
         
