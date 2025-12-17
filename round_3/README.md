@@ -4,11 +4,17 @@ Paste your dependencies. Get roasted. Question everything.
 
 PARANOID analyzes your software dependencies and roasts your questionable life choices with AI-generated memes. It detects CVEs, identifies cursed packages, and generates personalized security roasts.
 
+## Try It Now
+
+**Live Demo:** https://paranoid.up.railway.app
+
+No setup required - just paste your dependencies and get roasted!
+
 ## Features
 
 - **CVE Detection** - Scans for 55+ famous vulnerabilities (Log4Shell, Heartbleed, etc.)
 - **Cursed Package Detection** - Identifies 11 infamous packages (left-pad, event-stream, colors, etc.)
-- **AI-Powered Roasts** - Claude Haiku generates personalized security burns
+- **AI-Powered Roasts** - Claude Sonnet 4.5 generates personalized security burns
 - **Meme Generation** - Creates custom memes via memegen.link API
 - **Paranoia System** - Escalating distrust based on your dependency choices
 - **Multi-Format Support** - package.json, requirements.txt, go.mod, SBOM (CycloneDX/SPDX)
@@ -22,20 +28,24 @@ PARANOID analyzes your software dependencies and roasts your questionable life c
 - **Rate limiting** - 10 requests/minute per IP
 - **Input validation** - 100KB max, 500 dependencies max
 
-## Quick Start
+## Run Locally
+
+> **Note:** AI-powered roasts require an [Anthropic API key](https://console.anthropic.com/). Without one, the app falls back to pre-written captions.
 
 ```bash
 # Build
 docker build -t paranoid .
 
-# Run (with AI roasts)
-docker run -p 8000:8000 -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY paranoid
+# Run with AI roasts (recommended)
+docker run -p 8000:8000 -e ANTHROPIC_API_KEY=your-api-key paranoid
 
-# Run (without AI - uses pre-written captions)
+# Run without AI (uses pre-written captions)
 docker run -p 8000:8000 paranoid
 ```
 
 Then visit http://localhost:8000
+
+**Don't have an API key?** Just use the [live demo](https://paranoid.up.railway.app) instead!
 
 ## API Endpoints
 
@@ -73,7 +83,7 @@ curl -X POST http://localhost:8000/roast \
 ## Tech Stack
 
 - **Backend:** Python 3.12, FastAPI, Pydantic
-- **AI:** Claude 3 Haiku via Anthropic API
+- **AI:** Claude Sonnet 4.5 via Anthropic API
 - **Memes:** memegen.link API + Pillow
 - **Container:** Chainguard Wolfi (zero CVEs)
 
@@ -82,10 +92,6 @@ curl -X POST http://localhost:8000/roast \
 ```
 ghcr.io/chanfi0ne/vibelympics/paranoid:latest
 ```
-
-## Live Demo
-
-https://paranoid.up.railway.app
 
 ---
 
