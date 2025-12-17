@@ -1,24 +1,29 @@
 # PURPOSE: Dockerfile for PARANOID - SBOM Roast Generator
-# Using Chainguard images for maximum paranoia (no shell, minimal attack surface)
-# Pinned to Python 3.12 for wheel compatibility (3.14 lacks pre-built wheels)
+# Using Chainguard images: dev for building, distroless for runtime
 
-FROM cgr.dev/chainguard/python:3.12-dev AS builder
+# === BUILDER STAGE ===
+# Chainguard dev image has pip and build tools
+FROM cgr.dev/chainguard/python:latest-dev AS builder
 
-WORKDIR /app
+WORKDIR /build
 
 # Copy requirements first for layer caching
 COPY backend/requirements.txt .
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt --target /app/deps
+# Install dependencies - let pip build from source if needed
+# Set environment to allow forward compatibility builds
+ENV PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
 
-# Production image - distroless, no shell
-FROM cgr.dev/chainguard/python:3.12
+RUN pip install --no-cache-dir -r requirements.txt --target /build/deps
+
+# === RUNTIME STAGE ===
+# Chainguard distroless: no shell, minimal attack surface, maximum paranoia
+FROM cgr.dev/chainguard/python:latest
 
 WORKDIR /app
 
-# Copy installed dependencies
-COPY --from=builder --chown=nonroot:nonroot /app/deps /app/deps
+# Copy only the wheel artifacts from builder (no build tools)
+COPY --from=builder --chown=nonroot:nonroot /build/deps /app/deps
 
 # Copy application code (chown for nonroot user to write memes)
 COPY --chown=nonroot:nonroot backend/ /app/backend/
@@ -30,6 +35,9 @@ ENV PYTHONPATH=/app/deps:/app/backend
 
 # Expose port (Railway sets PORT env var)
 EXPOSE 8000
+
+# Chainguard runs as nonroot by default (UID 65532)
+# No shell available - maximum security
 
 # Run via run.py which handles import paths
 ENTRYPOINT ["python", "/app/run.py"]
