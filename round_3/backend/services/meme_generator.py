@@ -210,6 +210,12 @@ BUNDLED_TEMPLATES = {
     "drake": {"file": "drake.jpg", "text_position": "right"},
     "disaster": {"file": "disaster.jpg", "text_position": "bottom"},
     "fry": {"file": "fry.jpg", "text_position": "bottom"},
+    "batman": {"file": "batman.jpg", "text_position": "bottom"},
+    "buzz": {"file": "buzz.jpg", "text_position": "bottom"},
+    "rollsafe": {"file": "rollsafe.jpg", "text_position": "bottom"},
+    "doge": {"file": "doge.jpg", "text_position": "bottom"},
+    "pigeon": {"file": "pigeon.jpg", "text_position": "bottom"},
+    "afraid": {"file": "afraid.jpg", "text_position": "bottom"},
 }
 
 

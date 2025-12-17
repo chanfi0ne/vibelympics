@@ -47,10 +47,16 @@ You generate roasts that are:
 
 # Available meme templates (must match bundled images)
 MEME_TEMPLATES = {
-    "fine": "This is Fine dog - sitting in burning room, denial about your burning dependencies",
-    "drake": "Drake Hotline Bling - top: rejecting security, bottom: embracing chaos",
+    "fine": "This is Fine dog - sitting in burning room, denial about everything on fire",
+    "drake": "Drake Hotline Bling - top: rejecting good idea, bottom: embracing bad idea",
     "disaster": "Disaster Girl - smiling while everything burns behind her",
-    "fry": "Futurama Fry - squinting, 'not sure if secure or just lucky'",
+    "fry": "Futurama Fry - squinting suspiciously, 'not sure if X or Y'",
+    "batman": "Batman Slapping Robin - stopping someone from terrible choices",
+    "buzz": "Buzz Lightyear pointing - 'vulnerabilities... vulnerabilities everywhere'",
+    "rollsafe": "Roll Safe guy tapping head - galaxy brain bad security logic",
+    "doge": "Doge - 'such vulnerability, very CVE, much concern, wow'",
+    "pigeon": "Is This a Pigeon - misidentifying something obvious",
+    "afraid": "Afraid to Ask Andy - 'too scared to ask at this point'",
 }
 
 
