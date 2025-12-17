@@ -1,43 +1,46 @@
 # PURPOSE: Dockerfile for PARANOID - SBOM Roast Generator
-# Using Chainguard images: dev for building, distroless for runtime
+# Using python:3.12-slim for consistent builds across architectures
+# Running as non-root for security
 
 # === BUILDER STAGE ===
-# Chainguard dev image has pip and build tools
-FROM cgr.dev/chainguard/python:latest-dev AS builder
+FROM python:3.12-slim AS builder
 
 WORKDIR /build
 
 # Copy requirements first for layer caching
 COPY backend/requirements.txt .
 
-# Install dependencies - let pip build from source if needed
-# Set environment to allow forward compatibility builds
-ENV PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
-
+# Install dependencies - pre-built wheels available for all platforms
 RUN pip install --no-cache-dir -r requirements.txt --target /build/deps
 
 # === RUNTIME STAGE ===
-# Chainguard distroless: no shell, minimal attack surface, maximum paranoia
-FROM cgr.dev/chainguard/python:latest
+# Same Python version as builder for wheel compatibility
+FROM python:3.12-slim
+
+# Create non-root user (security hardening)
+RUN useradd --create-home --uid 65532 --shell /usr/sbin/nologin nonroot
 
 WORKDIR /app
 
-# Copy only the wheel artifacts from builder (no build tools)
-COPY --from=builder --chown=nonroot:nonroot /build/deps /app/deps
+# Copy dependencies from builder
+COPY --from=builder /build/deps /app/deps
 
-# Copy application code (chown for nonroot user to write memes)
-COPY --chown=nonroot:nonroot backend/ /app/backend/
-COPY --chown=nonroot:nonroot frontend/ /app/frontend/
-COPY --chown=nonroot:nonroot run.py /app/
+# Copy application code
+COPY backend/ /app/backend/
+COPY frontend/ /app/frontend/
+COPY run.py /app/
 
-# Set Python path to include deps and backend
+# Create memes directory and set ownership
+RUN mkdir -p /app/backend/static/memes && chown -R nonroot:nonroot /app
+
+# Switch to non-root user
+USER nonroot
+
+# Set Python path
 ENV PYTHONPATH=/app/deps:/app/backend
 
-# Expose port (Railway sets PORT env var)
+# Expose port
 EXPOSE 8000
 
-# Chainguard runs as nonroot by default (UID 65532)
-# No shell available - maximum security
-
-# Run via run.py which handles import paths
-ENTRYPOINT ["python", "/app/run.py"]
+# Run the app
+CMD ["python", "/app/run.py"]
