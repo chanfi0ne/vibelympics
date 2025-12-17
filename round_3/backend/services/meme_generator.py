@@ -227,12 +227,18 @@ BUNDLED_TEMPLATES = {
 
 
 def get_font(size: int = 32):
-    """Get a bold font for meme text."""
+    """Get a bold font for meme text - Impact style preferred."""
     font_paths = [
+        # Impact-style fonts (classic meme look)
+        "/usr/share/fonts/truetype/msttcorefonts/Impact.ttf",
+        "/usr/share/fonts/truetype/impact.ttf",
+        "/Library/Fonts/Impact.ttf",  # macOS
+        "/System/Library/Fonts/Supplemental/Impact.ttf",  # macOS
+        # Bold fallbacks
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
         "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
         "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
-        "/System/Library/Fonts/Helvetica.ttc",  # macOS
+        "/System/Library/Fonts/Helvetica.ttc",
     ]
     for font_path in font_paths:
         try:
@@ -243,16 +249,18 @@ def get_font(size: int = 32):
 
 
 def draw_meme_text(draw: ImageDraw, text: str, position: str, img_width: int, img_height: int, font):
-    """Draw meme-style text with black outline."""
-    lines = textwrap.wrap(text, width=30)
-    line_height = font.size + 10 if hasattr(font, 'size') else 40
+    """Draw Impact-style meme text - white with thick black outline."""
+    # Wrap text to fit image width
+    chars_per_line = max(15, img_width // 25)  # Dynamic based on image width
+    lines = textwrap.wrap(text.upper(), width=chars_per_line)  # ALL CAPS for meme style
+    line_height = font.size + 8 if hasattr(font, 'size') else 45
     
     if position == "bottom":
         total_height = len(lines) * line_height
-        y = img_height - total_height - 20
+        y = img_height - total_height - 15
     elif position == "top":
-        y = 20
-    else:  # center or default
+        y = 15
+    else:  # center
         total_height = len(lines) * line_height
         y = (img_height - total_height) // 2
     
@@ -261,10 +269,10 @@ def draw_meme_text(draw: ImageDraw, text: str, position: str, img_width: int, im
         text_width = bbox[2] - bbox[0]
         x = (img_width - text_width) // 2
         
-        # Draw black outline (stroke effect)
-        outline_range = 3
-        for dx in range(-outline_range, outline_range + 1):
-            for dy in range(-outline_range, outline_range + 1):
+        # Thick black outline (Impact meme style)
+        outline_width = 4
+        for dx in range(-outline_width, outline_width + 1):
+            for dy in range(-outline_width, outline_width + 1):
                 if dx != 0 or dy != 0:
                     draw.text((x + dx, y + dy), line, font=font, fill=(0, 0, 0))
         
@@ -303,9 +311,12 @@ def generate_meme_pillow(meme_id: str, caption: str, template_id: str | None = N
             logger.warning(f"Template not found: {template_path}, using plain background")
         
         draw = ImageDraw.Draw(img)
-        font = get_font(size=36)
         
-        # Draw the caption
+        # Scale font size based on image dimensions (bigger = more readable)
+        font_size = max(28, min(img.width, img.height) // 10)
+        font = get_font(size=font_size)
+        
+        # Draw the caption with Impact-style text
         draw_meme_text(draw, caption, template["text_position"], img.width, img.height, font)
         
         output_path = OUTPUT_DIR / f"{meme_id}.png"
