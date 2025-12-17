@@ -33,9 +33,12 @@ const levelDots = [
     document.getElementById('level-2')
 ];
 
-// Random terrible examples for "Roast Me" button
-const TERRIBLE_EXAMPLES = {
-    package_json: `{
+// Random terrible examples for "Roast Me" button - now actually random!
+const TERRIBLE_EXAMPLES = [
+    {
+        type: 'package_json',
+        content: `{
+  "name": "legacy-monolith",
   "dependencies": {
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
@@ -47,13 +50,46 @@ const TERRIBLE_EXAMPLES = {
     "jquery": "^3.5.0",
     "react": "^16.8.0",
     "webpack": "^4.41.0"
-  },
-  "devDependencies": {
-    "mocha": "^5.2.0",
-    "chai": "^4.2.0"
   }
-}`,
-    requirements_txt: `flask==1.0.0
+}`
+    },
+    {
+        type: 'package_json',
+        content: `{
+  "name": "startup-mvp",
+  "dependencies": {
+    "express": "^3.0.0",
+    "mongoose": "^4.0.0",
+    "passport": "^0.3.0",
+    "async": "^1.0.0",
+    "underscore": "^1.6.0",
+    "coffee-script": "^1.9.0",
+    "grunt": "^0.4.0"
+  }
+}`
+    },
+    {
+        type: 'package_json',
+        content: `{
+  "name": "node-modules-black-hole",
+  "dependencies": {
+    "create-react-app": "^1.0.0",
+    "gatsby": "^2.0.0",
+    "next": "^9.0.0",
+    "webpack": "^4.0.0",
+    "babel-core": "^6.0.0",
+    "typescript": "^3.0.0",
+    "eslint": "^5.0.0",
+    "prettier": "^1.0.0",
+    "jest": "^24.0.0",
+    "mocha": "^5.0.0",
+    "karma": "^3.0.0"
+  }
+}`
+    },
+    {
+        type: 'requirements_txt',
+        content: `flask==1.0.0
 requests==2.20.0
 django==2.0.0
 pillow==5.0.0
@@ -65,7 +101,54 @@ redis==2.10.0
 boto3==1.7.0
 urllib3==1.24.0
 pyyaml==3.12`
-};
+    },
+    {
+        type: 'requirements_txt',
+        content: `tensorflow==1.15.0
+keras==2.2.0
+scikit-learn==0.20.0
+matplotlib==2.2.0
+jupyter==1.0.0
+ipython==5.0.0
+scipy==1.1.0
+pillow==5.0.0
+opencv-python==3.4.0`
+    },
+    {
+        type: 'requirements_txt',
+        content: `django==1.11.0
+djangorestframework==3.6.0
+celery==3.1.0
+psycopg2==2.7.0
+gunicorn==19.0.0
+whitenoise==3.0.0
+sentry-sdk==0.5.0`
+    },
+    {
+        type: 'single_package',
+        content: 'lodash@4.17.11'
+    },
+    {
+        type: 'single_package',
+        content: 'moment@2.24.0'
+    },
+    {
+        type: 'single_package',
+        content: 'request@2.88.0'
+    },
+    {
+        type: 'single_package',
+        content: 'is-odd@1.0.0'
+    },
+    {
+        type: 'single_package',
+        content: 'is-even@1.0.0'
+    },
+    {
+        type: 'single_package',
+        content: 'is-thirteen@2.0.0'
+    }
+];
 
 // PANIC mode - triggers existential dread and HTTP 451
 const PANIC_EXAMPLE = `{
@@ -235,13 +318,10 @@ async function doRoast() {
 }
 
 function loadRandomExample() {
-    const type = inputType.value;
-    if (TERRIBLE_EXAMPLES[type]) {
-        inputContent.value = TERRIBLE_EXAMPLES[type];
-    } else {
-        inputContent.value = 'lodash@4.17.11';
-        inputType.value = 'single_package';
-    }
+    // Actually random now!
+    const example = TERRIBLE_EXAMPLES[Math.floor(Math.random() * TERRIBLE_EXAMPLES.length)];
+    inputType.value = example.type;
+    inputContent.value = example.content;
 }
 
 function loadPanicExample() {
