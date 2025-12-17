@@ -50,6 +50,9 @@ def encode_text(text: str) -> str:
 
     See: https://memegen.link/docs#special-characters
     """
+    # Strip problematic trailing punctuation BEFORE encoding
+    text = text.rstrip(".!?,;:")
+    
     # memegen special character encoding (order matters!)
     text = text.replace("-", "--")      # hyphen -> --
     text = text.replace("_", "__")      # underscore -> __
@@ -57,15 +60,16 @@ def encode_text(text: str) -> str:
     text = text.replace("?", "~q")      # question mark -> ~q
     text = text.replace("#", "~h")      # hash -> ~h
     text = text.replace("/", "~s")      # slash -> ~s
-    text = text.replace(".", "~p")      # period -> ~p
+    text = text.replace(".", "~p")      # period -> ~p (mid-text only now)
     text = text.replace("'", "")        # remove apostrophes (cause 404s)
     text = text.replace('"', "")        # remove quotes (cause 404s)
     text = text.replace(":", "~c")      # colon -> ~c
     text = text.replace(";", "~c")      # semicolon -> ~c
+    text = text.replace("%", "")        # remove percent signs
     
-    # Clean up any double underscores from removed chars
-    while "__" in text and not text.startswith("__"):
-        text = text.replace("___", "_")
+    # Clean up any triple underscores from removed chars
+    while "___" in text:
+        text = text.replace("___", "__")
     
     # Remove problematic chars at end
     text = text.rstrip("_~")
