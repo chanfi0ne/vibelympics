@@ -9,6 +9,7 @@ import random
 import uuid
 
 from services.analyzer import analyze
+from services.caption_selector import select_caption, get_sbom_commentary, get_paranoia_message
 
 
 class RoastRequest(BaseModel):
@@ -96,16 +97,6 @@ async def root():
     }
 
 
-# Stub roast captions - will be replaced with caption library
-STUB_CAPTIONS = [
-    "Your dependencies are a disaster. This is fine.",
-    "{count} dependencies for a todo app. Bold move.",
-    "I've seen better supply chains in a haunted house.",
-    "Your SBOM is technically accurate and practically useless. As is tradition.",
-    "node_modules heavier than my existential dread.",
-]
-
-
 @app.post("/roast", response_model=RoastResponse)
 async def roast(request: RoastRequest):
     """Main roast endpoint - analyzes dependencies and generates meme."""
@@ -135,13 +126,14 @@ async def roast(request: RoastRequest):
 
     # Generate response
     meme_id = str(uuid.uuid4())[:8]
-    caption = random.choice(STUB_CAPTIONS).format(count=dep_count)
+    caption = select_caption("dependency_count", dep_count=dep_count)
 
     # Build findings based on actual analysis
+    dep_severity = "high" if dep_count > 50 else "medium" if dep_count > 10 else "low"
     findings = [
         Finding(
             type="dependency_count",
-            severity="high" if dep_count > 50 else "medium" if dep_count > 10 else "low",
+            severity=dep_severity,
             detail=f"{dep_count} dependencies detected"
         )
     ]
@@ -160,6 +152,7 @@ async def roast(request: RoastRequest):
 
     # SBOM with actual components
     sbom = None
+    sbom_commentary = get_sbom_commentary()
     if request.include_sbom:
         components = [
             {"name": d.name, "version": d.version or "unknown", "type": "library"}
@@ -169,7 +162,7 @@ async def roast(request: RoastRequest):
             "format": "CycloneDX",
             "version": "1.4",
             "confidence": "LOW",
-            "confidence_explanation": "This SBOM lists some components. Not all. Never all.",
+            "confidence_explanation": sbom_commentary,
             "completeness_score": f"{random.randint(15, 35)}%",
             "completeness_note": f"We found {dep_count} components. We probably missed {dep_count * 3}.",
             "will_prevent_next_attack": False,
@@ -180,7 +173,7 @@ async def roast(request: RoastRequest):
     return RoastResponse(
         meme_url=f"/memes/{meme_id}.png",
         meme_id=meme_id,
-        roast_summary=f"You have {dep_count} dependencies. Your SBOM completeness is estimated at {random.randint(15,35)}%. This is fine.",
+        roast_summary=f"You have {dep_count} dependencies. {sbom_commentary}",
         findings=findings,
         caption=caption,
         template_used="this-is-fine",
@@ -188,6 +181,6 @@ async def roast(request: RoastRequest):
         paranoia={
             "level": 0,
             "level_name": "CHILL",
-            "message": "Roast complete. Your dependencies are a disaster, but at least I'm functioning normally. For now."
+            "message": get_paranoia_message(0)
         }
     )
