@@ -8,7 +8,7 @@ Welcome to Chainguard's Vibelympics, our first ever vibe coding tournament, wher
 |-------|---------|-------------|------------|------|
 | 1 | 🕳️ Emoji Zork | Dungeon crawler with 100% emoji UI | Python, Flask, Chainguard Containers | [round_1/](./round_1/) |
 | 2 | 🪚 CHAINSAW | npm supply chain security auditor | Python, FastAPI, React, Docker Compose | [round_2/](./round_2/) |
-| 3 | TBD | - | - | - |
+| 3 | 🔮 PARANOID | SBOM roast generator with AI memes | Python, FastAPI, Claude AI, Chainguard Wolfi | [round_3/](./round_3/) |
 
 ### Round 1: Emoji Zork
 
@@ -45,6 +45,23 @@ A containerized npm supply chain security auditor that cuts through supply chain
 - `ghcr.io/chanfi0ne/vibelympics/chainsaw-frontend:latest`
 
 **Quick Start:** `docker compose up --build` then visit http://localhost:3000
+
+### Round 3: PARANOID
+
+An SBOM roast generator that analyzes your dependencies and roasts your questionable security choices with AI-generated memes.
+
+**Features:**
+- 🔒 **0 CVEs** - Built on Chainguard Wolfi base image
+- CVE detection (55+ famous vulnerabilities)
+- Cursed package detection (left-pad, event-stream, colors, etc.)
+- AI-powered roasts via Claude Haiku
+- Custom meme generation via memegen.link
+- Paranoia system with escalating distrust
+- Multi-format support (package.json, requirements.txt, go.mod, SBOM)
+
+**Container:** `ghcr.io/chanfi0ne/vibelympics/paranoid:latest`
+
+**Quick Start:** `docker run -p 8000:8000 paranoid` then visit http://localhost:8000
 
 ---
 
