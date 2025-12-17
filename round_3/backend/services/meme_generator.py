@@ -254,26 +254,18 @@ def generate_meme_fallback(meme_id: str, caption: str) -> Path:
 
 
 def generate_meme(meme_id: str, caption: str, template: str | None = None) -> Path:
-    """Generate a meme - tries memegen.link API first, falls back to Pillow.
+    """Generate a meme using Pillow.
+    
+    Note: memegen.link API disabled due to unreliable URL encoding issues.
+    Using Pillow directly for consistent, reliable meme generation.
 
     Args:
         meme_id: Unique ID for the meme file
         caption: The roast text
-        template: Template ID from AI (e.g., "fine", "drake"). None for random.
+        template: Template ID (currently unused, for future use)
     """
-    logger.info(f"Generating meme {meme_id}, template={template}")
-    
-    # Try real meme generation first
-    result = generate_meme_memegen(meme_id, caption, template_id=template)
-    if result:
-        logger.info(f"Memegen succeeded: {result}")
-        return result
-    
-    # Fallback to simple generation
-    logger.info(f"Memegen failed, using Pillow fallback")
-    fallback_result = generate_meme_fallback(meme_id, caption)
-    logger.info(f"Fallback result: {fallback_result}")
-    return fallback_result
+    logger.info(f"Generating meme {meme_id} with Pillow")
+    return generate_meme_fallback(meme_id, caption)
 
 
 def get_meme_path(meme_id: str) -> Path | None:
