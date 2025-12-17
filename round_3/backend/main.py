@@ -349,8 +349,18 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
     stats["sboms_generated"] += 1 if request.include_sbom else 0
 
     # CVE Detection - uses cached DB + live OSV.dev API
+    # Map input type to OSV ecosystem
+    ecosystem_map = {
+        "package_json": "npm",
+        "requirements_txt": "PyPI",
+        "go_mod": "Go",
+        "single_package": "npm",  # Default to npm for single packages
+        "sbom": "npm",  # Default for SBOM
+    }
+    ecosystem = ecosystem_map.get(request.input_type, "npm")
+    
     packages_to_check = [(d.name, d.version) for d in result.dependencies]
-    cve_matches = await detect_cves_batch_live(packages_to_check, ecosystem="npm", max_osv_queries=25)
+    cve_matches = await detect_cves_batch_live(packages_to_check, ecosystem=ecosystem, max_osv_queries=25)
     cve_count = len(cve_matches)
     worst_cve_severity = get_worst_severity(cve_matches)
 
