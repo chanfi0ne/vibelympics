@@ -45,18 +45,12 @@ You generate roasts that are:
 - Memorable one-liners that developers would share with coworkers
 - Sometimes poetic, sometimes unhinged, always entertaining"""
 
-# Available meme templates
+# Available meme templates (must match bundled images)
 MEME_TEMPLATES = {
-    "fine": "This is Fine dog - denial, everything burning around you",
-    "drake": "Drake Hotline Bling - rejecting good practices, embracing chaos",
-    "batman": "Batman Slapping Robin - stopping someone from making terrible choices",
-    "buzz": "Buzz Lightyear - 'vulnerabilities everywhere'",
-    "disaster": "Disaster Girl - smiling while your supply chain burns",
-    "fry": "Futurama Fry - 'not sure if secure or just haven't been pwned yet'",
-    "rollsafe": "Roll Safe - galaxy brain bad security logic",
-    "doge": "Doge - such vulnerability, very CVE, wow",
-    "pigeon": "Is This a Pigeon - misidentifying malware as features",
-    "afraid": "Afraid to Ask Andy - too scared to check your dependencies"
+    "fine": "This is Fine dog - sitting in burning room, denial about your burning dependencies",
+    "drake": "Drake Hotline Bling - top: rejecting security, bottom: embracing chaos",
+    "disaster": "Disaster Girl - smiling while everything burns behind her",
+    "fry": "Futurama Fry - squinting, 'not sure if secure or just lucky'",
 }
 
 

@@ -202,70 +202,119 @@ def generate_meme_memegen(meme_id: str, caption: str, template_id: str | None = 
     return None
 
 
-def generate_meme_fallback(meme_id: str, caption: str) -> Path:
-    """Fallback: generate simple meme with Pillow if API fails."""
-    logger.info(f"Using Pillow fallback for meme {meme_id}")
+TEMPLATES_DIR = Path(__file__).parent.parent / "static" / "templates"
+
+# Bundled meme templates
+BUNDLED_TEMPLATES = {
+    "fine": {"file": "fine.png", "text_position": "bottom"},
+    "drake": {"file": "drake.jpg", "text_position": "right"},
+    "disaster": {"file": "disaster.jpg", "text_position": "bottom"},
+    "fry": {"file": "fry.jpg", "text_position": "bottom"},
+}
+
+
+def get_font(size: int = 32):
+    """Get a bold font for meme text."""
+    font_paths = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
+        "/System/Library/Fonts/Helvetica.ttc",  # macOS
+    ]
+    for font_path in font_paths:
+        try:
+            return ImageFont.truetype(font_path, size)
+        except (OSError, IOError):
+            continue
+    return ImageFont.load_default()
+
+
+def draw_meme_text(draw: ImageDraw, text: str, position: str, img_width: int, img_height: int, font):
+    """Draw meme-style text with black outline."""
+    lines = textwrap.wrap(text, width=30)
+    line_height = font.size + 10 if hasattr(font, 'size') else 40
+    
+    if position == "bottom":
+        total_height = len(lines) * line_height
+        y = img_height - total_height - 20
+    elif position == "top":
+        y = 20
+    else:  # center or default
+        total_height = len(lines) * line_height
+        y = (img_height - total_height) // 2
+    
+    for line in lines:
+        bbox = draw.textbbox((0, 0), line, font=font)
+        text_width = bbox[2] - bbox[0]
+        x = (img_width - text_width) // 2
+        
+        # Draw black outline (stroke effect)
+        outline_range = 3
+        for dx in range(-outline_range, outline_range + 1):
+            for dy in range(-outline_range, outline_range + 1):
+                if dx != 0 or dy != 0:
+                    draw.text((x + dx, y + dy), line, font=font, fill=(0, 0, 0))
+        
+        # Draw white text
+        draw.text((x, y), line, font=font, fill=(255, 255, 255))
+        y += line_height
+
+
+def generate_meme_pillow(meme_id: str, caption: str, template_id: str | None = None) -> Path:
+    """Generate meme with bundled template and Pillow.
+    
+    Args:
+        meme_id: Unique ID for output file
+        caption: The roast text to overlay
+        template_id: Template to use (fine, drake, disaster, fry). Random if None.
+    """
     ensure_output_dir()
     
     try:
-        img = Image.new("RGB", (600, 400), (30, 30, 30))
+        # Use specified template or pick random
+        if template_id and template_id in BUNDLED_TEMPLATES:
+            selected_id = template_id
+        else:
+            selected_id = random.choice(list(BUNDLED_TEMPLATES.keys()))
+            if template_id:
+                logger.warning(f"Unknown template '{template_id}', using {selected_id}")
+        
+        template = BUNDLED_TEMPLATES[selected_id]
+        template_path = TEMPLATES_DIR / template["file"]
+        
+        if template_path.exists():
+            img = Image.open(template_path).convert("RGB")
+            logger.info(f"Using template: {selected_id}")
+        else:
+            img = Image.new("RGB", (600, 400), (30, 30, 30))
+            logger.warning(f"Template not found: {template_path}, using plain background")
+        
         draw = ImageDraw.Draw(img)
+        font = get_font(size=36)
         
-        # Try to load a font, fall back to default
-        font = None
-        font_paths = [
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-            "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
-            "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
-        ]
-        for font_path in font_paths:
-            try:
-                font = ImageFont.truetype(font_path, 24)
-                break
-            except (OSError, IOError):
-                continue
-        
-        if font is None:
-            font = ImageFont.load_default()
-            logger.info("Using default font (no TTF found)")
-        
-        # Draw text with wrapping
-        lines = textwrap.wrap(caption, width=35)
-        y = 150
-        for line in lines:
-            bbox = draw.textbbox((0, 0), line, font=font)
-            x = (600 - (bbox[2] - bbox[0])) // 2
-            # Draw outline
-            for dx, dy in [(-2, 0), (2, 0), (0, -2), (0, 2)]:
-                draw.text((x + dx, y + dy), line, font=font, fill=(0, 0, 0))
-            draw.text((x, y), line, font=font, fill=(255, 255, 255))
-            y += 40
-        
-        # Add watermark
-        draw.text((200, 370), "PARANOID // SBOM ROAST", font=font, fill=(100, 100, 100))
+        # Draw the caption
+        draw_meme_text(draw, caption, template["text_position"], img.width, img.height, font)
         
         output_path = OUTPUT_DIR / f"{meme_id}.png"
         img.save(output_path, "PNG")
-        logger.info(f"Pillow fallback saved: {output_path}")
+        logger.info(f"Meme saved: {output_path}")
         return output_path
+        
     except Exception as e:
-        logger.error(f"Pillow fallback failed: {e}")
+        logger.error(f"Meme generation failed: {e}")
         raise
 
 
 def generate_meme(meme_id: str, caption: str, template: str | None = None) -> Path:
-    """Generate a meme using Pillow.
-    
-    Note: memegen.link API disabled due to unreliable URL encoding issues.
-    Using Pillow directly for consistent, reliable meme generation.
+    """Generate a meme using bundled templates and Pillow.
 
     Args:
         meme_id: Unique ID for the meme file
         caption: The roast text
-        template: Template ID (currently unused, for future use)
+        template: Template ID from AI (e.g., "fine", "drake", "disaster", "fry")
     """
-    logger.info(f"Generating meme {meme_id} with Pillow")
-    return generate_meme_fallback(meme_id, caption)
+    logger.info(f"Generating meme {meme_id} with template={template}")
+    return generate_meme_pillow(meme_id, caption, template)
 
 
 def get_meme_path(meme_id: str) -> Path | None:
