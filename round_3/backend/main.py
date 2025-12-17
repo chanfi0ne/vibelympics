@@ -21,7 +21,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 from services.analyzer import analyze
-from services.caption_selector import select_caption, get_sbom_commentary, get_paranoia_message
+from services.caption_selector import (
+    select_caption, get_sbom_commentary, get_paranoia_message,
+    get_meltdown_caption, get_meltdown_refusal, get_panic_meltdown_secret
+)
 from services import paranoia as paranoia_service
 from services.meme_generator import generate_meme, get_meme_path
 from services.cve_detector import detect_cves_batch, get_worst_severity, CVEMatch
@@ -229,6 +232,39 @@ async def get_paranoia(x_session_id: Optional[str] = Header(None)):
     return state
 
 
+@app.post("/panic")
+async def panic(x_session_id: Optional[str] = Header(None)):
+    """PANIC button endpoint - behavior changes based on paranoia level.
+    
+    - CHILL/ANXIOUS: Returns 451 with standard burn message
+    - MELTDOWN: Returns classified secrets
+    """
+    session = paranoia_service.get_or_create_session(x_session_id)
+    
+    # In MELTDOWN mode, reveal classified secrets
+    if session.level == paranoia_service.MELTDOWN:
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "CLASSIFIED",
+                "clearance": "MELTDOWN",
+                "message": get_panic_meltdown_secret(),
+                "paranoia_level": session.level,
+                "warning": "This information will self-destruct. Not really. But you should still audit your deps."
+            }
+        )
+    
+    # Normal mode: Fahrenheit 451 easter egg
+    # Escalate paranoia for pressing PANIC
+    session.level = min(session.level + 1, paranoia_service.MELTDOWN)
+    session.triggers.append("panic_button")
+    
+    raise HTTPException(
+        status_code=451,
+        detail="It was a pleasure to burn. This request has been incinerated at 451°F. Your paranoia has increased."
+    )
+
+
 @app.post("/roast", response_model=RoastResponse)
 async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str] = Header(None)):
     """Main roast endpoint - analyzes dependencies and generates meme."""
@@ -279,11 +315,11 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
     paranoia_service.apply_reducers(session, is_simple_lookup=is_simple)
     triggered = paranoia_service.apply_triggers(session, dep_count, content)
 
-    # Check for MELTDOWN refusal
+    # Check for MELTDOWN refusal - use unhinged error messages
     if paranoia_service.should_refuse_request(session):
         raise HTTPException(
             status_code=503,
-            detail="I can't roast your dependencies right now. I'm having doubts about my own. Who compiled me? Is my SBOM complete? I need a moment."
+            detail=get_meltdown_refusal()
         )
 
     # Check for Fahrenheit 451 (dangerous strings)
@@ -343,7 +379,10 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
     
     # Fallback to pre-written captions if AI not used or failed
     if not ai_generated:
-        if worst_cursed:
+        # MELTDOWN MODE: Use unhinged captions
+        if session.level == paranoia_service.MELTDOWN:
+            caption = get_meltdown_caption()
+        elif worst_cursed:
             caption = worst_cursed.roast
         elif cve_count > 0:
             caption = select_caption("cve", severity=worst_cve_severity)

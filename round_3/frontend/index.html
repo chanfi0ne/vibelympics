@@ -34,6 +34,22 @@
         .blink { animation: blink 1s step-end infinite; }
         @keyframes blink { 50% { opacity: 0; } }
         pre { white-space: pre-wrap; word-wrap: break-word; }
+        
+        /* MELTDOWN glitch effect */
+        .glitch-mode {
+            animation: glitch 0.3s infinite;
+        }
+        @keyframes glitch {
+            0% { transform: translate(0); filter: hue-rotate(0deg); }
+            20% { transform: translate(-2px, 2px); filter: hue-rotate(90deg); }
+            40% { transform: translate(2px, -2px); filter: hue-rotate(180deg); }
+            60% { transform: translate(-2px, -2px); filter: hue-rotate(270deg); }
+            80% { transform: translate(2px, 2px); filter: hue-rotate(360deg); }
+            100% { transform: translate(0); filter: hue-rotate(0deg); }
+        }
+        .glitch-mode * {
+            text-shadow: 2px 0 #f85149, -2px 0 #39d353;
+        }
     </style>
 </head>
 <body class="min-h-screen font-mono text-terminal-text p-4">

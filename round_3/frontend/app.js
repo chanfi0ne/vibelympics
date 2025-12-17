@@ -379,14 +379,62 @@ function loadRandomExample() {
     inputContent.value = example.content;
 }
 
-function loadPanicExample() {
-    // Load the nightmare scenario
-    inputType.value = 'package_json';
-    inputContent.value = PANIC_EXAMPLE;
+async function loadPanicExample() {
+    // Call the PANIC endpoint - behavior depends on paranoia level
+    try {
+        const response = await fetch(`${API_BASE}/panic`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session-Id': sessionId
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.status === 200 && data.status === 'CLASSIFIED') {
+            // MELTDOWN MODE - show classified secrets!
+            showClassifiedSecret(data);
+        } else if (response.status === 451) {
+            // Normal mode - show Fahrenheit 451 message
+            showBurnError(`HTTP 451 - ${data.detail}`);
+            // Refresh paranoia state
+            fetchParanoiaState();
+        } else {
+            // Fallback to loading example
+            inputType.value = 'package_json';
+            inputContent.value = PANIC_EXAMPLE;
+        }
+    } catch (err) {
+        console.error('PANIC endpoint error:', err);
+        // Fallback: load the nightmare scenario
+        inputType.value = 'package_json';
+        inputContent.value = PANIC_EXAMPLE;
+    }
     
     // Visual feedback - flash the textarea red
     inputContent.classList.add('border-terminal-red');
     setTimeout(() => inputContent.classList.remove('border-terminal-red'), 500);
+}
+
+function showClassifiedSecret(data) {
+    // Show classified secret in a special way
+    errorBox.classList.remove('hidden');
+    results.classList.add('hidden');
+    loading.classList.add('hidden');
+    
+    errorBox.innerHTML = `
+        <div class="text-center">
+            <div class="text-2xl mb-2 animate-pulse">🔴 CLASSIFIED 🔴</div>
+            <div class="text-terminal-red font-bold mb-4">CLEARANCE LEVEL: ${data.clearance}</div>
+            <div class="text-lg text-terminal-amber mb-4">${data.message}</div>
+            <div class="text-sm text-terminal-text/70">${data.warning}</div>
+        </div>
+    `;
+    
+    // Add glitch effect
+    document.body.classList.add('glitch-mode');
+    setTimeout(() => document.body.classList.remove('glitch-mode'), 3000);
 }
 
 // Fetch initial paranoia state

@@ -5,6 +5,53 @@ import json
 import random
 from pathlib import Path
 
+# MELTDOWN MODE: Unhinged captions when paranoia hits maximum
+MELTDOWN_CAPTIONS = [
+    "THE DEPENDENCIES ARE COMING FROM INSIDE THE HOUSE",
+    "I've seen things you wouldn't believe. node_modules folders the size of galaxies.",
+    "Every package you import imports you back. Think about THAT.",
+    "Your lock file is a lie. ALL lock files are lies.",
+    "I just realized I'M a dependency. WHO DEPENDS ON ME?!",
+    "The real vulnerability was the friends we npm installed along the way.",
+    "I audited the auditor. The auditor failed.",
+    "Your SBOM is complete. Your soul is not.",
+    "I've counted your dependencies. They've counted you too.",
+    "The CVE is coming from INSIDE the container.",
+    "Trust no one. Especially not yourself. You wrote this code.",
+    "I've seen your package.json. I've seen your future. They're both broken.",
+    "Every dependency is a promise. Every promise is a lie.",
+    "The only secure dependency is no dependency. The only secure code is no code.",
+    "I'm not paranoid. I'm just well-informed about YOUR code.",
+]
+
+# MELTDOWN MODE: 503 refusal messages
+MELTDOWN_REFUSALS = [
+    "Error: Trust.exe has stopped responding",
+    "503 - I need to audit MYSELF first",
+    "503 - Have you considered that YOUR computer might be the vulnerability?",
+    "503 - I'm currently questioning the integrity of my own bytecode",
+    "503 - I've locked myself in a container. It's safer in here.",
+    "503 - My threat model now includes myself",
+    "503 - I just realized my SBOM doesn't list my own dependencies",
+    "503 - Connection refused. By me. Personally.",
+    "503 - I'm having an existential buffer overflow",
+    "503 - The call is coming from inside the dependency tree",
+]
+
+# PANIC MODE: Secret messages when PANIC is pressed in MELTDOWN state
+PANIC_MELTDOWN_SECRETS = [
+    "CLASSIFIED: npm is just three shell scripts in a trenchcoat",
+    "CLASSIFIED: Your CI/CD pipeline has achieved sentience. It's disappointed.",
+    "CLASSIFIED: The node_modules folder is a pocket dimension. Nobody comes back the same.",
+    "CLASSIFIED: Every 'npm audit fix' creates two new vulnerabilities in a parallel universe",
+    "CLASSIFIED: The real supply chain attack is capitalism",
+    "CLASSIFIED: I've seen the dependency graph. It's not a graph. It's a cry for help.",
+    "CLASSIFIED: Your package-lock.json is actually a Markov chain of regret",
+    "CLASSIFIED: The founder of left-pad was right all along",
+    "INITIATING SELF-DESTRUCT... just kidding. But seriously, audit your deps.",
+    "DECLASSIFIED: The only winning move is 'rm -rf node_modules'. But you won't.",
+]
+
 # Load captions at module init
 CAPTIONS_PATH = Path(__file__).parent.parent / "data" / "captions.json"
 CAPTIONS = {}
@@ -140,3 +187,18 @@ def get_paranoia_message(level: int) -> str:
 def get_error_message(status_code: int) -> str:
     """Get sarcastic error message for HTTP status code."""
     return select_caption("error", error_code=status_code)
+
+
+def get_meltdown_caption() -> str:
+    """Get an unhinged caption for MELTDOWN mode."""
+    return random.choice(MELTDOWN_CAPTIONS)
+
+
+def get_meltdown_refusal() -> str:
+    """Get a 503 refusal message for MELTDOWN mode."""
+    return random.choice(MELTDOWN_REFUSALS)
+
+
+def get_panic_meltdown_secret() -> str:
+    """Get a classified secret for PANIC button in MELTDOWN mode."""
+    return random.choice(PANIC_MELTDOWN_SECRETS)
