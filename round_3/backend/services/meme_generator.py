@@ -301,21 +301,26 @@ def draw_meme_text(draw: ImageDraw, text: str, position: str, img_width: int, im
     except Exception:
         avg_char_width = font_size * 0.45  # Impact is VERY condensed
 
-    # Fill 95% of image width
-    target_width = img_width * 0.95
-    wrap_chars = max(15, int(target_width / avg_char_width))
+    # Fill image width minus margins (20px total for 10px on each side)
+    margin = 10
+    target_width = img_width - (margin * 2)
+    wrap_chars = max(12, int(target_width / avg_char_width))
 
-    # Allow up to 3 lines per section for longer captions
-    max_lines = 3
+    # Limit to 2 lines per section - classic meme style
+    max_lines = 2
+
+    # Minimum margin to prevent clipping
+    margin = 10
 
     # Draw TOP text (stays at very top)
     if top_text:
         lines = textwrap.wrap(top_text, width=wrap_chars)[:max_lines]
-        y = 10
+        y = margin
         for line in lines:
             bbox = draw.textbbox((0, 0), line, font=font)
             text_width = bbox[2] - bbox[0]
-            x = (img_width - text_width) // 2
+            # Center but ensure minimum margin on both sides
+            x = max(margin, (img_width - text_width) // 2)
             draw_text_with_outline(draw, line, x, y, font, outline)
             y += line_height
 
@@ -323,11 +328,12 @@ def draw_meme_text(draw: ImageDraw, text: str, position: str, img_width: int, im
     if bottom_text:
         lines = textwrap.wrap(bottom_text, width=wrap_chars)[:max_lines]
         total_height = len(lines) * line_height
-        y = img_height - total_height - 10
+        y = img_height - total_height - margin
         for line in lines:
             bbox = draw.textbbox((0, 0), line, font=font)
             text_width = bbox[2] - bbox[0]
-            x = (img_width - text_width) // 2
+            # Center but ensure minimum margin on both sides
+            x = max(margin, (img_width - text_width) // 2)
             draw_text_with_outline(draw, line, x, y, font, outline)
             y += line_height
 
@@ -363,18 +369,17 @@ def generate_meme_pillow(meme_id: str, caption: str, template_id: str | None = N
         
         draw = ImageDraw.Draw(img)
 
-        # MASSIVE font for classic meme look - Impact style fills the image
-        # Scale font based on caption length to ensure it fits in ~2 lines per section
+        # Scale font based on caption length - readable but not overwhelming
         caption_len = len(caption)
         if caption_len > 80:
-            # Long text - use smaller font so it fits
-            font_size = max(48, img.width // 8)
+            # Long text - smaller font
+            font_size = max(36, img.width // 14)
         elif caption_len > 50:
             # Medium text
-            font_size = max(56, img.width // 7)
+            font_size = max(42, img.width // 12)
         else:
-            # Short text - go big!
-            font_size = max(64, img.width // 6)
+            # Short text - bigger
+            font_size = max(48, img.width // 10)
 
         font = get_font(size=font_size)
         logger.info(f"Using font size {font_size}px for {img.width}x{img.height} image (caption len: {caption_len})")
