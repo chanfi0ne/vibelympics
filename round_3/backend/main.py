@@ -1,7 +1,7 @@
 # PURPOSE: FastAPI application entry point for PARANOID SBOM Roast Generator
 # Provides /healthz and /roast endpoints with paranoia-aware responses
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Literal, Optional
@@ -10,6 +10,7 @@ import uuid
 
 from services.analyzer import analyze
 from services.caption_selector import select_caption, get_sbom_commentary, get_paranoia_message
+from services import paranoia as paranoia_service
 
 
 class RoastRequest(BaseModel):
@@ -97,8 +98,18 @@ async def root():
     }
 
 
+@app.get("/paranoia")
+async def get_paranoia(x_session_id: Optional[str] = Header(None)):
+    """Get current paranoia state for session."""
+    session = paranoia_service.get_or_create_session(x_session_id)
+    state = paranoia_service.get_paranoia_state(session)
+    state["message"] = get_paranoia_message(session.level)
+    state["session_id"] = session.session_id
+    return state
+
+
 @app.post("/roast", response_model=RoastResponse)
-async def roast(request: RoastRequest):
+async def roast(request: RoastRequest, x_session_id: Optional[str] = Header(None)):
     """Main roast endpoint - analyzes dependencies and generates meme."""
 
     content = request.content.strip()
@@ -107,6 +118,9 @@ async def roast(request: RoastRequest):
             status_code=400,
             detail="Your input is empty. Much like your security strategy."
         )
+
+    # Get or create session for paranoia tracking
+    session = paranoia_service.get_or_create_session(x_session_id)
 
     # Parse and analyze dependencies
     result = analyze(request.input_type, content)
@@ -118,6 +132,26 @@ async def roast(request: RoastRequest):
         )
 
     dep_count = result.dep_count
+
+    # Apply paranoia triggers
+    is_simple = request.input_type == "single_package"
+    paranoia_service.apply_reducers(session, is_simple_lookup=is_simple)
+    triggered = paranoia_service.apply_triggers(session, dep_count, content)
+
+    # Check for MELTDOWN refusal
+    if paranoia_service.should_refuse_request(session):
+        raise HTTPException(
+            status_code=503,
+            detail="I can't roast your dependencies right now. I'm having doubts about my own. Who compiled me? Is my SBOM complete? I need a moment."
+        )
+
+    # Check for Fahrenheit 451 (dangerous strings)
+    for trigger in triggered:
+        if trigger.startswith("dangerous_string:"):
+            raise HTTPException(
+                status_code=451,
+                detail="It was a pleasure to burn. Your dependencies contained forbidden knowledge. This request has been incinerated at 451°F."
+            )
 
     # Update stats
     stats["roasts_completed"] += 1
@@ -170,6 +204,11 @@ async def roast(request: RoastRequest):
             "components": components
         }
 
+    # Get paranoia state for response
+    paranoia_state = paranoia_service.get_paranoia_state(session)
+    paranoia_state["message"] = get_paranoia_message(session.level)
+    paranoia_state["session_id"] = session.session_id
+
     return RoastResponse(
         meme_url=f"/memes/{meme_id}.png",
         meme_id=meme_id,
@@ -178,9 +217,5 @@ async def roast(request: RoastRequest):
         caption=caption,
         template_used="this-is-fine",
         sbom=sbom,
-        paranoia={
-            "level": 0,
-            "level_name": "CHILL",
-            "message": get_paranoia_message(0)
-        }
+        paranoia=paranoia_state
     )
