@@ -318,11 +318,11 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
     
     # Try AI generation if requested and available
     if request.use_ai and is_ai_available():
-        # Prepare data for AI
+        # Prepare data for AI - pass ALL findings for full context
         cve_data = [
-            {"package": c.package, "version": c.version, "cve_id": c.cve_id, 
+            {"package": c.package, "version": c.version, "cve_id": c.cve_id,
              "severity": c.severity, "description": c.description}
-            for c in cve_matches[:5]
+            for c in cve_matches  # All CVEs, not just 5
         ]
         cursed_data = [
             {"package": c.package, "description": c.description}

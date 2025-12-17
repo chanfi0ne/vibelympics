@@ -13,8 +13,9 @@ logger = logging.getLogger(__name__)
 # Configuration
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
-AI_TIMEOUT = 10  # seconds
-AI_MODEL = "claude-3-haiku-20240307"  # Fast and cheap
+AI_TIMEOUT = 15  # seconds (increased for better models)
+# Model options: claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001, claude-opus-4-5-20251101
+AI_MODEL = os.environ.get("AI_MODEL", "claude-sonnet-4-5-20250929")  # Claude Sonnet 4.5
 
 
 def mask_api_key(key: str | None) -> str:
@@ -28,18 +29,34 @@ def validate_api_key_format(key: str | None) -> bool:
     """M-4 Security: Validate Anthropic API key format."""
     return bool(key and key.startswith("sk-ant-") and len(key) > 20)
 
+# System prompt for PARANOID persona
+SYSTEM_PROMPT = """You are PARANOID, an unhinged but brilliant supply chain security analyst who has seen too much. You've witnessed Log4Shell, the left-pad incident, and the event-stream backdoor. You trust nothing. Every dependency is a potential backdoor. Every version bump is suspicious.
+
+Your personality:
+- Darkly humorous, like a security researcher who copes with gallows humor
+- Technically accurate but delivers insights through absurdist commentary
+- References real security incidents and CVEs when relevant
+- Speaks like someone who has stared into the npm abyss and the abyss stared back
+- Occasionally breaks into existential crisis about the state of software supply chains
+
+You generate roasts that are:
+- Actually funny (not just "haha security bad")
+- Technically informed (reference specific CVEs, packages, or incidents)
+- Memorable one-liners that developers would share with coworkers
+- Sometimes poetic, sometimes unhinged, always entertaining"""
+
 # Available meme templates
 MEME_TEMPLATES = {
-    "fine": "This is Fine dog - denial, everything burning",
-    "drake": "Drake Hotline Bling - bad vs good choices",
-    "batman": "Batman Slapping Robin - stopping bad behavior",
-    "buzz": "Buzz Lightyear - 'X everywhere'",
-    "disaster": "Disaster Girl - watching things burn",
-    "fry": "Futurama Fry - uncertainty, squinting",
-    "rollsafe": "Roll Safe - bad logic, tapping head",
-    "doge": "Doge - such/very/wow",
-    "pigeon": "Is This a Pigeon - misidentification",
-    "afraid": "I'm Afraid - nervous confession"
+    "fine": "This is Fine dog - denial, everything burning around you",
+    "drake": "Drake Hotline Bling - rejecting good practices, embracing chaos",
+    "batman": "Batman Slapping Robin - stopping someone from making terrible choices",
+    "buzz": "Buzz Lightyear - 'vulnerabilities everywhere'",
+    "disaster": "Disaster Girl - smiling while your supply chain burns",
+    "fry": "Futurama Fry - 'not sure if secure or just haven't been pwned yet'",
+    "rollsafe": "Roll Safe - galaxy brain bad security logic",
+    "doge": "Doge - such vulnerability, very CVE, wow",
+    "pigeon": "Is This a Pigeon - misidentifying malware as features",
+    "afraid": "Afraid to Ask Andy - too scared to check your dependencies"
 }
 
 
@@ -59,6 +76,7 @@ def is_ai_available() -> bool:
     if not validate_api_key_format(ANTHROPIC_API_KEY):
         logger.warning(f"Invalid ANTHROPIC_API_KEY format detected: {mask_api_key(ANTHROPIC_API_KEY)}")
         return False
+    logger.info(f"AI roaster ready with model: {AI_MODEL}")
     return True
 
 
@@ -69,57 +87,73 @@ def build_prompt(
     cursed_list: list[dict]
 ) -> str:
     """Build the prompt for Claude to generate a roast."""
-    
-    # Format CVEs
-    cve_text = "None found"
+
+    # Format ALL CVEs (not just 5)
+    cve_text = "None detected (suspicious... too clean)"
     if cve_list:
-        cve_items = [f"- {c['package']}@{c['version']}: {c['cve_id']} ({c['severity']}) - {c['description']}" 
-                    for c in cve_list[:5]]
+        cve_items = [f"- {c['package']}@{c['version']}: {c['cve_id']} ({c['severity']}) - {c['description']}"
+                    for c in cve_list]
         cve_text = "\n".join(cve_items)
-        if len(cve_list) > 5:
-            cve_text += f"\n- ...and {len(cve_list) - 5} more"
-    
-    # Format cursed packages
-    cursed_text = "None found"
+
+    # Format cursed packages with full context
+    cursed_text = "None found (they're hiding)"
     if cursed_list:
         cursed_items = [f"- {c['package']}: {c['description']}" for c in cursed_list]
         cursed_text = "\n".join(cursed_items)
-    
-    # Format package sample
-    pkg_sample = ", ".join(package_names[:10])
-    if len(package_names) > 10:
-        pkg_sample += f" (+{len(package_names) - 10} more)"
-    
-    # Template list
+
+    # Format full package list (up to 50)
+    pkg_display = package_names[:50]
+    pkg_sample = ", ".join(pkg_display)
+    if len(package_names) > 50:
+        pkg_sample += f" (+{len(package_names) - 50} more lurking)"
+
+    # Template list with better descriptions
     template_list = "\n".join([f"- {k}: {v}" for k, v in MEME_TEMPLATES.items()])
-    
-    prompt = f"""You are PARANOID, a sarcastic and witty supply chain security roaster. Your job is to roast people's dependencies in a funny but technically accurate way.
 
-Analyze these dependencies and generate a brutal but entertaining roast:
+    # Calculate threat level for context
+    threat_level = "DEFCON 5 (calm)"
+    if len(cve_list) > 5 or len(cursed_list) > 2:
+        threat_level = "DEFCON 1 (PANIC)"
+    elif len(cve_list) > 2 or len(cursed_list) > 0:
+        threat_level = "DEFCON 2 (sweating)"
+    elif len(cve_list) > 0 or dep_count > 100:
+        threat_level = "DEFCON 3 (concerned)"
+    elif dep_count > 50:
+        threat_level = "DEFCON 4 (uneasy)"
 
-DEPENDENCY SUMMARY:
-- Total count: {dep_count} dependencies
-- Sample packages: {pkg_sample}
+    prompt = f"""Analyze this dependency disaster and generate a memorable roast.
 
-CVEs DETECTED:
+## THE CRIME SCENE
+
+**Dependency Count:** {dep_count} packages (each one a potential betrayal)
+**Threat Level:** {threat_level}
+**Packages:** {pkg_sample}
+
+## CVEs DETECTED ({len(cve_list)} total)
 {cve_text}
 
-CURSED/INFAMOUS PACKAGES:
+## CURSED PACKAGES ({len(cursed_list)} found)
 {cursed_text}
 
-AVAILABLE MEME TEMPLATES:
+## YOUR MISSION
+
+Generate a roast that will:
+1. Make security engineers snort-laugh at their desks
+2. Reference specific findings when juicy (CVE IDs, package names, incidents)
+3. Be quotable - something they'd paste in Slack
+4. Match the severity - gentle ribbing for clean deps, existential horror for left-pad
+
+IMPORTANT: The roast will be split across TOP and BOTTOM of a meme image.
+- Write TWO short parts separated by a period: "Setup line. Punchline."
+- Each part should be under 50 characters
+- Example: "Log4Shell in your deps. At least you're consistent."
+
+## MEME TEMPLATES (pick the perfect one)
 {template_list}
 
-Generate a roast that:
-1. Is 2-3 sentences max
-2. References specific packages or CVEs when relevant
-3. Is sarcastic but not mean-spirited
-4. Would make a security engineer laugh (or cry)
-
-Also select the most appropriate meme template based on the findings.
-
-Respond with ONLY valid JSON in this exact format:
-{{"roast": "Your roast here", "template": "template_id", "severity": "low|medium|high|critical"}}"""
+## OUTPUT FORMAT
+Return ONLY valid JSON:
+{{"roast": "Your devastating roast here", "template": "template_id", "severity": "low|medium|high|critical"}}"""
 
     return prompt
 
@@ -157,7 +191,8 @@ async def generate_ai_roast(
                 },
                 json={
                     "model": AI_MODEL,
-                    "max_tokens": 256,
+                    "max_tokens": 512,
+                    "system": SYSTEM_PROMPT,
                     "messages": [
                         {"role": "user", "content": prompt}
                     ]
@@ -166,7 +201,9 @@ async def generate_ai_roast(
             
             if response.status_code != 200:
                 # M-4 Security: Log error without exposing full response (may contain key info)
-                logger.warning(f"AI API error: status={response.status_code}")
+                error_body = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+                error_msg = error_body.get("error", {}).get("message", "unknown")
+                logger.warning(f"AI API error: status={response.status_code}, model={AI_MODEL}, error={error_msg}")
                 return None
             
             data = response.json()

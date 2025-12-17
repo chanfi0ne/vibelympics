@@ -12,9 +12,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 # H-2 Security: Constants for safe meme fetching
-MEMEGEN_ALLOWED_HOST = "api.memegen.link"
+MEMEGEN_ALLOWED_HOSTS = ["api.memegen.link", "memegen.link"]  # Allow CDN redirects
 MAX_MEME_SIZE = 5 * 1024 * 1024  # 5MB max
 MEME_FETCH_TIMEOUT = 5.0  # seconds
+MAX_REDIRECTS = 3  # Limit redirect chain length
 
 # Output directory
 OUTPUT_DIR = Path(__file__).parent.parent / "static" / "memes"
@@ -51,44 +52,63 @@ def encode_text(text: str) -> str:
     return urllib.parse.quote(text, safe="_~")
 
 
-def validate_memegen_url(url: str) -> bool:
-    """H-2 Security: Validate that URL is actually memegen.link."""
+def validate_memegen_url(url: str, allow_any_path: bool = False) -> bool:
+    """H-2 Security: Validate that URL is from allowed memegen hosts."""
     try:
         parsed = urllib.parse.urlparse(url)
-        return (
-            parsed.scheme == "https" and
-            parsed.netloc == MEMEGEN_ALLOWED_HOST and
-            parsed.path.startswith("/images/")
-        )
+        host_ok = parsed.scheme == "https" and parsed.netloc in MEMEGEN_ALLOWED_HOSTS
+        path_ok = allow_any_path or parsed.path.startswith("/images/")
+        return host_ok and path_ok
     except Exception:
         return False
 
 
-def generate_meme_memegen(meme_id: str, caption: str) -> Path | None:
+def generate_meme_memegen(meme_id: str, caption: str, template_id: str | None = None) -> Path | None:
     """Generate a real meme using memegen.link API (no auth needed!).
-    
+
     H-2 Security: Uses httpx with timeout, content-type validation, and size limits.
+
+    Args:
+        meme_id: Unique ID for the meme file
+        caption: The roast text (goes on bottom of meme)
+        template_id: Specific template to use (e.g., "fine", "drake"). If None, picks random.
     """
     ensure_output_dir()
-    
-    template = random.choice(MEME_TEMPLATES)
-    
-    # Build the caption
-    if template["top"]:
-        top_text = template["top"]
-        bottom_text = template["bottom_prefix"] + caption
+
+    # Use specified template or pick random
+    if template_id:
+        # AI specified a template - split caption between top and bottom
+        selected_template_id = template_id
+        # Split at sentence boundary or midpoint
+        if ". " in caption:
+            parts = caption.split(". ", 1)
+            top_text = parts[0] + "."
+            bottom_text = parts[1] if len(parts) > 1 else ""
+        else:
+            # Split at midpoint by words
+            words = caption.split()
+            mid = len(words) // 2
+            top_text = " ".join(words[:mid]) if mid > 0 else ""
+            bottom_text = " ".join(words[mid:]) if mid > 0 else caption
     else:
-        words = caption.split()
-        mid = len(words) // 2
-        top_text = " ".join(words[:mid]) if mid > 0 else caption
-        bottom_text = template["bottom_prefix"] + " ".join(words[mid:]) if mid > 0 else ""
-    
-    # Truncate for URL length limits
-    top_encoded = encode_text(top_text[:50])
-    bottom_encoded = encode_text(bottom_text[:80])
+        # Fallback mode - use pre-defined templates with prefixes
+        template = random.choice(MEME_TEMPLATES)
+        selected_template_id = template["id"]
+        if template["top"]:
+            top_text = template["top"]
+            bottom_text = template["bottom_prefix"] + caption
+        else:
+            words = caption.split()
+            mid = len(words) // 2
+            top_text = " ".join(words[:mid]) if mid > 0 else caption
+            bottom_text = template["bottom_prefix"] + " ".join(words[mid:]) if mid > 0 else ""
+
+    # Truncate for URL length limits (memegen has ~60 char limit per line)
+    top_encoded = encode_text(top_text[:60]) if top_text else "_"
+    bottom_encoded = encode_text(bottom_text[:60]) if bottom_text else "_"
     
     # Build URL: https://api.memegen.link/images/{template}/{top}/{bottom}.png
-    meme_url = f"{MEMEGEN_API}/{template['id']}/{top_encoded}/{bottom_encoded}.png"
+    meme_url = f"{MEMEGEN_API}/{selected_template_id}/{top_encoded}/{bottom_encoded}.png"
     
     # H-2 Security: Validate URL before fetching
     if not validate_memegen_url(meme_url):
@@ -96,36 +116,56 @@ def generate_meme_memegen(meme_id: str, caption: str) -> Path | None:
         return None
     
     try:
-        # H-2 Security: Use httpx with timeout and validation
+        # H-2 Security: Manually follow redirects with validation
+        current_url = meme_url
         with httpx.Client(timeout=MEME_FETCH_TIMEOUT, follow_redirects=False) as client:
-            response = client.get(meme_url)
-            
-            # Validate response status
-            if response.status_code != 200:
-                logger.warning(f"Meme API returned {response.status_code}")
-                return None
-            
-            # H-2 Security: Validate content-type is an image
-            content_type = response.headers.get("content-type", "")
-            if not content_type.startswith("image/"):
-                logger.warning(f"Invalid content-type from meme API: {content_type}")
-                return None
-            
-            # H-2 Security: Validate size limit
-            content_length = len(response.content)
-            if content_length > MAX_MEME_SIZE:
-                logger.warning(f"Meme too large: {content_length} bytes")
-                return None
-            
-            if content_length < 1000:
-                logger.warning(f"Meme too small (likely error): {content_length} bytes")
-                return None
-            
-            # Write file
-            output_path = OUTPUT_DIR / f"{meme_id}.png"
-            output_path.write_bytes(response.content)
-            return output_path
-            
+            for redirect_count in range(MAX_REDIRECTS + 1):
+                response = client.get(current_url)
+
+                # Handle redirects safely
+                if response.status_code in (301, 302, 303, 307, 308):
+                    redirect_url = response.headers.get("location", "")
+                    # Handle relative redirects
+                    if redirect_url.startswith("/"):
+                        redirect_url = f"https://api.memegen.link{redirect_url}"
+                    logger.info(f"Meme redirect to: {redirect_url[:100]}")
+                    # Validate redirect destination is still memegen
+                    if not validate_memegen_url(redirect_url, allow_any_path=True):
+                        logger.warning(f"Blocked redirect to untrusted URL: {redirect_url[:100]}")
+                        return None
+                    current_url = redirect_url
+                    continue
+
+                # Validate final response status
+                if response.status_code != 200:
+                    logger.warning(f"Meme API returned {response.status_code}")
+                    return None
+
+                # H-2 Security: Validate content-type is an image
+                content_type = response.headers.get("content-type", "")
+                if not content_type.startswith("image/"):
+                    logger.warning(f"Invalid content-type from meme API: {content_type}")
+                    return None
+
+                # H-2 Security: Validate size limit
+                content_length = len(response.content)
+                if content_length > MAX_MEME_SIZE:
+                    logger.warning(f"Meme too large: {content_length} bytes")
+                    return None
+
+                if content_length < 1000:
+                    logger.warning(f"Meme too small (likely error): {content_length} bytes")
+                    return None
+
+                # Write file
+                output_path = OUTPUT_DIR / f"{meme_id}.png"
+                output_path.write_bytes(response.content)
+                return output_path
+
+            # Too many redirects
+            logger.warning(f"Too many redirects ({MAX_REDIRECTS})")
+            return None
+
     except httpx.TimeoutException:
         logger.warning("Meme API timeout")
     except Exception as e:
@@ -166,10 +206,16 @@ def generate_meme_fallback(meme_id: str, caption: str) -> Path:
     return output_path
 
 
-def generate_meme(meme_id: str, caption: str, template: str = "this-is-fine") -> Path:
-    """Generate a meme - tries memegen.link API first, falls back to Pillow."""
+def generate_meme(meme_id: str, caption: str, template: str | None = None) -> Path:
+    """Generate a meme - tries memegen.link API first, falls back to Pillow.
+
+    Args:
+        meme_id: Unique ID for the meme file
+        caption: The roast text
+        template: Template ID from AI (e.g., "fine", "drake"). None for random.
+    """
     # Try real meme generation first
-    result = generate_meme_memegen(meme_id, caption)
+    result = generate_meme_memegen(meme_id, caption, template_id=template)
     if result:
         return result
     
