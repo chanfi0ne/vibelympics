@@ -1,7 +1,8 @@
 # PURPOSE: Dockerfile for PARANOID - SBOM Roast Generator
 # Using Chainguard images for maximum paranoia (no shell, minimal attack surface)
+# Pinned to Python 3.12 for wheel compatibility (3.14 lacks pre-built wheels)
 
-FROM cgr.dev/chainguard/python:latest-dev AS builder
+FROM cgr.dev/chainguard/python:3.12-dev AS builder
 
 WORKDIR /app
 
@@ -12,7 +13,7 @@ COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt --target /app/deps
 
 # Production image - distroless, no shell
-FROM cgr.dev/chainguard/python:latest
+FROM cgr.dev/chainguard/python:3.12
 
 WORKDIR /app
 
