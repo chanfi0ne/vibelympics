@@ -1,0 +1,16 @@
+# PURPOSE: Docker Compose for local development and testing
+version: '3.8'
+
+services:
+  paranoid:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount memes directory for persistence (optional)
+      - meme-storage:/app/backend/static/memes
+
+volumes:
+  meme-storage:
