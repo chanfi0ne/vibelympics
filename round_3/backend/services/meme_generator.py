@@ -229,40 +229,51 @@ BUNDLED_TEMPLATES = {
 def get_font(size: int = 32):
     """Get a bold font for meme text - Impact style preferred."""
     font_paths = [
-        # Impact-style fonts (classic meme look)
-        "/usr/share/fonts/truetype/msttcorefonts/Impact.ttf",
-        "/usr/share/fonts/truetype/impact.ttf",
-        "/Library/Fonts/Impact.ttf",  # macOS
-        "/System/Library/Fonts/Supplemental/Impact.ttf",  # macOS
-        # Bold fallbacks
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        # Impact font - THE classic meme font (check macOS locations first)
+        "/System/Library/Fonts/Supplemental/Impact.ttf",  # macOS Sonoma+
+        "/Library/Fonts/Impact.ttf",  # macOS user-installed
+        "/usr/share/fonts/truetype/msttcorefonts/Impact.ttf",  # Linux with MS fonts
+        "/usr/share/fonts/truetype/impact.ttf",  # Linux alternate
+        # Bold fallbacks that still look good
+        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",  # macOS
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Linux
         "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
         "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
-        "/System/Library/Fonts/Helvetica.ttc",
     ]
     for font_path in font_paths:
         try:
-            return ImageFont.truetype(font_path, size)
+            font = ImageFont.truetype(font_path, size)
+            logger.info(f"Loaded font: {font_path} at size {size}")
+            return font
         except (OSError, IOError):
             continue
-    return ImageFont.load_default()
+    logger.warning(f"No fonts found, using default at size {size}")
+    return ImageFont.load_default(size=size)
 
 
-def draw_text_with_outline(draw: ImageDraw, text: str, x: int, y: int, font, outline: int = 3):
-    """Draw single line of text with thick black outline."""
-    # Black outline
-    for dx in range(-outline, outline + 1):
-        for dy in range(-outline, outline + 1):
-            if dx != 0 or dy != 0:
-                draw.text((x + dx, y + dy), text, font=font, fill=(0, 0, 0))
-    # White text
-    draw.text((x, y), text, font=font, fill=(255, 255, 255))
+def draw_text_with_outline(draw: ImageDraw, text: str, x: int, y: int, font, outline: int = 5):
+    """Draw single line of text with THICK black outline - classic meme style."""
+    # Use stroke parameter for cleaner outline (Pillow 8.0+)
+    try:
+        draw.text(
+            (x, y), text, font=font,
+            fill=(255, 255, 255),
+            stroke_width=outline,
+            stroke_fill=(0, 0, 0)
+        )
+    except TypeError:
+        # Fallback for older Pillow - manual outline
+        for dx in range(-outline, outline + 1):
+            for dy in range(-outline, outline + 1):
+                if dx != 0 or dy != 0:
+                    draw.text((x + dx, y + dy), text, font=font, fill=(0, 0, 0))
+        draw.text((x, y), text, font=font, fill=(255, 255, 255))
 
 
 def draw_meme_text(draw: ImageDraw, text: str, position: str, img_width: int, img_height: int, font):
     """Draw classic meme text - TOP and BOTTOM with huge Impact-style font."""
-    text = text.upper()  # ALL CAPS
-    
+    text = text.upper()  # ALL CAPS - essential for meme style
+
     # Split into top/bottom if there's a period or newline
     if ". " in text:
         parts = text.split(". ", 1)
@@ -276,30 +287,43 @@ def draw_meme_text(draw: ImageDraw, text: str, position: str, img_width: int, im
         # Single text - put at specified position
         top_text = text if position == "top" else ""
         bottom_text = text if position != "top" else ""
-    
-    line_height = int(font.size * 1.2) if hasattr(font, 'size') else 60
-    outline = max(4, font.size // 8) if hasattr(font, 'size') else 5  # THICK outline
-    
-    # Calculate wrap width based on image and font - fill ~90% of width
-    avg_char_width = font.size * 0.6  # Approximate character width
-    wrap_chars = max(15, int((img_width * 0.9) / avg_char_width))
-    
-    # Draw TOP text
+
+    font_size = font.size if hasattr(font, 'size') else 60
+    line_height = int(font_size * 1.1)  # Tight line spacing for more text
+    outline = max(4, font_size // 16)  # Visible but not excessive outline
+
+    # Calculate wrap width - Impact font is VERY condensed (~0.45x font size)
+    # Measure actual text to get accurate width
+    test_text = "ABCDEFGHIJKLMNOP"  # 16 chars for better average
+    try:
+        bbox = draw.textbbox((0, 0), test_text, font=font)
+        avg_char_width = (bbox[2] - bbox[0]) / len(test_text)
+    except Exception:
+        avg_char_width = font_size * 0.45  # Impact is VERY condensed
+
+    # Fill 95% of image width
+    target_width = img_width * 0.95
+    wrap_chars = max(15, int(target_width / avg_char_width))
+
+    # Allow up to 3 lines per section for longer captions
+    max_lines = 3
+
+    # Draw TOP text (stays at very top)
     if top_text:
-        lines = textwrap.wrap(top_text, width=wrap_chars)
-        y = 15
+        lines = textwrap.wrap(top_text, width=wrap_chars)[:max_lines]
+        y = 10
         for line in lines:
             bbox = draw.textbbox((0, 0), line, font=font)
             text_width = bbox[2] - bbox[0]
             x = (img_width - text_width) // 2
             draw_text_with_outline(draw, line, x, y, font, outline)
             y += line_height
-    
-    # Draw BOTTOM text
+
+    # Draw BOTTOM text (stays at very bottom)
     if bottom_text:
-        lines = textwrap.wrap(bottom_text, width=wrap_chars)
+        lines = textwrap.wrap(bottom_text, width=wrap_chars)[:max_lines]
         total_height = len(lines) * line_height
-        y = img_height - total_height - 15
+        y = img_height - total_height - 10
         for line in lines:
             bbox = draw.textbbox((0, 0), line, font=font)
             text_width = bbox[2] - bbox[0]
@@ -338,11 +362,22 @@ def generate_meme_pillow(meme_id: str, caption: str, template_id: str | None = N
             logger.warning(f"Template not found: {template_path}, using plain background")
         
         draw = ImageDraw.Draw(img)
-        
-        # HUGE font for classic meme look - like memegen.link
-        font_size = max(52, img.width // 10)  # Even bigger!
+
+        # MASSIVE font for classic meme look - Impact style fills the image
+        # Scale font based on caption length to ensure it fits in ~2 lines per section
+        caption_len = len(caption)
+        if caption_len > 80:
+            # Long text - use smaller font so it fits
+            font_size = max(48, img.width // 8)
+        elif caption_len > 50:
+            # Medium text
+            font_size = max(56, img.width // 7)
+        else:
+            # Short text - go big!
+            font_size = max(64, img.width // 6)
+
         font = get_font(size=font_size)
-        logger.info(f"Using font size {font_size} for {img.width}x{img.height} image")
+        logger.info(f"Using font size {font_size}px for {img.width}x{img.height} image (caption len: {caption_len})")
         
         # Draw the caption with Impact-style text
         draw_meme_text(draw, caption, template["text_position"], img.width, img.height, font)
