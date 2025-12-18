@@ -150,12 +150,7 @@ def build_prompt(
 
 ## YOUR MISSION
 
-Generate a SHORT meme caption with an APPROPRIATE template. This goes ON A MEME IMAGE.
-
-STRICT LENGTH LIMIT:
-- MAXIMUM 100 characters total (both parts combined)
-- Format: "Top text. Bottom text."
-- If you write more than 100 chars, the meme will be unreadable
+Generate a SHORT meme caption, then pick the template that best matches its vibe.
 
 ## STEP 1: IDENTIFY THE PRIMARY ISSUE
 
@@ -166,57 +161,61 @@ Look at the findings above and identify what stands out MOST:
 - Massive dependency bloat?
 - Suspiciously clean (no issues)?
 
-## STEP 2: SELECT TEMPLATE (Multiple valid options - VARY your choice!)
+## STEP 2: WRITE YOUR ROAST FIRST
 
-Each situation has 2-3 VALID templates. Pick one that fits your roast angle:
+Write a SHORT, punchy caption (max 100 chars total, format: "Top text. Bottom text.")
+Focus on what's funny/roast-worthy. Let the caption flow naturally.
 
-| Primary Issue | Valid Templates (pick ONE, vary across requests) |
-|--------------|--------------------------------------------------|
-| Famous incident (left-pad, event-stream) | surprisedpikachu, disaster, harold |
-| Deprecated pkg (moment, request, bower) | drake, distractedbf, harold |
-| Malicious pkg (colors, faker sabotage) | disaster, fine, surprisedpikachu |
-| Many CVEs (5+) | buzz, disaster, fine |
-| Critical CVE | disaster, harold, fine |
-| Legacy/old versions | harold, fine, drake |
-| Micro-deps (is-odd, is-number) | rollsafe, pigeon, fry |
-| Duplicate libs (lodash+underscore) | spiderman, rollsafe, pigeon |
-| Massive bloat (200+ deps) | buzz, fine, disaster |
-| Suspiciously clean | fry, aliens, pigeon |
-| Config complexity (webpack) | onedoesnot, harold, fine |
+Good roast vibes:
+- Denial: "X problem. This is fine."
+- Shock: "Did X. Surprised by Y."
+- Galaxy brain: "Can't have X if you Y."
+- Chaos: "X happened. Y is on fire."
+- Pain: "Using X. The pain is real."
+- Hot take: "X is fine. Change my mind."
 
-VARIETY IS KEY: If you've been picking the same template, try a different valid one!
+## STEP 3: NOW PICK THE TEMPLATE THAT MATCHES YOUR CAPTION'S TONE
+
+Look at what you wrote. What's the vibe?
+
+| Your caption feels like... | Use template |
+|---------------------------|--------------|
+| Denial while everything burns | fine |
+| Shocked by obvious outcome | surprisedpikachu |
+| Gleeful watching chaos | disaster |
+| Hidden pain, fake smile | harold |
+| Galaxy brain bad logic | rollsafe |
+| "X everywhere" energy | buzz |
+| Choosing bad over good | drake |
+| Ignoring good for bad | distractedbf |
+| Two things blaming each other | spiderman |
+| Misidentifying something obvious | pigeon |
+| "Not sure if X or Y" | fry |
+| Blaming mysterious forces | aliens |
+| Too scared to ask | afraid |
+| Hot take that's true | changemymind |
+| "such X, very Y, wow" | doge |
+| Something harder than it looks | onedoesnot |
 
 ## AVAILABLE TEMPLATES
 {template_list}
 
-## STEP 3: WRITE A SHORT CAPTION
+## EXAMPLES (notice how template MATCHES the caption's tone)
 
-Match your caption STYLE to the template:
-- drake: "X? Nah. Y? Yes." format
-- surprisedpikachu: State obvious cause, then "shocked" outcome
-- rollsafe: Galaxy brain logic "Can't have X if Y"
-- buzz: "X. X everywhere."
-- fine: Denial statement. "This is fine."
-- disaster: Gleeful chaos observation
-- harold: Hidden pain statement
-- doge: "such X. very Y. wow."
-- fry: "Not sure if X or Y"
-- spiderman: Two things pointing at each other
-- pigeon: "Is this a [wrong thing]?"
+Example 1 - Denial vibe:
+{{"roast": "47 CVEs in prod. This is fine.", "template": "fine", "severity": "high"}}
 
-## EXAMPLES (notice DIFFERENT templates for similar inputs)
+Example 2 - Shock vibe:
+{{"roast": "Used left-pad. npm broke. Shocked.", "template": "surprisedpikachu", "severity": "medium"}}
 
-Example 1 - left-pad found:
-{{"roast": "left-pad in 2024. We learned nothing.", "template": "surprisedpikachu", "severity": "medium"}}
-
-Example 2 - left-pad found (DIFFERENT template, same input):
+Example 3 - Chaos vibe:
 {{"roast": "11 lines of padding. Mass chaos.", "template": "disaster", "severity": "medium"}}
 
-Example 3 - Many CVEs:
+Example 4 - Everywhere vibe:
 {{"roast": "CVEs. CVEs everywhere.", "template": "buzz", "severity": "high"}}
 
-Example 4 - Many CVEs (DIFFERENT template):
-{{"roast": "47 CVEs in prod. This is fine.", "template": "fine", "severity": "high"}}
+Example 5 - Pain vibe:
+{{"roast": "Still on Flask 1.0. I'm fine.", "template": "harold", "severity": "medium"}}
 
 ## OUTPUT FORMAT
 Return ONLY valid JSON (under 100 chars for roast):
