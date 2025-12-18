@@ -123,13 +123,72 @@ def parse_single_package(content: str) -> AnalysisResult:
     )
 
 
-def analyze(input_type: str, content: str) -> AnalysisResult:
-    """Main entry point - routes to appropriate parser."""
+def detect_input_type(content: str) -> str:
+    """Auto-detect input type based on content patterns."""
+    content_stripped = content.strip()
+    
+    # Check for package.json (JSON with dependencies or devDependencies)
+    if content_stripped.startswith("{"):
+        try:
+            data = json.loads(content_stripped)
+            if isinstance(data, dict):
+                if "dependencies" in data or "devDependencies" in data:
+                    return "package_json"
+                if "name" in data and "version" in data:
+                    return "package_json"  # Likely a package.json
+        except json.JSONDecodeError:
+            pass
+    
+    # Check for requirements.txt patterns
+    # Lines like: package==1.0.0, package>=1.0, package[extra], etc.
+    lines = content_stripped.split('\n')
+    requirements_patterns = 0
+    for line in lines[:10]:  # Check first 10 lines
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        # requirements.txt patterns: ==, >=, <=, ~=, !=, or just package name
+        if any(op in line for op in ['==', '>=', '<=', '~=', '!=', '>']):
+            requirements_patterns += 1
+        elif re.match(r'^[a-zA-Z][a-zA-Z0-9_-]*(\[.*\])?$', line):
+            requirements_patterns += 1
+    
+    if requirements_patterns >= 2:
+        return "requirements_txt"
+    
+    # Check for go.mod
+    if "module " in content_stripped and "go " in content_stripped:
+        return "go_mod"
+    
+    # Check for single package (simple format: name or name@version)
+    if '\n' not in content_stripped and len(content_stripped) < 100:
+        if re.match(r'^@?[a-zA-Z][a-zA-Z0-9_/-]*(@[\d.]+)?$', content_stripped):
+            return "single_package"
+    
+    # Default fallback
+    return "unknown"
+
+
+def analyze(input_type: str, content: str, auto_detect: bool = True) -> AnalysisResult:
+    """Main entry point - routes to appropriate parser.
+    
+    Args:
+        input_type: Specified input type
+        content: The content to analyze
+        auto_detect: If True, override input_type if content clearly matches another type
+    """
     parsers = {
         "package_json": parse_package_json,
         "requirements_txt": parse_requirements_txt,
         "single_package": parse_single_package,
     }
+
+    # Auto-detect input type if enabled
+    if auto_detect:
+        detected = detect_input_type(content)
+        if detected != "unknown" and detected != input_type:
+            # Content clearly matches a different type - use detected type
+            input_type = detected
 
     parser = parsers.get(input_type)
     if not parser:
