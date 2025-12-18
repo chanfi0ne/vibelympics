@@ -376,6 +376,7 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
     meme_id = str(uuid.uuid4())[:8]
     ai_generated = False
     template_used = "leonardo"
+    ai_sbom_commentary = ""  # Will be set if AI provides it
     
     # Try AI generation if requested and available
     if request.use_ai and is_ai_available():
@@ -401,6 +402,7 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
         if ai_result:
             caption = ai_result.roast
             template_used = ai_result.template
+            ai_sbom_commentary = ai_result.sbom_commentary
             ai_generated = True
     
     # Fallback to pre-written captions if AI not used or failed
@@ -464,7 +466,8 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
 
     # SBOM with actual components
     sbom = None
-    sbom_commentary = get_sbom_commentary()
+    # Use AI-generated commentary if available, otherwise random from captions.json
+    sbom_commentary = ai_sbom_commentary if ai_sbom_commentary else get_sbom_commentary()
     if request.include_sbom:
         components = [
             {"name": d.name, "version": d.version or "unknown", "type": "library"}

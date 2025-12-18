@@ -80,6 +80,7 @@ class AIRoastResult:
     roast: str
     template: str
     severity: str
+    sbom_commentary: str = ""  # AI-generated SBOM analysis
     ai_generated: bool = True
 
 
@@ -221,8 +222,13 @@ Example 5 - Pain vibe:
 {{"roast": "Still on Flask 1.0. I'm fine.", "template": "harold", "severity": "medium"}}
 
 ## OUTPUT FORMAT
-Return ONLY valid JSON (under 100 chars for roast):
-{{"roast": "Top text. Bottom text.", "template": "template_id", "severity": "low|medium|high|critical"}}"""
+Return ONLY valid JSON:
+- roast: Under 100 chars, meme text (top. bottom.)
+- template: Template ID from list above
+- severity: low|medium|high|critical
+- sbom_commentary: 1-2 sentences of sarcastic SBOM analysis (reference specific findings!)
+
+{{"roast": "Top text. Bottom text.", "template": "template_id", "severity": "high", "sbom_commentary": "Your SBOM lists 47 CVEs across 12 packages. That's a 3.9 vulnerability-per-dependency ratio. Impressive efficiency."}}"""
 
     return prompt
 
@@ -314,10 +320,14 @@ async def generate_ai_roast(
                 else:
                     roast = roast[:100] + "..."
             
+            # Get SBOM commentary if provided
+            sbom_commentary = result.get("sbom_commentary", "")
+            
             return AIRoastResult(
                 roast=roast,
                 template=template,
                 severity=result.get("severity", "medium"),
+                sbom_commentary=sbom_commentary,
                 ai_generated=True
             )
             
