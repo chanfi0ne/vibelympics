@@ -112,7 +112,15 @@
       "Your SBOM is ready. It has the same relationship to your actual dependencies that a map has to the territory.",
       "SBOM generated. Auditors will love it. Attackers will ignore it. The circle of compliance.",
       "This SBOM is compliant. Compliance and security are different things. Very different things.",
-      "I've documented your supply chain. It's longer than expected. It always is."
+      "I've documented your supply chain. It's longer than expected. It always is.",
+      "Your dependencies have dependencies. Those have dependencies too. It's dependencies all the way down.",
+      "SBOM complete. It's like a family tree, except everyone is estranged and some relatives are malicious.",
+      "I've mapped your supply chain. It looks like a conspiracy theory board. Red strings everywhere.",
+      "This SBOM contains everything I could find. What I couldn't find is statistically more interesting.",
+      "Your software bill of materials is ready. The bill is higher than you expected.",
+      "SBOM exported. Frame it. Hang it on your wall. It won't help, but it's pretty.",
+      "I've enumerated your transitive dependencies. I need a moment. And possibly therapy.",
+      "Your SBOM is technically a legal document now. Congratulations on your new liability."
     ],
     "sbom_input": [
       "You submitted an SBOM for roasting. Bold. Let me check... ah yes, it's incomplete. They always are.",

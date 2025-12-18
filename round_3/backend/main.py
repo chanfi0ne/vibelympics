@@ -496,13 +496,18 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
     paranoia_state["session_id"] = session.session_id
 
     # Build roast summary
-    summary_parts = [f"You have {dep_count} dependencies."]
-    if cve_count > 0:
-        summary_parts.append(f"{cve_count} CVE{'s' if cve_count > 1 else ''} detected.")
-    if cursed_count > 0:
-        summary_parts.append(f"{cursed_count} cursed package{'s' if cursed_count > 1 else ''} found.")
-    summary_parts.append(sbom_commentary)
-    roast_summary = " ".join(summary_parts)
+    # When AI commentary is used, skip boilerplate - AI provides full context
+    if ai_sbom_commentary:
+        roast_summary = sbom_commentary
+    else:
+        # Fallback: use boilerplate + random commentary
+        summary_parts = [f"You have {dep_count} dependencies."]
+        if cve_count > 0:
+            summary_parts.append(f"{cve_count} CVE{'s' if cve_count > 1 else ''} detected.")
+        if cursed_count > 0:
+            summary_parts.append(f"{cursed_count} cursed package{'s' if cursed_count > 1 else ''} found.")
+        summary_parts.append(sbom_commentary)
+        roast_summary = " ".join(summary_parts)
 
     # Build response data for signing
     response_data = {
