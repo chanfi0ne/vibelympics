@@ -467,7 +467,12 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
     # SBOM with actual components
     sbom = None
     # Use AI-generated commentary if available, otherwise random from captions.json
-    sbom_commentary = ai_sbom_commentary if ai_sbom_commentary else get_sbom_commentary()
+    if ai_sbom_commentary:
+        sbom_commentary = ai_sbom_commentary
+        logger.info("Using AI-generated SBOM commentary")
+    else:
+        sbom_commentary = get_sbom_commentary()
+        logger.info("Using fallback SBOM commentary from captions.json")
     if request.include_sbom:
         components = [
             {"name": d.name, "version": d.version or "unknown", "type": "library"}
