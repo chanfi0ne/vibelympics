@@ -101,6 +101,11 @@
                     <button id="ai-toggle" class="px-3 sm:px-4 py-2 rounded font-bold text-sm transition border border-terminal-blue text-terminal-blue hover:bg-terminal-blue/20" data-enabled="false">
                         AI: OFF
                     </button>
+                    <select id="ai-level" class="hidden bg-terminal-bg border border-terminal-blue/50 rounded px-2 py-2 text-sm text-terminal-blue focus:outline-none focus:border-terminal-blue">
+                        <option value="low">Fast (Haiku)</option>
+                        <option value="medium" selected>Balanced (Sonnet)</option>
+                        <option value="high">Best (Opus)</option>
+                    </select>
                 </div>
             </div>
             <textarea

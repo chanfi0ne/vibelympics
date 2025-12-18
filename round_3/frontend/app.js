@@ -324,7 +324,9 @@ async function doRoast() {
     const type = inputType.value;
     const content = inputContent.value.trim();
     const aiToggle = document.getElementById('ai-toggle');
+    const aiLevelSelect = document.getElementById('ai-level');
     const useAi = aiToggle?.dataset.enabled === 'true';
+    const aiLevel = aiLevelSelect?.value || 'medium';
 
     if (!content) {
         showError('Your input is empty. Much like your security strategy.');
@@ -335,8 +337,9 @@ async function doRoast() {
     loading.classList.remove('hidden');
     const loadingText = loading.querySelector('p');
     if (loadingText) {
+        const levelLabel = aiLevel === 'high' ? 'Opus' : aiLevel === 'low' ? 'Haiku' : 'Sonnet';
         loadingText.innerHTML = useAi 
-            ? 'AI is crafting your personalized roast<span class="blink">_</span>' 
+            ? `AI (${levelLabel}) is crafting your personalized roast<span class="blink">_</span>` 
             : 'Analyzing dependencies<span class="blink">_</span>';
     }
     results.classList.add('hidden');
@@ -354,7 +357,8 @@ async function doRoast() {
                 input_type: type,
                 content: content,
                 include_sbom: true,
-                use_ai: useAi
+                use_ai: useAi,
+                ai_level: aiLevel
             })
         });
 
@@ -499,6 +503,7 @@ async function resetParanoia() {
 // AI Toggle button
 function toggleAi() {
     const aiToggle = document.getElementById('ai-toggle');
+    const aiLevel = document.getElementById('ai-level');
     if (!aiToggle) return;
     
     const isEnabled = aiToggle.dataset.enabled === 'true';
@@ -506,6 +511,15 @@ function toggleAi() {
     
     aiToggle.dataset.enabled = newState.toString();
     aiToggle.textContent = newState ? 'AI: ON' : 'AI: OFF';
+    
+    // Show/hide reasoning level dropdown
+    if (aiLevel) {
+        if (newState) {
+            aiLevel.classList.remove('hidden');
+        } else {
+            aiLevel.classList.add('hidden');
+        }
+    }
     
     // Update styling
     if (newState) {

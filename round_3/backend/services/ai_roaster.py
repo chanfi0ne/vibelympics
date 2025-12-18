@@ -14,8 +14,14 @@ logger = logging.getLogger(__name__)
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 AI_TIMEOUT = 15  # seconds (increased for better models)
-# Model options: claude-sonnet-4-5-20250929, claude-haiku-4-5-20251001, claude-opus-4-5-20251101
-AI_MODEL = os.environ.get("AI_MODEL", "claude-sonnet-4-5-20250929")  # Claude Sonnet 4.5
+
+# Model mapping by reasoning level
+AI_MODELS = {
+    "low": "claude-haiku-4-5-20251001",      # Fast, cheap
+    "medium": "claude-sonnet-4-5-20250929",  # Balanced (default)
+    "high": "claude-opus-4-20250514",        # Best quality
+}
+AI_MODEL = os.environ.get("AI_MODEL", AI_MODELS["medium"])  # Default fallback
 
 
 def mask_api_key(key: str | None) -> str:
@@ -194,7 +200,8 @@ async def generate_ai_roast(
     dep_count: int,
     package_names: list[str],
     cve_list: list[dict],
-    cursed_list: list[dict]
+    cursed_list: list[dict],
+    level: str = "medium"
 ) -> Optional[AIRoastResult]:
     """Generate a roast using Claude API.
     
@@ -203,12 +210,17 @@ async def generate_ai_roast(
         package_names: List of package names
         cve_list: List of CVE dicts with package, version, cve_id, severity, description
         cursed_list: List of cursed package dicts with package, description
+        level: Reasoning level - "low" (Haiku), "medium" (Sonnet), "high" (Opus)
     
     Returns:
         AIRoastResult if successful, None if failed
     """
     if not is_ai_available():
         return None
+    
+    # Select model based on level
+    model = AI_MODELS.get(level, AI_MODELS["medium"])
+    logger.info(f"Using AI model: {model} (level={level})")
     
     prompt = build_prompt(dep_count, package_names, cve_list, cursed_list)
     
@@ -222,7 +234,7 @@ async def generate_ai_roast(
                     "content-type": "application/json"
                 },
                 json={
-                    "model": AI_MODEL,
+                    "model": model,
                     "max_tokens": 512,
                     "system": SYSTEM_PROMPT,
                     "messages": [

@@ -50,6 +50,7 @@ class RoastRequest(BaseModel):
     content: str
     include_sbom: bool = True
     use_ai: bool = False  # Enable AI-generated roasts (requires ANTHROPIC_API_KEY)
+    ai_level: Literal["low", "medium", "high"] = "medium"  # low=Haiku, medium=Sonnet, high=Opus
 
     @field_validator('content')
     @classmethod
@@ -392,7 +393,8 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
             dep_count=dep_count,
             package_names=package_names,
             cve_list=cve_data,
-            cursed_list=cursed_data
+            cursed_list=cursed_data,
+            level=request.ai_level
         )
         
         if ai_result:
