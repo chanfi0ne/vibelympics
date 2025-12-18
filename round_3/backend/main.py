@@ -30,6 +30,7 @@ from services.meme_generator import generate_meme, get_meme_path
 from services.cve_detector import detect_cves_batch, detect_cves_batch_live, get_worst_severity, CVEMatch
 from services.cursed_detector import detect_cursed_batch, get_worst_cursed, CursedMatch
 from services.ai_roaster import generate_ai_roast, is_ai_available, AIRoastResult
+from services.signer import sign_response, get_signing_method
 
 # Configuration
 MAX_INPUT_SIZE = int(os.environ.get("MAX_INPUT_SIZE", 102400))  # 100KB
@@ -495,6 +496,21 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
     summary_parts.append(sbom_commentary)
     roast_summary = " ".join(summary_parts)
 
+    # Build response data for signing
+    response_data = {
+        "meme_url": f"/memes/{meme_id}.png",
+        "meme_id": meme_id,
+        "roast_summary": roast_summary,
+        "caption": caption,
+        "template_used": template_used,
+        "ai_generated": ai_generated,
+        "cve_count": cve_count,
+        "cursed_count": cursed_count
+    }
+    
+    # Sign the response (REQ-053)
+    signature = sign_response(response_data)
+    
     return RoastResponse(
         meme_url=f"/memes/{meme_id}.png",
         meme_id=meme_id,
@@ -504,6 +520,7 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
         template_used=template_used,
         sbom=sbom,
         paranoia=paranoia_state,
+        signature=signature,
         ai_generated=ai_generated,
         cve_count=cve_count,
         cursed_count=cursed_count

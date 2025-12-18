@@ -97,6 +97,59 @@ def parse_requirements_txt(content: str) -> AnalysisResult:
     )
 
 
+def parse_go_mod(content: str) -> AnalysisResult:
+    """Parse Go go.mod and extract dependencies."""
+    deps = []
+    errors = []
+    
+    lines = content.split('\n')
+    in_require_block = False
+    
+    for line in lines:
+        line = line.strip()
+        
+        # Skip empty lines and comments
+        if not line or line.startswith('//'):
+            continue
+        
+        # Detect require block start
+        if line.startswith('require ('):
+            in_require_block = True
+            continue
+        
+        # Detect require block end
+        if in_require_block and line == ')':
+            in_require_block = False
+            continue
+        
+        # Parse dependencies inside require block
+        if in_require_block:
+            # Format: github.com/gin-gonic/gin v1.9.1 // indirect
+            parts = line.split()
+            if len(parts) >= 2:
+                name = parts[0]
+                version = parts[1].lstrip('v')  # Remove 'v' prefix
+                source = "indirect" if "// indirect" in line else "direct"
+                deps.append(Dependency(name=name, version=version, source=source))
+        
+        # Parse single-line require: require github.com/pkg/errors v0.9.1
+        elif line.startswith('require ') and '(' not in line:
+            parts = line[8:].split()  # Skip "require "
+            if len(parts) >= 2:
+                name = parts[0]
+                version = parts[1].lstrip('v')
+                source = "indirect" if "// indirect" in line else "direct"
+                deps.append(Dependency(name=name, version=version, source=source))
+    
+    return AnalysisResult(
+        dependencies=deps,
+        dep_count=len(deps),
+        input_type="go_mod",
+        raw_content=content,
+        errors=errors
+    )
+
+
 def parse_single_package(content: str) -> AnalysisResult:
     """Parse a single package name, optionally with version."""
     content = content.strip()
@@ -180,6 +233,7 @@ def analyze(input_type: str, content: str, auto_detect: bool = True) -> Analysis
     parsers = {
         "package_json": parse_package_json,
         "requirements_txt": parse_requirements_txt,
+        "go_mod": parse_go_mod,
         "single_package": parse_single_package,
     }
 
