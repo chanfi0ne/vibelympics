@@ -291,29 +291,49 @@ require (
 // Demo presets - curated examples to showcase specific meme templates
 const DEMO_PRESETS = {
     famous: {
-        type: 'requirements_txt',
-        content: `left-pad==1.0.0
-event-stream==3.3.4`,
+        type: 'package_json',
+        content: `{
+  "name": "famous-disasters",
+  "dependencies": {
+    "left-pad": "1.0.0",
+    "event-stream": "3.3.4"
+  }
+}`,
         description: 'Famous npm disasters → surprisedpikachu, disaster'
     },
     deprecated: {
-        type: 'requirements_txt',
-        content: `moment==2.29.0
-request==2.88.0
-bower==1.8.0`,
+        type: 'package_json',
+        content: `{
+  "name": "deprecated-stack",
+  "dependencies": {
+    "moment": "2.29.0",
+    "request": "2.88.0",
+    "bower": "1.8.0"
+  }
+}`,
         description: 'Deprecated packages → drake, distractedbf'
     },
     microdeps: {
-        type: 'requirements_txt',
-        content: `is-odd==1.0.0
-is-number==7.0.0
-is-even==1.0.0`,
+        type: 'package_json',
+        content: `{
+  "name": "micro-deps",
+  "dependencies": {
+    "is-odd": "1.0.0",
+    "is-number": "7.0.0",
+    "is-even": "1.0.0"
+  }
+}`,
         description: 'Absurd micro-dependencies → rollsafe, pigeon'
     },
     duplicates: {
-        type: 'requirements_txt',
-        content: `lodash==4.17.21
-underscore==1.13.6`,
+        type: 'package_json',
+        content: `{
+  "name": "duplicate-libs",
+  "dependencies": {
+    "lodash": "4.17.21",
+    "underscore": "1.13.6"
+  }
+}`,
         description: 'Duplicate libraries → spiderman'
     },
     legacy: {
@@ -324,10 +344,15 @@ python-memcached==1.48`,
         description: 'Ancient legacy stack → harold, fine'
     },
     sabotage: {
-        type: 'requirements_txt',
-        content: `colors==1.4.0
-faker==5.5.3
-node-ipc==10.1.0`,
+        type: 'package_json',
+        content: `{
+  "name": "sabotaged-packages",
+  "dependencies": {
+    "colors": "1.4.0",
+    "faker": "5.5.3",
+    "node-ipc": "10.1.0"
+  }
+}`,
         description: 'Sabotaged packages → disaster, leonardo'
     },
     cvepocalypse: {
