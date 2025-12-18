@@ -204,6 +204,36 @@ def generate_meme_memegen(meme_id: str, caption: str, template_id: str | None = 
 
 TEMPLATES_DIR = Path(__file__).parent.parent / "static" / "templates"
 
+# Track recently used templates to force variety
+_recent_templates: list[str] = []
+MAX_RECENT = 5  # Don't repeat last 5 templates
+
+
+def get_random_template(exclude: list[str] = None) -> str:
+    """Get a random template, excluding recently used ones."""
+    available = list(BUNDLED_TEMPLATES.keys())
+    
+    # Exclude recently used
+    exclude_set = set(_recent_templates)
+    if exclude:
+        exclude_set.update(exclude)
+    
+    candidates = [t for t in available if t not in exclude_set]
+    
+    # If all excluded, reset and use any
+    if not candidates:
+        candidates = available
+    
+    selected = random.choice(candidates)
+    
+    # Track as recently used
+    _recent_templates.append(selected)
+    if len(_recent_templates) > MAX_RECENT:
+        _recent_templates.pop(0)
+    
+    return selected
+
+
 # Bundled meme templates
 BUNDLED_TEMPLATES = {
     "fine": {"file": "fine.png", "text_position": "bottom"},
@@ -350,12 +380,22 @@ def generate_meme_pillow(meme_id: str, caption: str, template_id: str | None = N
     
     try:
         # Use specified template or pick random
-        if template_id and template_id in BUNDLED_TEMPLATES:
+        # 30% chance to ignore AI choice for more variety
+        use_random = random.random() < 0.3
+        
+        if template_id and template_id in BUNDLED_TEMPLATES and not use_random:
             selected_id = template_id
+            # Still track as recently used
+            _recent_templates.append(selected_id)
+            if len(_recent_templates) > MAX_RECENT:
+                _recent_templates.pop(0)
         else:
-            selected_id = random.choice(list(BUNDLED_TEMPLATES.keys()))
-            if template_id:
-                logger.warning(f"Unknown template '{template_id}', using {selected_id}")
+            # Pick random, excluding recently used templates
+            selected_id = get_random_template()
+            if template_id and template_id in BUNDLED_TEMPLATES:
+                logger.info(f"Random override: using {selected_id} instead of {template_id}")
+            elif template_id:
+                logger.warning(f"Unknown template '{template_id}', using random: {selected_id}")
         
         template = BUNDLED_TEMPLATES[selected_id]
         template_path = TEMPLATES_DIR / template["file"]
