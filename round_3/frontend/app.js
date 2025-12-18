@@ -147,6 +147,115 @@ sentry-sdk==0.5.0`
     {
         type: 'single_package',
         content: 'is-thirteen@2.0.0'
+    },
+    // More package.json examples
+    {
+        type: 'package_json',
+        content: `{
+  "name": "security-nightmare",
+  "dependencies": {
+    "serialize-javascript": "^1.0.0",
+    "lodash": "^4.17.4",
+    "minimist": "^0.0.8",
+    "kind-of": "^6.0.0",
+    "set-value": "^2.0.0",
+    "mixin-deep": "^1.0.0",
+    "merge": "^1.0.0",
+    "jquery": "^1.12.0"
+  }
+}`
+    },
+    {
+        type: 'package_json',
+        content: `{
+  "name": "yolo-production",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "express": "^4.15.0",
+    "helmet": "^2.0.0",
+    "jsonwebtoken": "^7.0.0",
+    "bcrypt": "^1.0.0",
+    "mysql": "^2.10.0",
+    "sequelize": "^3.0.0"
+  }
+}`
+    },
+    {
+        type: 'package_json',
+        content: `{
+  "name": "frontend-archaeology",
+  "dependencies": {
+    "angular": "^1.5.0",
+    "backbone": "^1.2.0",
+    "ember-cli": "^2.0.0",
+    "bower": "^1.8.0",
+    "gulp": "^3.9.0",
+    "browserify": "^13.0.0"
+  }
+}`
+    },
+    // More requirements.txt examples
+    {
+        type: 'requirements_txt',
+        content: `cryptography==2.3.0
+pyOpenSSL==18.0.0
+paramiko==2.4.0
+pycrypto==2.6.1
+Jinja2==2.10.0
+werkzeug==0.14.0
+itsdangerous==0.24`
+    },
+    {
+        type: 'requirements_txt',
+        content: `lxml==4.2.0
+defusedxml==0.5.0
+PyYAML==3.13
+ruamel.yaml==0.15.0
+python-docx==0.8.0
+openpyxl==2.5.0
+xlrd==1.1.0`
+    },
+    {
+        type: 'requirements_txt',
+        content: `ansible==2.5.0
+fabric==1.14.0
+invoke==0.22.0
+plumbum==1.6.0
+sh==1.12.0
+pexpect==4.4.0`
+    },
+    // More single package examples
+    {
+        type: 'single_package',
+        content: 'ua-parser-js@0.7.28'
+    },
+    {
+        type: 'single_package',
+        content: 'node-ipc@10.1.0'
+    },
+    {
+        type: 'single_package',
+        content: 'colors@1.4.0'
+    },
+    {
+        type: 'single_package',
+        content: 'faker@5.5.3'
+    },
+    {
+        type: 'single_package',
+        content: 'log4j@2.14.0'
+    },
+    {
+        type: 'single_package',
+        content: 'flatmap-stream@0.1.1'
+    },
+    {
+        type: 'single_package',
+        content: 'event-stream@3.3.6'
+    },
+    {
+        type: 'single_package',
+        content: 'rc@1.2.8'
     }
 ];
 
@@ -382,7 +491,7 @@ async function doRoast() {
     } catch (err) {
         showError(`Network error: ${err.message}. Is the backend running?`);
     } finally {
-        roastBtn.disabled = false;
+        updateRoastButton(); // Re-enable based on content
         loading.classList.add('hidden');
     }
 }
@@ -392,6 +501,7 @@ function loadRandomExample() {
     const example = TERRIBLE_EXAMPLES[Math.floor(Math.random() * TERRIBLE_EXAMPLES.length)];
     inputType.value = example.type;
     inputContent.value = example.content;
+    updateRoastButton(); // Enable the ROAST button
 }
 
 async function loadPanicExample() {
@@ -543,6 +653,14 @@ inputContent.addEventListener('keydown', (e) => {
         doRoast();
     }
 });
+
+// Enable/disable ROAST button based on input content
+function updateRoastButton() {
+    const hasContent = inputContent.value.trim().length > 0;
+    roastBtn.disabled = !hasContent;
+}
+inputContent.addEventListener('input', updateRoastButton);
+updateRoastButton(); // Initial state
 
 // Check if AI is available and auto-enable toggle
 async function checkAiAvailability() {
