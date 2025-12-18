@@ -79,35 +79,37 @@
 
         <!-- Input Section -->
         <div class="mb-4 md:mb-6">
-            <!-- Mobile: Stack controls, Desktop: Row -->
-            <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-3">
-                <div class="flex gap-2 flex-wrap">
-                    <select id="input-type" class="bg-terminal-bg border border-terminal-green/50 rounded px-2 sm:px-3 py-2 text-sm text-terminal-text focus:outline-none focus:border-terminal-green flex-shrink-0">
-                        <option value="package_json">package.json</option>
-                        <option value="requirements_txt">requirements.txt</option>
-                        <option value="single_package">Single Package</option>
-                    </select>
-                    <button id="roast-btn" class="bg-terminal-green text-terminal-bg px-4 sm:px-6 py-2 rounded font-bold text-sm hover:bg-terminal-green/80 transition">
-                        ROAST ME
-                    </button>
-                </div>
-                <div class="flex gap-2 flex-wrap">
-                    <button id="random-btn" class="border border-terminal-amber text-terminal-amber px-3 sm:px-4 py-2 rounded text-sm hover:bg-terminal-amber/20 transition">
-                        Random
-                    </button>
-                    <button id="panic-btn" class="border border-terminal-red text-terminal-red px-3 sm:px-4 py-2 rounded text-sm hover:bg-terminal-red/20 transition animate-pulse">
-                        PANIC
-                    </button>
-                    <button id="ai-toggle" class="px-3 sm:px-4 py-2 rounded font-bold text-sm transition border border-terminal-blue text-terminal-blue hover:bg-terminal-blue/20" data-enabled="false">
-                        AI: OFF
-                    </button>
-                    <select id="ai-level" class="hidden bg-terminal-bg border border-terminal-blue/50 rounded px-2 py-2 text-sm text-terminal-blue focus:outline-none focus:border-terminal-blue">
-                        <option value="low">Fast (Haiku)</option>
-                        <option value="medium" selected>Balanced (Sonnet)</option>
-                        <option value="high">Best (Opus)</option>
-                    </select>
-                </div>
+            <!-- Main controls row -->
+            <div class="flex flex-wrap gap-2 mb-3">
+                <select id="input-type" class="bg-terminal-bg border border-terminal-green/50 rounded px-2 sm:px-3 py-2 text-sm text-terminal-text focus:outline-none focus:border-terminal-green">
+                    <option value="package_json">package.json</option>
+                    <option value="requirements_txt">requirements.txt</option>
+                    <option value="single_package">Single Package</option>
+                </select>
+                <button id="roast-btn" class="bg-terminal-green text-terminal-bg px-4 sm:px-6 py-2 rounded font-bold text-sm hover:bg-terminal-green/80 transition">
+                    ROAST ME
+                </button>
+                <button id="random-btn" class="border border-terminal-amber text-terminal-amber px-3 sm:px-4 py-2 rounded text-sm hover:bg-terminal-amber/20 transition">
+                    Random
+                </button>
+                <button id="panic-btn" class="border border-terminal-red text-terminal-red px-3 sm:px-4 py-2 rounded text-sm hover:bg-terminal-red/20 transition animate-pulse">
+                    PANIC
+                </button>
             </div>
+            
+            <!-- AI controls row (separate) -->
+            <div class="flex items-center gap-2 mb-3 p-2 rounded border border-terminal-blue/20 bg-terminal-blue/5">
+                <span class="text-xs text-terminal-blue/70">AI Roasts:</span>
+                <button id="ai-toggle" class="px-3 py-1 rounded font-bold text-xs transition border border-terminal-blue text-terminal-blue hover:bg-terminal-blue/20" data-enabled="false">
+                    OFF
+                </button>
+                <select id="ai-level" class="hidden bg-terminal-bg border border-terminal-blue/50 rounded px-2 py-1 text-xs text-terminal-blue focus:outline-none focus:border-terminal-blue">
+                    <option value="low">Haiku (Fast)</option>
+                    <option value="medium" selected>Sonnet (Balanced)</option>
+                    <option value="high">Opus (Best)</option>
+                </select>
+            </div>
+            
             <textarea
                 id="input-content"
                 class="w-full h-40 sm:h-48 bg-terminal-bg border border-terminal-green/30 rounded p-3 sm:p-4 text-sm sm:text-base text-terminal-text font-mono resize-none focus:outline-none focus:border-terminal-green"

@@ -510,7 +510,7 @@ function toggleAi() {
     const newState = !isEnabled;
     
     aiToggle.dataset.enabled = newState.toString();
-    aiToggle.textContent = newState ? 'AI: ON' : 'AI: OFF';
+    aiToggle.textContent = newState ? 'ON' : 'OFF';
     
     // Show/hide reasoning level dropdown
     if (aiLevel) {
