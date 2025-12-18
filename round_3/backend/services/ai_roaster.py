@@ -320,8 +320,15 @@ async def generate_ai_roast(
                 else:
                     roast = roast[:100] + "..."
             
-            # Get SBOM commentary if provided
+            # Get SBOM commentary if provided, with length limit
             sbom_commentary = result.get("sbom_commentary", "")
+            if sbom_commentary and len(sbom_commentary) > 200:
+                logger.warning(f"AI sbom_commentary too long ({len(sbom_commentary)} chars), truncating")
+                # Truncate at sentence boundary if possible
+                if ". " in sbom_commentary[:180]:
+                    sbom_commentary = sbom_commentary[:180].rsplit(". ", 1)[0] + "."
+                else:
+                    sbom_commentary = sbom_commentary[:180] + "..."
             
             return AIRoastResult(
                 roast=roast,
