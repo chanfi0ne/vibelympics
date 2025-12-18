@@ -71,6 +71,7 @@ MEME_TEMPLATES = {
     "onedoesnot": "One Does Not Simply (Boromir) - something that's harder than it looks",
     "harold": "Hide the Pain Harold - smiling through the pain of bad code",
     "aliens": "Ancient Aliens guy - blaming everything on mysterious forces",
+    "monkeypuppet": "Monkey Puppet side-eye - awkward avoidance, 'that wasn't me' energy",
 }
 
 
@@ -200,6 +201,7 @@ Look at what you wrote. What's the vibe?
 | Hot take that's true | changemymind |
 | "such X, very Y, wow" | doge |
 | Something harder than it looks | onedoesnot |
+| Awkward avoidance, "wasn't me" energy | monkeypuppet |
 
 ## AVAILABLE TEMPLATES
 {template_list}

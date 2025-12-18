@@ -239,6 +239,7 @@ def get_random_template(exclude: list[str] = None) -> str:
 BUNDLED_TEMPLATES = {
     "fine": {"file": "fine.png", "text_position": "bottom"},
     "leonardo": {"file": "leonardo.png", "text_position": "bottom"},
+    "monkeypuppet": {"file": "monkeypuppet.png", "text_position": "bottom"},
     "drake": {"file": "drake.jpg", "text_position": "bottom"},
     "disaster": {"file": "disaster.jpg", "text_position": "bottom"},
     "fry": {"file": "fry.jpg", "text_position": "bottom"},
