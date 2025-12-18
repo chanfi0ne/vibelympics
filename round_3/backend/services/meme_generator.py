@@ -237,7 +237,7 @@ def get_random_template(exclude: list[str] = None) -> str:
 
 # Bundled meme templates
 BUNDLED_TEMPLATES = {
-    "fine": {"file": "fine.jpg", "text_position": "bottom"},
+    "fine": {"file": "fine.png", "text_position": "bottom"},
     "leonardo": {"file": "leonardo.png", "text_position": "bottom"},
     "drake": {"file": "drake.jpg", "text_position": "right"},
     "disaster": {"file": "disaster.jpg", "text_position": "bottom"},
