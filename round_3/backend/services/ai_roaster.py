@@ -170,24 +170,25 @@ BAD examples (TOO LONG - don't do this):
 ## MEME TEMPLATES - Match template to your roast content!
 {template_list}
 
-TEMPLATE SELECTION GUIDE (match the VIBE):
-- "fine" → Denial, everything burning, "this is fine" energy
-- "disaster" → Smiling at chaos, watching things burn
-- "drake" → Rejecting good practice / embracing bad practice  
-- "fry" → Suspicious squinting, "not sure if X or Y"
-- "harold" → Hiding pain, smiling through suffering
-- "rollsafe" → Galaxy brain logic, "can't have bugs if..."
-- "surprisedpikachu" → Shocked at obvious consequence
-- "onedoesnot" → "One does not simply..." (hard things)
-- "batman" → Slapping sense into someone
-- "spiderman" → Two things pointing at each other (blame)
-- "buzz" → "X everywhere" (vulnerabilities everywhere)
-- "doge" → "Such X, very Y, wow"
-- "changemymind" → Hot take at a table
-- "distractedbf" → Ignoring good option for bad option
-- "aliens" → Blaming mysterious forces
-- "afraid" → Too scared to ask
-- "pigeon" → Misidentifying something obvious
+IMPORTANT: Do NOT always pick "fine"! Match the template to the SPECIFIC situation:
+
+TEMPLATE SELECTION GUIDE (pick based on content):
+- "drake" → USE FOR: deprecated packages (moment, request), bad choices over good ones
+- "surprisedpikachu" → USE FOR: event-stream, left-pad, obvious security failures, "shocked" moments
+- "rollsafe" → USE FOR: is-odd, is-even, absurd micro-packages, galaxy brain logic
+- "distractedbf" → USE FOR: using old/deprecated when modern exists (request vs axios)
+- "buzz" → USE FOR: many CVEs found, vulnerabilities everywhere
+- "spiderman" → USE FOR: duplicate libs (lodash+underscore), things blaming each other
+- "fry" → USE FOR: uncertainty, "not sure if X or Y" situations
+- "harold" → USE FOR: painful legacy code, suffering in silence
+- "onedoesnot" → USE FOR: complex configs (webpack, babel), hard tasks
+- "disaster" → USE FOR: watching chaos unfold, gleeful destruction
+- "fine" → USE FOR: denial when everything is clearly broken (ONLY use if truly "this is fine" energy)
+- "changemymind" → USE FOR: hot takes, controversial opinions
+- "doge" → USE FOR: playful "such X, very Y" format
+- "aliens" → USE FOR: unexplained behavior, blaming mysterious forces
+- "afraid" → USE FOR: too scared to ask about obvious problems
+- "pigeon" → USE FOR: misidentifying something obvious ("is this a secure app?")
 
 ## OUTPUT FORMAT
 Return ONLY valid JSON with a SHORT roast (under 100 chars):
