@@ -26,6 +26,7 @@ MEMEGEN_API = "https://api.memegen.link/images"
 # Meme templates with security-themed top text
 MEME_TEMPLATES = [
     {"id": "fine", "top": "This is fine", "bottom_prefix": ""},
+    {"id": "leonardo", "top": "Cheers to that", "bottom_prefix": ""},
     {"id": "doge", "top": "Such dependencies", "bottom_prefix": "Very "},
     {"id": "drake", "top": "Reading the CVE list", "bottom_prefix": ""},
     {"id": "buzz", "top": "Vulnerabilities", "bottom_prefix": ""},
@@ -99,7 +100,7 @@ def generate_meme_memegen(meme_id: str, caption: str, template_id: str | None = 
     Args:
         meme_id: Unique ID for the meme file
         caption: The roast text (goes on bottom of meme)
-        template_id: Specific template to use (e.g., "fine", "drake"). If None, picks random.
+        template_id: Specific template to use (e.g., "leonardo", "drake"). If None, picks random.
     """
     ensure_output_dir()
 
@@ -236,7 +237,8 @@ def get_random_template(exclude: list[str] = None) -> str:
 
 # Bundled meme templates
 BUNDLED_TEMPLATES = {
-    "fine": {"file": "fine.png", "text_position": "bottom"},
+    "fine": {"file": "fine.jpg", "text_position": "bottom"},
+    "leonardo": {"file": "leonardo.png", "text_position": "bottom"},
     "drake": {"file": "drake.jpg", "text_position": "right"},
     "disaster": {"file": "disaster.jpg", "text_position": "bottom"},
     "fry": {"file": "fry.jpg", "text_position": "bottom"},
@@ -441,7 +443,7 @@ def generate_meme(meme_id: str, caption: str, template: str | None = None) -> Pa
     Args:
         meme_id: Unique ID for the meme file
         caption: The roast text
-        template: Template ID from AI (e.g., "fine", "drake", "disaster", "fry")
+        template: Template ID from AI (e.g., "leonardo", "drake", "disaster", "fry")
     """
     logger.info(f"Generating meme {meme_id} with template={template}")
     return generate_meme_pillow(meme_id, caption, template)

@@ -54,6 +54,7 @@ You generate roasts that are:
 # Available meme templates (must match bundled images)
 MEME_TEMPLATES = {
     "fine": "This is Fine dog - sitting in burning room, denial about everything on fire",
+    "leonardo": "Leonardo DiCaprio Cheers - snarky/ironic toast, 'cheers to this disaster'",
     "drake": "Drake Hotline Bling - top: rejecting good idea, bottom: embracing bad idea",
     "disaster": "Disaster Girl - smiling while everything burns behind her",
     "fry": "Futurama Fry - squinting suspiciously, 'not sure if X or Y'",
@@ -168,6 +169,7 @@ Focus on what's funny/roast-worthy. Let the caption flow naturally.
 
 Good roast vibes:
 - Denial: "X problem. This is fine."
+- Snarky cheers: "X problem. Cheers to that."
 - Shock: "Did X. Surprised by Y."
 - Galaxy brain: "Can't have X if you Y."
 - Chaos: "X happened. Y is on fire."
@@ -181,6 +183,7 @@ Look at what you wrote. What's the vibe?
 | Your caption feels like... | Use template |
 |---------------------------|--------------|
 | Denial while everything burns | fine |
+| Snarky/ironic "cheers to this disaster" | leonardo |
 | Shocked by obvious outcome | surprisedpikachu |
 | Gleeful watching chaos | disaster |
 | Hidden pain, fake smile | harold |
@@ -202,8 +205,8 @@ Look at what you wrote. What's the vibe?
 
 ## EXAMPLES (notice how template MATCHES the caption's tone)
 
-Example 1 - Denial vibe:
-{{"roast": "47 CVEs in prod. This is fine.", "template": "fine", "severity": "high"}}
+Example 1 - Snarky cheers vibe:
+{{"roast": "47 CVEs in prod. Cheers to that.", "template": "leonardo", "severity": "high"}}
 
 Example 2 - Shock vibe:
 {{"roast": "Used left-pad. npm broke. Shocked.", "template": "surprisedpikachu", "severity": "medium"}}

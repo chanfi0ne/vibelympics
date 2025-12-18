@@ -374,7 +374,7 @@ async def roast(request: RoastRequest, req: Request, x_session_id: Optional[str]
     # Generate response
     meme_id = str(uuid.uuid4())[:8]
     ai_generated = False
-    template_used = "fine"
+    template_used = "leonardo"
     
     # Try AI generation if requested and available
     if request.use_ai and is_ai_available():
