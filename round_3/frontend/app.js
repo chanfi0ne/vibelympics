@@ -512,12 +512,16 @@ function toggleAi() {
     aiToggle.dataset.enabled = newState.toString();
     aiToggle.textContent = newState ? 'ON' : 'OFF';
     
-    // Show/hide reasoning level dropdown
+    // Enable/disable reasoning level dropdown
     if (aiLevel) {
         if (newState) {
-            aiLevel.classList.remove('hidden');
+            aiLevel.disabled = false;
+            aiLevel.classList.remove('opacity-50', 'cursor-not-allowed', 'text-gray-500', 'border-gray-600');
+            aiLevel.classList.add('text-terminal-blue', 'border-terminal-blue/50');
         } else {
-            aiLevel.classList.add('hidden');
+            aiLevel.disabled = true;
+            aiLevel.classList.add('opacity-50', 'cursor-not-allowed', 'text-gray-500', 'border-gray-600');
+            aiLevel.classList.remove('text-terminal-blue', 'border-terminal-blue/50');
         }
     }
     
