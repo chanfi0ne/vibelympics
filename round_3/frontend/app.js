@@ -259,6 +259,58 @@ pexpect==4.4.0`
     }
 ];
 
+// Demo presets - curated examples to showcase specific meme templates
+const DEMO_PRESETS = {
+    famous: {
+        type: 'requirements_txt',
+        content: `left-pad==1.0.0
+event-stream==3.3.4`,
+        description: 'Famous npm disasters → surprisedpikachu, disaster'
+    },
+    deprecated: {
+        type: 'requirements_txt',
+        content: `moment==2.29.0
+request==2.88.0
+bower==1.8.0`,
+        description: 'Deprecated packages → drake, distractedbf'
+    },
+    microdeps: {
+        type: 'requirements_txt',
+        content: `is-odd==1.0.0
+is-number==7.0.0
+is-even==1.0.0`,
+        description: 'Absurd micro-dependencies → rollsafe, pigeon'
+    },
+    duplicates: {
+        type: 'requirements_txt',
+        content: `lodash==4.17.21
+underscore==1.13.6`,
+        description: 'Duplicate libraries → spiderman'
+    },
+    legacy: {
+        type: 'requirements_txt',
+        content: `django==1.11.0
+celery==3.1.0
+python-memcached==1.48`,
+        description: 'Ancient legacy stack → harold, fine'
+    },
+    sabotage: {
+        type: 'requirements_txt',
+        content: `colors==1.4.0
+faker==5.5.3
+node-ipc==10.1.0`,
+        description: 'Sabotaged packages → disaster, leonardo'
+    },
+    cvepocalypse: {
+        type: 'requirements_txt',
+        content: `flask==1.0.0
+requests==2.20.0
+urllib3==1.24.0
+pyyaml==3.12`,
+        description: 'CVE-heavy packages → buzz, fine'
+    }
+};
+
 // PANIC mode - triggers existential dread and HTTP 451
 const PANIC_EXAMPLE = `{
   "name": "totally-not-malware",
@@ -504,6 +556,18 @@ function loadRandomExample() {
     updateRoastButton(); // Enable the ROAST button
 }
 
+function loadDemoPreset(presetKey) {
+    if (!presetKey || !DEMO_PRESETS[presetKey]) return;
+
+    const preset = DEMO_PRESETS[presetKey];
+    inputType.value = preset.type;
+    inputContent.value = preset.content;
+    updateRoastButton(); // Enable the ROAST button
+
+    // Reset the dropdown to placeholder
+    document.getElementById('demo-presets').value = '';
+}
+
 async function loadPanicExample() {
     // Call the PANIC endpoint - behavior depends on paranoia level
     try {
@@ -641,11 +705,13 @@ function toggleAi() {
 const panicBtn = document.getElementById('panic-btn');
 const resetBtn = document.getElementById('reset-btn');
 const aiToggle = document.getElementById('ai-toggle');
+const demoPresets = document.getElementById('demo-presets');
 roastBtn.addEventListener('click', doRoast);
 randomBtn.addEventListener('click', loadRandomExample);
 panicBtn.addEventListener('click', loadPanicExample);
 if (resetBtn) resetBtn.addEventListener('click', resetParanoia);
 if (aiToggle) aiToggle.addEventListener('click', toggleAi);
+if (demoPresets) demoPresets.addEventListener('change', (e) => loadDemoPreset(e.target.value));
 
 // Allow Ctrl+Enter to submit
 inputContent.addEventListener('keydown', (e) => {
