@@ -55,10 +55,23 @@
 <body class="min-h-screen font-mono text-terminal-text p-4">
     <div class="max-w-4xl mx-auto">
         <!-- Header -->
-        <header class="mb-6 md:mb-8 text-center">
+        <header class="mb-4 md:mb-6 text-center">
             <h1 class="text-2xl md:text-4xl font-bold text-terminal-green glow-green mb-2">PARANOID</h1>
             <p class="text-sm md:text-base text-terminal-text opacity-80">Paste your dependencies. Get roasted. Question everything.</p>
         </header>
+
+        <!-- AI controls row -->
+        <div class="flex items-center justify-center gap-2 mb-4 p-2 rounded border border-terminal-blue/20 bg-terminal-blue/5">
+            <span class="text-xs text-terminal-blue/70">AI Roasts:</span>
+            <button id="ai-toggle" class="px-3 py-1 rounded font-bold text-xs transition border border-terminal-blue text-terminal-blue hover:bg-terminal-blue/20" data-enabled="false">
+                OFF
+            </button>
+            <select id="ai-level" disabled class="bg-terminal-bg border border-gray-600 rounded px-2 py-1 text-xs text-gray-500 focus:outline-none opacity-50 cursor-not-allowed">
+                <option value="low">Haiku (Fast)</option>
+                <option value="medium" selected>Sonnet (Balanced)</option>
+                <option value="high">Opus (Best)</option>
+            </select>
+        </div>
 
         <!-- Paranoia Indicator -->
         <div id="paranoia-bar" class="mb-4 md:mb-6 p-3 rounded border border-terminal-green/30 bg-terminal-bg">
@@ -95,19 +108,6 @@
                 <button id="panic-btn" class="border border-terminal-red text-terminal-red px-3 sm:px-4 py-2 rounded text-sm hover:bg-terminal-red/20 transition animate-pulse">
                     PANIC
                 </button>
-            </div>
-            
-            <!-- AI controls row (separate) -->
-            <div class="flex items-center gap-2 mb-3 p-2 rounded border border-terminal-blue/20 bg-terminal-blue/5">
-                <span class="text-xs text-terminal-blue/70">AI Roasts:</span>
-                <button id="ai-toggle" class="px-3 py-1 rounded font-bold text-xs transition border border-terminal-blue text-terminal-blue hover:bg-terminal-blue/20" data-enabled="false">
-                    OFF
-                </button>
-                <select id="ai-level" disabled class="bg-terminal-bg border border-gray-600 rounded px-2 py-1 text-xs text-gray-500 focus:outline-none opacity-50 cursor-not-allowed">
-                    <option value="low">Haiku (Fast)</option>
-                    <option value="medium" selected>Sonnet (Balanced)</option>
-                    <option value="high">Opus (Best)</option>
-                </select>
             </div>
             
             <textarea
