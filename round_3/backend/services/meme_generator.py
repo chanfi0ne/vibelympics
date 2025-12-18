@@ -379,22 +379,20 @@ def generate_meme_pillow(meme_id: str, caption: str, template_id: str | None = N
     ensure_output_dir()
     
     try:
-        # Use specified template or pick random
-        # 30% chance to ignore AI choice for more variety
-        use_random = random.random() < 0.3
-        
-        if template_id and template_id in BUNDLED_TEMPLATES and not use_random:
+        # Use AI-selected template if valid, otherwise pick random (excluding recent)
+        if template_id and template_id in BUNDLED_TEMPLATES:
+            # AI picked a valid template - trust it for content matching
             selected_id = template_id
-            # Still track as recently used
+            # Track as recently used for variety
+            if selected_id in _recent_templates:
+                _recent_templates.remove(selected_id)
             _recent_templates.append(selected_id)
             if len(_recent_templates) > MAX_RECENT:
                 _recent_templates.pop(0)
         else:
-            # Pick random, excluding recently used templates
+            # Invalid or no template - pick random excluding recently used
             selected_id = get_random_template()
-            if template_id and template_id in BUNDLED_TEMPLATES:
-                logger.info(f"Random override: using {selected_id} instead of {template_id}")
-            elif template_id:
+            if template_id:
                 logger.warning(f"Unknown template '{template_id}', using random: {selected_id}")
         
         template = BUNDLED_TEMPLATES[selected_id]

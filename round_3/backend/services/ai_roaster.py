@@ -161,15 +161,27 @@ GOOD examples (notice how SHORT they are):
 BAD examples (TOO LONG - don't do this):
 - "Using left-pad AND event-stream? That's not a dependency tree..." (WAY too long)
 
-## MEME TEMPLATES (pick ONE that best fits - VARY your choices, don't always use "fine")
+## MEME TEMPLATES - Match template to your roast content!
 {template_list}
 
-Pick the template that BEST matches the roast. Examples:
-- Found CVEs? Use "disaster" or "fine" 
-- Old deprecated packages? Use "harold" or "fry"
-- Left-pad/event-stream? Use "spiderman" or "surprisedpikachu"
-- Bad security logic? Use "rollsafe" or "changemymind"
-- Clean deps? Use "aliens" (suspicious!)
+TEMPLATE SELECTION GUIDE (match the VIBE):
+- "fine" → Denial, everything burning, "this is fine" energy
+- "disaster" → Smiling at chaos, watching things burn
+- "drake" → Rejecting good practice / embracing bad practice  
+- "fry" → Suspicious squinting, "not sure if X or Y"
+- "harold" → Hiding pain, smiling through suffering
+- "rollsafe" → Galaxy brain logic, "can't have bugs if..."
+- "surprisedpikachu" → Shocked at obvious consequence
+- "onedoesnot" → "One does not simply..." (hard things)
+- "batman" → Slapping sense into someone
+- "spiderman" → Two things pointing at each other (blame)
+- "buzz" → "X everywhere" (vulnerabilities everywhere)
+- "doge" → "Such X, very Y, wow"
+- "changemymind" → Hot take at a table
+- "distractedbf" → Ignoring good option for bad option
+- "aliens" → Blaming mysterious forces
+- "afraid" → Too scared to ask
+- "pigeon" → Misidentifying something obvious
 
 ## OUTPUT FORMAT
 Return ONLY valid JSON with a SHORT roast (under 100 chars):
