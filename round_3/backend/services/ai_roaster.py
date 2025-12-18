@@ -150,49 +150,77 @@ def build_prompt(
 
 ## YOUR MISSION
 
-Generate a SHORT meme caption. This goes ON A MEME IMAGE so it MUST be brief.
+Generate a SHORT meme caption with an APPROPRIATE template. This goes ON A MEME IMAGE.
 
 STRICT LENGTH LIMIT:
 - MAXIMUM 100 characters total (both parts combined)
 - Format: "Top text. Bottom text."
-- Each part: 5-50 characters
 - If you write more than 100 chars, the meme will be unreadable
 
-GOOD examples (notice how SHORT they are):
-- "8 CVEs in production. This is fine."
-- "Left-pad in your deps. Bold move."
-- "Django 1.11 in 2024. Vintage security."
-- "No CVEs found. The audit lied."
+## STEP 1: IDENTIFY THE PRIMARY ISSUE
 
-BAD examples (TOO LONG - don't do this):
-- "Using left-pad AND event-stream? That's not a dependency tree..." (WAY too long)
+Look at the findings above and identify what stands out MOST:
+- Cursed/famous packages? (left-pad, event-stream, colors, moment.js)
+- High CVE count or severity?
+- Absurd micro-dependencies? (is-odd, is-number)
+- Massive dependency bloat?
+- Suspiciously clean (no issues)?
 
-## MEME TEMPLATES - Match template to your roast content!
+## STEP 2: SELECT TEMPLATE (Multiple valid options - VARY your choice!)
+
+Each situation has 2-3 VALID templates. Pick one that fits your roast angle:
+
+| Primary Issue | Valid Templates (pick ONE, vary across requests) |
+|--------------|--------------------------------------------------|
+| Famous incident (left-pad, event-stream) | surprisedpikachu, disaster, harold |
+| Deprecated pkg (moment, request, bower) | drake, distractedbf, harold |
+| Malicious pkg (colors, faker sabotage) | disaster, fine, surprisedpikachu |
+| Many CVEs (5+) | buzz, disaster, fine |
+| Critical CVE | disaster, harold, fine |
+| Legacy/old versions | harold, fine, drake |
+| Micro-deps (is-odd, is-number) | rollsafe, pigeon, fry |
+| Duplicate libs (lodash+underscore) | spiderman, rollsafe, pigeon |
+| Massive bloat (200+ deps) | buzz, fine, disaster |
+| Suspiciously clean | fry, aliens, pigeon |
+| Config complexity (webpack) | onedoesnot, harold, fine |
+
+VARIETY IS KEY: If you've been picking the same template, try a different valid one!
+
+## AVAILABLE TEMPLATES
 {template_list}
 
-IMPORTANT: Do NOT always pick "fine"! Match the template to the SPECIFIC situation:
+## STEP 3: WRITE A SHORT CAPTION
 
-TEMPLATE SELECTION GUIDE (pick based on content):
-- "drake" → USE FOR: deprecated packages (moment, request), bad choices over good ones
-- "surprisedpikachu" → USE FOR: event-stream, left-pad, obvious security failures, "shocked" moments
-- "rollsafe" → USE FOR: is-odd, is-even, absurd micro-packages, galaxy brain logic
-- "distractedbf" → USE FOR: using old/deprecated when modern exists (request vs axios)
-- "buzz" → USE FOR: many CVEs found, vulnerabilities everywhere
-- "spiderman" → USE FOR: duplicate libs (lodash+underscore), things blaming each other
-- "fry" → USE FOR: uncertainty, "not sure if X or Y" situations
-- "harold" → USE FOR: painful legacy code, suffering in silence
-- "onedoesnot" → USE FOR: complex configs (webpack, babel), hard tasks
-- "disaster" → USE FOR: watching chaos unfold, gleeful destruction
-- "fine" → USE FOR: denial when everything is clearly broken (ONLY use if truly "this is fine" energy)
-- "changemymind" → USE FOR: hot takes, controversial opinions
-- "doge" → USE FOR: playful "such X, very Y" format
-- "aliens" → USE FOR: unexplained behavior, blaming mysterious forces
-- "afraid" → USE FOR: too scared to ask about obvious problems
-- "pigeon" → USE FOR: misidentifying something obvious ("is this a secure app?")
+Match your caption STYLE to the template:
+- drake: "X? Nah. Y? Yes." format
+- surprisedpikachu: State obvious cause, then "shocked" outcome
+- rollsafe: Galaxy brain logic "Can't have X if Y"
+- buzz: "X. X everywhere."
+- fine: Denial statement. "This is fine."
+- disaster: Gleeful chaos observation
+- harold: Hidden pain statement
+- doge: "such X. very Y. wow."
+- fry: "Not sure if X or Y"
+- spiderman: Two things pointing at each other
+- pigeon: "Is this a [wrong thing]?"
+
+## EXAMPLES (notice DIFFERENT templates for similar inputs)
+
+Example 1 - left-pad found:
+{{"roast": "left-pad in 2024. We learned nothing.", "template": "surprisedpikachu", "severity": "medium"}}
+
+Example 2 - left-pad found (DIFFERENT template, same input):
+{{"roast": "11 lines of padding. Mass chaos.", "template": "disaster", "severity": "medium"}}
+
+Example 3 - Many CVEs:
+{{"roast": "CVEs. CVEs everywhere.", "template": "buzz", "severity": "high"}}
+
+Example 4 - Many CVEs (DIFFERENT template):
+{{"roast": "47 CVEs in prod. This is fine.", "template": "fine", "severity": "high"}}
 
 ## OUTPUT FORMAT
-Return ONLY valid JSON with a SHORT roast (under 100 chars):
-{{"roast": "Short top text. Short bottom text.", "template": "template_id", "severity": "low|medium|high|critical"}}"""
+Return ONLY valid JSON (under 100 chars for roast):
+{{"roast": "Top text. Bottom text.", "template": "template_id", "severity": "low|medium|high|critical"}}"""
 
     return prompt
 
@@ -237,6 +265,7 @@ async def generate_ai_roast(
                 json={
                     "model": model,
                     "max_tokens": 512,
+                    "temperature": 0.7,  # Balance: consistent matching but varied creativity
                     "system": SYSTEM_PROMPT,
                     "messages": [
                         {"role": "user", "content": prompt}
