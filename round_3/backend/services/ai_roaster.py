@@ -72,6 +72,7 @@ MEME_TEMPLATES = {
     "harold": "Hide the Pain Harold - smiling through the pain of bad code",
     "aliens": "Ancient Aliens guy - blaming everything on mysterious forces",
     "monkeypuppet": "Monkey Puppet side-eye - awkward avoidance, 'that wasn't me' energy",
+    "highlander": "Highlander 'There Can Only Be One' - when duplicates exist or one thing dominates",
 }
 
 
@@ -202,6 +203,7 @@ Look at what you wrote. What's the vibe?
 | "such X, very Y, wow" | doge |
 | Something harder than it looks | onedoesnot |
 | Awkward avoidance, "wasn't me" energy | monkeypuppet |
+| Duplicates that shouldn't coexist | highlander |
 
 ## AVAILABLE TEMPLATES
 {template_list}
