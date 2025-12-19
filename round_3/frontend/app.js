@@ -19,6 +19,7 @@ const errorBox = document.getElementById('error-box');
 const errorMessage = document.getElementById('error-message');
 const loading = document.getElementById('loading');
 const roastSummary = document.getElementById('roast-summary').querySelector('p');
+const badges = document.getElementById('badges');
 const caption = document.getElementById('caption');
 const findingsList = document.getElementById('findings-list');
 const sbomJson = document.getElementById('sbom-json');
@@ -488,18 +489,21 @@ function showResults(data) {
     // Meme image
     memeImage.src = `${API_BASE}${data.meme_url}`;
 
-    // Roast summary with AI badge
-    let summaryHtml = data.roast_summary;
+    // Badges (above meme)
+    let badgesHtml = '';
     if (data.ai_generated) {
-        summaryHtml += ' <span class="inline-block ml-2 px-2 py-0.5 text-xs bg-terminal-blue/20 text-terminal-blue rounded">AI Generated</span>';
+        badgesHtml += '<span class="px-3 py-1 text-xs bg-terminal-blue/20 text-terminal-blue rounded-full border border-terminal-blue/30">AI Generated</span>';
     }
     if (data.cve_count > 0) {
-        summaryHtml += ` <span class="inline-block ml-1 px-2 py-0.5 text-xs bg-terminal-red/20 text-terminal-red rounded">${data.cve_count} CVEs</span>`;
+        badgesHtml += `<span class="px-3 py-1 text-xs bg-terminal-red/20 text-terminal-red rounded-full border border-terminal-red/30">${data.cve_count} CVEs</span>`;
     }
     if (data.cursed_count > 0) {
-        summaryHtml += ` <span class="inline-block ml-1 px-2 py-0.5 text-xs bg-terminal-amber/20 text-terminal-amber rounded">${data.cursed_count} Cursed</span>`;
+        badgesHtml += `<span class="px-3 py-1 text-xs bg-terminal-amber/20 text-terminal-amber rounded-full border border-terminal-amber/30">${data.cursed_count} Cursed</span>`;
     }
-    roastSummary.innerHTML = summaryHtml;
+    badges.innerHTML = badgesHtml;
+
+    // Roast summary (text only)
+    roastSummary.textContent = data.roast_summary;
 
     // Caption
     caption.textContent = data.caption;
