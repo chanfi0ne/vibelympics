@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from typing import Optional
 import httpx
 
+from services.osv_client import is_version_affected
+
 logger = logging.getLogger(__name__)
 
 # Load CVE database
@@ -221,6 +223,10 @@ async def query_osv(package_name: str, version: str, ecosystem: str = "npm") -> 
             vulns = data.get("vulns", [])
             
             for vuln in vulns:
+                # Filter by version - OSV API returns all vulns, we need to check ranges
+                if version and not is_version_affected(version, vuln, ecosystem):
+                    continue
+                
                 # Extract CVE ID from aliases
                 cve_id = vuln.get("id", "")
                 for alias in vuln.get("aliases", []):

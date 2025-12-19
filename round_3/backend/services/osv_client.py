@@ -76,19 +76,24 @@ def version_in_range(
     return True
 
 
-def is_version_affected(version: str, vuln: Dict[str, Any]) -> bool:
+def is_version_affected(version: str, vuln: Dict[str, Any], ecosystem: str = None) -> bool:
     """
     Check if a specific version is affected by a vulnerability.
 
     Parses OSV affected ranges and checks if the version falls within any affected range.
+    
+    Args:
+        version: Version string to check
+        vuln: OSV vulnerability dict
+        ecosystem: Optional ecosystem to filter by (npm, PyPI, Go, etc.)
     """
     if not version:
         return True  # If no version specified, assume affected
 
     for affected in vuln.get("affected", []):
-        # Check if this affects npm ecosystem
         pkg = affected.get("package", {})
-        if pkg.get("ecosystem") != "npm":
+        # If ecosystem specified, filter by it; otherwise check all
+        if ecosystem and pkg.get("ecosystem") != ecosystem:
             continue
 
         for range_info in affected.get("ranges", []):
