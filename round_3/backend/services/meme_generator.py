@@ -256,6 +256,7 @@ BUNDLED_TEMPLATES = {
     "onedoesnot": {"file": "onedoesnot.jpg", "text_position": "bottom"},
     "harold": {"file": "harold.jpg", "text_position": "bottom"},
     "aliens": {"file": "aliens.jpg", "text_position": "bottom"},
+    "highlander": {"file": "highlander.webp", "text_position": "bottom"},
 }
 
 
